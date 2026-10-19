@@ -446,7 +446,7 @@ app.get('/api/config', (_req, res) => {
 
 // Start server and mount Vite
 async function startServer() {
-  const isProduction = process.env.NODE_ENV === 'production' && fs.existsSync(path.resolve(process.cwd(), 'dist'));
+  const isProduction = fs.existsSync(path.resolve(process.cwd(), 'dist'));
 
   if (isProduction) {
     app.use(express.static(path.resolve(process.cwd(), 'dist')));
@@ -473,7 +473,7 @@ async function startServer() {
     app.use(vite.middlewares);
   }
 
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || '3000', 10);
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`VaultSpring Wallet Server running at http://0.0.0.0:${PORT}`);
   });
