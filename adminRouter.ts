@@ -1,0 +1,1452 @@
+import express, { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
+
+// ---------------------------------------------------------------------------
+// VaultSpring Wallet — Admin Panel backend
+// Fully compatible with the wallet ledger (data/ledger.json). All financial
+// actions are traceable, balances are only mutated through journal entries,
+// and the audit log is append-only.
+// ---------------------------------------------------------------------------
+
+export interface LedgerLike {
+  wallets: Record<string, any>;
+  addressMap: Record<string, string>;
+  transactions: Record<string, any[]>;
+  pendingAlerts: Record<string, any[]>;
+}
+
+type Role = 'super_admin' | 'finance_ops' | 'support' | 'risk_compliance' | 'auditor';
+
+// Permission matrix (least privilege). super_admin has everything.
+const PERMISSIONS: Record<string, Role[]> = {
+  'users.read': ['super_admin', 'finance_ops', 'support', 'risk_compliance', 'auditor'],
+  'users.write': ['super_admin', 'risk_compliance'],
+  'credit.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
+  'credit.write': ['super_admin', 'finance_ops'],
+  'withdraw.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
+  'withdraw.write': ['super_admin', 'finance_ops'],
+  'pool.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
+  'pool.write': ['super_admin', 'finance_ops'],
+  'restrictions.read': ['super_admin', 'risk_compliance', 'auditor'],
+  'restrictions.write': ['super_admin', 'risk_compliance'],
+  'support.read': ['super_admin', 'support', 'risk_compliance', 'auditor'],
+  'support.write': ['super_admin', 'support'],
+  'tokens.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
+  'tokens.write': ['super_admin', 'finance_ops'],
+  'staking.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
+  'staking.write': ['super_admin', 'finance_ops'],
+  'reports.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
+  'settings.write': ['super_admin'],
+};
+
+const SECOND_APPROVAL_THRESHOLD_USD = 5000;
+const DEFAULT_UNLOCK_PERIOD_HOURS = 48;
+
+interface AdminStore {
+  adminAccounts: any[];
+  profiles: Record<string, any>;
+  addressPool: any[];
+  journal: any[];
+  withdrawals: any[];
+  restrictions: any[];
+  supportChats: any[];
+  internalTokens: any[];
+  tokenPriceHistory: any[];
+  auditLog: any[];
+  notifications: any[];
+  depositSettings: Record<string, DepositSetting>;
+  stakingProAssets: StakingProAssetRow[];
+  stakingProPositions: StakingProPositionRow[];
+  config?: { unlockPeriodHours?: number };
+}
+
+export interface DepositSetting {
+  id: string;              // unique per (coin + network) so a coin can have several wallets
+  symbol: string;
+  name?: string;
+  network: string;
+  address: string;
+  memo?: string;           // destination tag / payment id / memo (XRP, TON, EOS, etc.)
+  label?: string;
+  minDeposit?: number;
+  confirmations?: number;
+  qrImage: string | null; // data URL of an uploaded QR, or null to auto-generate from address
+  enabled: boolean;        // hidden from users when false
+  updatedAt: number;
+}
+
+// Staking Pro tradable asset catalog — fully managed by the admin and consumed
+// by the wallet app. `enabled` turns an asset on/off for every user.
+export interface StakingProAssetRow {
+  id: string;
+  symbol: string;
+  name: string;
+  network: string;
+  currentPrice: number;
+  change24h: number;
+  minPositionUsd: number;
+  maxLeverage: number;
+  fundingRate8h: number;
+  fundingDirection: 'pay' | 'receive';
+  spread: number;
+  makerFeePercent: number;
+  takerFeePercent: number;
+  enabled: boolean;
+  updatedAt: number;
+}
+
+// A Staking Pro position belongs to a specific user (walletPrimary) and is
+// created/managed either by the admin or by the client — always journal-backed.
+export interface StakingProPositionRow {
+  id: string;
+  userId: string;
+  walletPrimary: string;
+  assetId: string;
+  assetSymbol: string;
+  assetName: string;
+  direction: 'long' | 'short';
+  executionType: 'market' | 'limit';
+  entryPrice: number;
+  currentPrice: number;
+  positionSizeUsd: number;
+  collateralUsd: number;
+  leverage: number;
+  takeProfitPrice: number;
+  stopLossPrice: number;
+  liquidationPrice: number;
+  openingFeeUsd: number;
+  estClosingFeeUsd: number;
+  spreadCostUsd: number;
+  fundingRate8h: number;
+  accruedFundingUsd: number;
+  stakingYieldUsd: number;
+  openedAt: number;
+  closedAt?: number;
+  closePrice?: number;
+  realizedPnlUsd?: number;
+  status: 'open' | 'closed' | 'liquidated' | 'pending_limit';
+  source: 'admin' | 'client';
+  openedBy: string;
+  updatedAt: number;
+}
+
+function nowId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+}
+
+function normalize(addr: string) {
+  return (addr || '').trim().toLowerCase();
+}
+
+export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () => void) {
+  const router = express.Router();
+  const ADMIN_FILE = path.resolve(process.cwd(), 'data', 'admin.json');
+
+  let store: AdminStore = loadStore();
+
+  function loadStore(): AdminStore {
+    try {
+      if (fs.existsSync(ADMIN_FILE)) {
+        const parsed = JSON.parse(fs.readFileSync(ADMIN_FILE, 'utf8'));
+        // Ensure newer keys exist on older stores.
+        if (!parsed.depositSettings) parsed.depositSettings = {};
+        parsed.depositSettings = migrateDepositSettings(parsed.depositSettings);
+        if (!parsed.stakingProAssets) parsed.stakingProAssets = [];
+        if (!parsed.stakingProPositions) parsed.stakingProPositions = [];
+        if (parsed.stakingProAssets.length === 0) parsed.stakingProAssets = defaultStakingProAssets();
+        return parsed;
+      }
+    } catch (err) {
+      console.warn('Admin store read failed, starting fresh:', err);
+    }
+    return {
+      adminAccounts: [], profiles: {}, addressPool: [], journal: [], withdrawals: [],
+      restrictions: [], supportChats: [], internalTokens: [], tokenPriceHistory: [],
+      auditLog: [], notifications: [], depositSettings: {},
+      stakingProAssets: defaultStakingProAssets(), stakingProPositions: [],
+    };
+  }
+
+  // Seed the Staking Pro catalog so the admin/app have a working baseline set.
+  function defaultStakingProAssets(): StakingProAssetRow[] {
+    const now = Date.now();
+    const base = [
+      { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', network: 'All Networks', currentPrice: 96420.50, change24h: 3.42, minPositionUsd: 20, maxLeverage: 10, fundingRate8h: 0.012, spread: 1.50, makerFeePercent: 0.02, takerFeePercent: 0.05 },
+      { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', network: 'Ethereum', currentPrice: 3840.25, change24h: 4.18, minPositionUsd: 10, maxLeverage: 10, fundingRate8h: 0.010, spread: 0.25, makerFeePercent: 0.02, takerFeePercent: 0.05 },
+      { id: 'solana', symbol: 'SOL', name: 'Solana', network: 'Solana', currentPrice: 218.40, change24h: 7.64, minPositionUsd: 10, maxLeverage: 10, fundingRate8h: 0.015, spread: 0.08, makerFeePercent: 0.02, takerFeePercent: 0.05 },
+      { id: 'bnb', symbol: 'BNB', name: 'BNB', network: 'BNB Smart Chain', currentPrice: 645.80, change24h: 1.85, minPositionUsd: 10, maxLeverage: 10, fundingRate8h: 0.009, spread: 0.15, makerFeePercent: 0.02, takerFeePercent: 0.05 },
+      { id: 'vaultspring', symbol: 'VLT', name: 'VaultSpring Token', network: 'BNB Smart Chain', currentPrice: 5.50, change24h: 2.83, minPositionUsd: 5, maxLeverage: 5, fundingRate8h: 0.020, spread: 0.01, makerFeePercent: 0.01, takerFeePercent: 0.04 },
+      { id: 'tron', symbol: 'TRX', name: 'TRON', network: 'TRON (TRC-20)', currentPrice: 0.335, change24h: 1.20, minPositionUsd: 5, maxLeverage: 10, fundingRate8h: 0.012, spread: 0.001, makerFeePercent: 0.02, takerFeePercent: 0.05 },
+    ];
+    return base.map((a) => ({ ...a, fundingDirection: 'pay' as const, enabled: true, updatedAt: now }));
+  }
+
+  function saveStore() {
+    try {
+      fs.writeFileSync(ADMIN_FILE, JSON.stringify(store, null, 2), 'utf8');
+    } catch (err) {
+      console.error('Failed to save admin.json:', err);
+    }
+  }
+
+  // Normalize deposit wallets to be keyed by a stable id and carry the new
+  // fields (memo / min / confirmations / enabled). Handles legacy symbol-keyed data.
+  function migrateDepositSettings(raw: Record<string, any>): Record<string, DepositSetting> {
+    const out: Record<string, DepositSetting> = {};
+    for (const [k, v] of Object.entries(raw || {})) {
+      if (!v) continue;
+      const id = v.id || k;
+      out[id] = {
+        id,
+        symbol: String(v.symbol || k).toUpperCase(),
+        name: v.name || v.symbol || k,
+        network: v.network || '',
+        address: v.address || '',
+        memo: v.memo || '',
+        label: v.label ?? '',
+        minDeposit: v.minDeposit,
+        confirmations: v.confirmations,
+        qrImage: v.qrImage ?? null,
+        enabled: v.enabled !== false,
+        updatedAt: v.updatedAt || Date.now(),
+      };
+    }
+    return out;
+  }
+
+  // -- Auth / session ------------------------------------------------------
+  // Demo credential model: password === role name (e.g. admin/admin).
+  const sessions: Record<string, { userId: string; role: Role; expires: number }> = {};
+  const SESSION_TTL_MS = 30 * 60 * 1000;
+
+  function auth(req: Request): { userId: string; role: Role; name: string } | null {
+    const token = req.header('x-admin-token');
+    if (!token || !sessions[token]) return null;
+    const s = sessions[token];
+    if (s.expires < Date.now()) {
+      delete sessions[token];
+      return null;
+    }
+    s.expires = Date.now() + SESSION_TTL_MS; // sliding window
+    const acct = store.adminAccounts.find((a) => a.id === s.userId);
+    if (!acct) return null;
+    return { userId: acct.id, role: s.role, name: acct.name };
+  }
+
+  function can(role: Role, perm: string): boolean {
+    if (role === 'super_admin') return true;
+    return (PERMISSIONS[perm] || []).includes(role);
+  }
+
+  function guard(perm: string) {
+    return (req: Request, res: Response, next: any) => {
+      const who = auth(req);
+      if (!who) return res.status(401).json({ error: 'Не авторизован' });
+      if (!can(who.role, perm)) return res.status(403).json({ error: 'Недостаточно прав' });
+      (req as any).who = who;
+      next();
+    };
+  }
+
+  function audit(who: { userId: string; role: Role; name: string }, action: string, object: string, extra: Partial<any> = {}) {
+    store.auditLog.unshift({
+      id: nowId('audit'),
+      actor: who.name,
+      actorId: who.userId,
+      role: who.role,
+      action,
+      object,
+      reason: extra.reason || null,
+      oldValue: extra.oldValue ?? null,
+      newValue: extra.newValue ?? null,
+      reference: extra.reference || null,
+      createdAt: Date.now(),
+    });
+    saveStore();
+  }
+
+  function notifyAdmin(type: string, title: string, message: string, severity: 'info' | 'warning' | 'critical' = 'info', link?: string) {
+    store.notifications.unshift({
+      id: nowId('notif'), type, title, message, severity, link: link || null,
+      createdAt: Date.now(), read: false, audience: 'admin',
+    });
+    saveStore();
+  }
+
+  // -- Wallet helpers (shared with the app ledger) -------------------------
+  function findPrimary(address: string): string | null {
+    const ledger = getLedger();
+    const norm = normalize(address);
+    if (ledger.addressMap[norm]) return ledger.addressMap[norm];
+    for (const [primary, w] of Object.entries(ledger.wallets)) {
+      if (normalize(w.address) === norm) return primary;
+      for (const k of ['tronAddress', 'btcAddress', 'solAddress', 'tonAddress']) {
+        if ((w as any)[k] && normalize((w as any)[k]) === norm) return primary;
+      }
+    }
+    return null;
+  }
+
+  function ensureProfile(primary: string, wallet: any) {
+    if (!store.profiles[primary]) {
+      store.profiles[primary] = {
+        id: nowId('usr'),
+        walletPrimary: primary,
+        email: `user${Object.keys(store.profiles).length + 1}@vaultspring.app`,
+        phone: '',
+        status: 'active',
+        kycStatus: 'none',
+        createdAt: wallet.updatedAt || Date.now(),
+        lastActiveAt: wallet.updatedAt || Date.now(),
+      };
+    }
+    return store.profiles[primary];
+  }
+
+  function computeBalanceUsd(primary: string): number {
+    const ledger = getLedger();
+    const w = ledger.wallets[primary];
+    if (!w) return 0;
+    let total = 0;
+    for (const [sym, amt] of Object.entries(w.balances || {})) {
+      total += Number(amt) * priceOf(sym);
+    }
+    return total;
+  }
+
+  function priceOf(symbol: string): number {
+    const internal = store.internalTokens.find((t) => t.symbol === symbol);
+    if (internal) return internal.price;
+    // Static reference prices for demo reconciliation (external oracle stand-in).
+    const REF: Record<string, number> = {
+      BTC: 67000, ETH: 3500, BNB: 590, SOL: 165, USDT: 1, USDC: 1, TRX: 0.16,
+      XRP: 0.62, DOGE: 0.14, ADA: 0.45, TON: 6.8, LINK: 17, DOT: 7.1, LTC: 84,
+      NEAR: 5.6, PEPE: 0.0000112, SHIB: 0.0000185, SUI: 1.42, UNI: 9.8, POL: 0.55,
+      ARB: 0.95, OP: 1.9, KAS: 0.13, BCH: 400, APT: 9.2, ATOM: 7.4, FIL: 4.6,
+      RENDER: 7.2, FET: 1.6, FLOKI: 0.00018, BONK: 0.000024, WIF: 2.4, DAI: 1, SEI: 0.52,
+    };
+    return REF[symbol] || 0;
+  }
+
+  // =========================================================================
+  // AUTH
+  // =========================================================================
+  router.post('/login', (req: Request, res: Response) => {
+    const username = String(req.body.username || '').trim();
+    const password = String(req.body.password || '').trim();
+    const mfaCode = String(req.body.mfaCode || '').trim();
+    const acct = store.adminAccounts.find((a) => a.username === username && a.active);
+    // Demo auth: password may equal the role name OR the username (e.g. admin/admin).
+    if (!acct || (password !== acct.role && password !== acct.username)) {
+      return res.status(401).json({ error: 'Неверные учётные данные' });
+    }
+    if (acct.mfaEnabled && !mfaCode) {
+      return res.status(401).json({ error: 'mfa_required', mfaRequired: true });
+    }
+    if (acct.mfaEnabled && mfaCode !== '123456') {
+      return res.status(401).json({ error: 'Неверный MFA код', mfaRequired: true });
+    }
+    const token = nowId('sess');
+    sessions[token] = { userId: acct.id, role: acct.role, expires: Date.now() + SESSION_TTL_MS };
+    acct.lastLogin = Date.now();
+    saveStore();
+    audit({ userId: acct.id, role: acct.role, name: acct.name }, 'login', 'session');
+    return res.json({ token, account: { id: acct.id, name: acct.name, username: acct.username, role: acct.role, mfaEnabled: acct.mfaEnabled } });
+  });
+
+  router.post('/logout', (req: Request, res: Response) => {
+    const token = req.header('x-admin-token');
+    if (token) delete sessions[token];
+    res.json({ success: true });
+  });
+
+  router.get('/me', (req: Request, res: Response) => {
+    const who = auth(req);
+    if (!who) return res.status(401).json({ error: 'Не авторизован' });
+    const acct = store.adminAccounts.find((a) => a.id === who.userId);
+    res.json({ account: { id: acct.id, name: acct.name, username: acct.username, role: acct.role, mfaEnabled: acct.mfaEnabled }, permissions: PERMISSIONS });
+  });
+
+  // =========================================================================
+  // DASHBOARD
+  // =========================================================================
+  router.get('/dashboard', guard('users.read'), (_req: Request, res: Response) => {
+    const ledger = getLedger();
+    const primaries = Object.keys(ledger.wallets);
+    primaries.forEach((p) => ensureProfile(p, ledger.wallets[p]));
+    const profiles = Object.values(store.profiles);
+    const active = profiles.filter((p: any) => p.status === 'active').length;
+    const restricted = profiles.filter((p: any) => p.status === 'restricted' || p.status === 'blocked').length;
+    const newRegs = profiles.filter((p: any) => Date.now() - p.createdAt < 7 * 864e5).length;
+
+    const pendingWithdrawals = store.withdrawals.filter((w: any) => ['new', 'review', 'awaiting_send'].includes(w.status)).length;
+    const pendingDeposits = store.journal.filter((j: any) => j.type === 'deposit' && !j.approved).length;
+    const openChats = store.supportChats.filter((c: any) => c.status === 'open').length;
+
+    const totalUnderManagement = primaries.reduce((sum, p) => sum + computeBalanceUsd(p), 0);
+
+    res.json({
+      cards: { totalUsers: profiles.length, active, restricted, newRegs },
+      queues: { pendingWithdrawals, pendingDeposits, openChats },
+      summary: {
+        totalUnderManagement,
+        stakingPositions: ledger.wallets ? countStaking() : 0,
+        openProPositions: store.stakingProPositions.filter((p) => p.status === 'open').length,
+      },
+      recentEvents: store.auditLog.slice(0, 8),
+      integrationErrors: store.notifications.filter((n: any) => n.severity === 'critical').slice(0, 5),
+    });
+  });
+
+  function countStaking() {
+    // Staking positions are tracked client-side; admin reports journal-derived stakes.
+    return store.journal.filter((j: any) => j.type === 'reward').length;
+  }
+
+  // =========================================================================
+  // USERS
+  // =========================================================================
+  router.get('/users', guard('users.read'), (_req: Request, res: Response) => {
+    const ledger = getLedger();
+    const list = Object.keys(ledger.wallets).map((primary) => {
+      const w = ledger.wallets[primary];
+      const prof = ensureProfile(primary, w);
+      const openWithdrawals = store.withdrawals.filter((x: any) => x.walletPrimary === primary && !['completed', 'rejected'].includes(x.status)).length;
+      return {
+        id: prof.id,
+        walletPrimary: primary,
+        email: prof.email,
+        phone: prof.phone,
+        address: w.address,
+        status: prof.status,
+        kycStatus: prof.kycStatus,
+        createdAt: prof.createdAt,
+        lastActiveAt: prof.lastActiveAt,
+        balanceUsd: computeBalanceUsd(primary),
+        assetCount: Object.values(w.balances || {}).filter((v: any) => Number(v) > 0).length,
+        openWithdrawals,
+      };
+    });
+    res.json({ users: list });
+  });
+
+  router.get('/users/:id', guard('users.read'), (req: Request, res: Response) => {
+    const ledger = getLedger();
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === req.params.id);
+    if (!primary || !ledger.wallets[primary]) return res.status(404).json({ error: 'Пользователь не найден' });
+    const w = ledger.wallets[primary];
+    const prof = store.profiles[primary];
+    const assets = Object.entries(w.balances || {}).map(([sym, amt]) => ({
+      symbol: sym, amount: Number(amt), price: priceOf(sym), valueUsd: Number(amt) * priceOf(sym),
+    })).filter((a) => a.amount !== 0);
+    const reservations = store.withdrawals
+      .filter((x: any) => x.walletPrimary === primary && ['new', 'review', 'awaiting_send', 'sent', 'awaiting_confirm'].includes(x.status))
+      .reduce((m: Record<string, number>, x: any) => { m[x.asset] = (m[x.asset] || 0) + x.amount; return m; }, {} as Record<string, number>);
+    const journal = store.journal.filter((j: any) => j.walletPrimary === primary);
+    const txs = ledger.transactions[primary] || [];
+    const restrictions = store.restrictions.filter((r: any) => r.userId === prof.id && r.active);
+    const chats = store.supportChats.filter((c: any) => c.userId === prof.id);
+    res.json({
+      profile: prof,
+      wallet: { address: w.address, tronAddress: w.tronAddress, btcAddress: w.btcAddress, solAddress: w.solAddress, tonAddress: w.tonAddress },
+      assets: assets.map((a) => ({ ...a, reserved: reservations[a.symbol] || 0, available: a.amount - (reservations[a.symbol] || 0) })),
+      balanceUsd: computeBalanceUsd(primary),
+      reservedUsd: Object.entries(reservations).reduce((s, [sym, amt]) => s + Number(amt) * priceOf(sym), 0),
+      journal, transactions: txs, restrictions, chats: chats.map((c) => ({ id: c.id, subject: c.subject, status: c.status })),
+    });
+  });
+
+  router.patch('/users/:id', guard('users.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === req.params.id);
+    if (!primary) return res.status(404).json({ error: 'Пользователь не найден' });
+    const prof = store.profiles[primary];
+    const { email, phone, status, kycStatus } = req.body;
+    const oldValue = JSON.stringify({ email: prof.email, phone: prof.phone, status: prof.status, kycStatus: prof.kycStatus });
+    if (email !== undefined) prof.email = email;
+    if (phone !== undefined) prof.phone = phone;
+    if (status !== undefined) prof.status = status;
+    if (kycStatus !== undefined) prof.kycStatus = kycStatus;
+    saveStore();
+    audit(who, 'user.update', prof.id, { oldValue, newValue: JSON.stringify({ email: prof.email, phone: prof.phone, status: prof.status, kycStatus: prof.kycStatus }), reason: req.body.reason });
+    res.json({ success: true, profile: prof });
+  });
+
+  // =========================================================================
+  // JOURNAL / MANUAL CREDITS (append-only; balances mutate only via entries)
+  // =========================================================================
+  router.get('/journal', guard('credit.read'), (_req: Request, res: Response) => {
+    res.json({ journal: store.journal });
+  });
+
+  router.post('/credit', guard('credit.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { userId, asset, amount, type, reason, reference, txHash, source, walletPrimary } = req.body;
+    const primary = walletPrimary || Object.keys(store.profiles).find((p) => store.profiles[p].id === userId);
+    const ledger = getLedger();
+    if (!primary || !ledger.wallets[primary]) return res.status(404).json({ error: 'Кошелёк не найден' });
+    if (!asset || !amount || amount <= 0) return res.status(400).json({ error: 'Некорректная сумма/актив' });
+    if (source === 'onchain' && !txHash) return res.status(400).json({ error: 'Для on-chain перевода обязателен TX hash' });
+    if (type === 'fee_refund' && !reference) return res.status(400).json({ error: 'Для возврата комиссии нужна ссылка на исходную операцию' });
+    if (type === 'correction' && !reference) return res.status(400).json({ error: 'Для исправления нужна ссылка на исходную запись' });
+
+    const amountUsd = amount * priceOf(asset);
+    const needsSecond = amountUsd >= SECOND_APPROVAL_THRESHOLD_USD;
+
+    const entry = {
+      id: nowId('jr'), userId, walletPrimary: primary, asset, amount, amountUsd,
+      type: type || 'deposit', reason: reason || '', reference: reference || null,
+      txHash: txHash || null, source: source || 'manual', author: who.name, authorId: who.userId,
+      createdAt: Date.now(), requiresSecondApproval: needsSecond, approved: !needsSecond,
+    };
+    store.journal.unshift(entry);
+
+    // Apply delta to ledger balance only when approved (single approval).
+    if (entry.approved) {
+      const w = ledger.wallets[primary];
+      w.balances[asset] = Number((w.balances[asset] || 0)) + amount;
+      w.updatedAt = Date.now();
+      
+      // Create transaction record for history
+      const txId = `tx-admin-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+      const tx = {
+        id: txId,
+        type: 'receive' as const,
+        tokenSymbol: asset.split('-')[0] || asset, // USDT from USDT-ERC20
+        tokenName: asset.split('-')[0] || asset,
+        amount,
+        amountUsd: amountUsd,
+        fromAddress: 'Admin Deposit',
+        toAddress: w.address || '',
+        timestamp: 'Только что',
+        status: 'completed' as const,
+        hash: txHash || `admin-${txId}`,
+        fee: 0,
+        network: asset.includes('-') ? asset.split('-')[1] : 'Manual'
+      };
+      ledger.transactions[primary] = [tx, ...(ledger.transactions[primary] || [])];
+      
+      // Create notification alert
+      const alert = {
+        id: `alert-${Date.now()}`,
+        title: 'Пополнение от администратора',
+        message: `+${amount} ${asset.split('-')[0]} (${asset.includes('-') ? asset.split('-')[1] : 'Manual'})`,
+        time: 'Только что',
+        type: 'tx' as const,
+        subtype: 'receive' as const
+      };
+      ledger.pendingAlerts[primary] = [alert, ...(ledger.pendingAlerts[primary] || [])];
+      
+      saveLedger();
+    }
+    saveStore();
+    audit(who, 'credit.create', entry.id, { newValue: `+${amount} ${asset} (${type})`, reason, reference });
+    if (needsSecond) notifyAdmin('approval', 'Ожидает второго подтверждения', `Начисление ${amount} ${asset} (~$${amountUsd.toFixed(0)}) требует подтверждения`, 'warning', `/deposits`);
+    res.json({ success: true, entry });
+  });
+
+  router.post('/journal/:id/approve', guard('credit.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const entry = store.journal.find((j: any) => j.id === req.params.id);
+    if (!entry) return res.status(404).json({ error: 'Запись не найдена' });
+    if (entry.approved) return res.status(400).json({ error: 'Уже подтверждено' });
+    if (entry.authorId === who.userId) return res.status(403).json({ error: 'Требуется подтверждение вторым оператором' });
+    const ledger = getLedger();
+    const w = ledger.wallets[entry.walletPrimary];
+    if (!w) return res.status(404).json({ error: 'Кошелёк не найден' });
+    entry.approved = true;
+    entry.approvedBy = who.name;
+    entry.approvedAt = Date.now();
+    w.balances[entry.asset] = Number((w.balances[entry.asset] || 0)) + entry.amount;
+    w.updatedAt = Date.now();
+    saveLedger();
+    saveStore();
+    audit(who, 'credit.approve', entry.id, { newValue: `approved +${entry.amount} ${entry.asset}` });
+    res.json({ success: true, entry });
+  });
+
+  // =========================================================================
+  // WITHDRAWALS
+  // =========================================================================
+  router.get('/withdrawals', guard('withdraw.read'), (_req: Request, res: Response) => {
+    res.json({ withdrawals: store.withdrawals });
+  });
+
+  // Client-side creates a request (compatible endpoint used by wallet app)
+  router.post('/withdrawals', guard('withdraw.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { userId, walletPrimary, asset, network, amount, fee = 0, toAddress, memo } = req.body;
+    const primary = walletPrimary || Object.keys(store.profiles).find((p) => store.profiles[p].id === userId);
+    const ledger = getLedger();
+    if (!primary || !ledger.wallets[primary]) return res.status(404).json({ error: 'Кошелёк не найден' });
+    const w = ledger.wallets[primary];
+    if (Number(w.balances[asset] || 0) < amount) return res.status(400).json({ error: 'Недостаточно средств на балансе пользователя' });
+    const req0 = {
+      id: nowId('wd'), userId, walletPrimary: primary, asset, network: network || 'Multi-Chain',
+      amount, fee, toAddress, memo: memo || null, status: 'new', createdAt: Date.now(),
+      txHash: null, reason: null, reviewedBy: null,
+    };
+    store.withdrawals.unshift(req0);
+    // Reserve funds (debit immediately, refund on reject)
+    w.balances[asset] = Number(w.balances[asset]) - amount;
+    w.updatedAt = Date.now();
+    saveLedger();
+    saveStore();
+    audit(who, 'withdraw.create', req0.id, { newValue: `${amount} ${asset} -> ${toAddress}` });
+    notifyAdmin('withdrawal', 'Новая заявка на вывод', `Вывод ${amount} ${asset} ожидает обработки`, 'info', '/withdrawals');
+    res.json({ success: true, withdrawal: req0 });
+  });
+
+  router.patch('/withdrawals/:id/status', guard('withdraw.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const wd = store.withdrawals.find((x: any) => x.id === req.params.id);
+    if (!wd) return res.status(404).json({ error: 'Заявка не найдена' });
+    const { status, txHash, reason } = req.body;
+    const ledger = getLedger();
+    const w = ledger.wallets[wd.walletPrimary];
+
+    // Rules: cannot mark completed without a real txHash; sent requires txHash.
+    if (['sent', 'awaiting_confirm', 'completed'].includes(status) && !wd.txHash && !txHash) {
+      return res.status(400).json({ error: 'Нельзя отправить/завершить без TX hash реальной транзакции' });
+    }
+    if (txHash) wd.txHash = txHash;
+    const oldStatus = wd.status;
+
+    if (status === 'rejected') {
+      if (!reason) return res.status(400).json({ error: 'Укажите причину отказа' });
+      if (w) { w.balances[wd.asset] = Number(w.balances[wd.asset] || 0) + wd.amount; w.updatedAt = Date.now(); saveLedger(); }
+      wd.reason = reason;
+      // Compensating journal record for the released reservation
+      store.journal.unshift({
+        id: nowId('jr'), userId: wd.userId, walletPrimary: wd.walletPrimary, asset: wd.asset,
+        amount: wd.amount, amountUsd: wd.amount * priceOf(wd.asset), type: 'correction',
+        reason: `Отказ в выводе ${wd.id}: ${reason}`, reference: wd.id, txHash: null, source: 'manual',
+        author: who.name, authorId: who.userId, createdAt: Date.now(), requiresSecondApproval: false, approved: true,
+      });
+    }
+    wd.status = status;
+    wd.reviewedBy = who.name;
+    wd.updatedAt = Date.now();
+    saveStore();
+    audit(who, 'withdraw.status', wd.id, { oldValue: oldStatus, newValue: status, reason });
+    res.json({ success: true, withdrawal: wd });
+  });
+
+  // =========================================================================
+  // ADDRESS POOL
+  // =========================================================================
+  router.get('/address-pool', guard('pool.read'), (_req: Request, res: Response) => {
+    res.json({ pool: store.addressPool });
+  });
+
+  router.post('/address-pool', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { assets, network, publicAddress, custodyProvider, memo, note } = req.body;
+    if (!publicAddress) return res.status(400).json({ error: 'Публичный адрес обязателен' });
+    if (store.addressPool.some((s: any) => normalize(s.publicAddress) === normalize(publicAddress))) {
+      return res.status(400).json({ error: 'Дубликат адреса в пуле' });
+    }
+    const set = {
+      id: nowId('set'), assets: assets || [], network: network || '', publicAddress,
+      custodyProvider: custodyProvider || 'Fireblocks MPC', memo: memo || '', status: 'free',
+      createdAt: Date.now(), assignedTo: null, note: note || '',
+    };
+    store.addressPool.unshift(set);
+    saveStore();
+    audit(who, 'pool.create', set.id, { newValue: `${publicAddress} (${network})` });
+    res.json({ success: true, set });
+  });
+
+  router.post('/address-pool/:id/assign', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const set = store.addressPool.find((s: any) => s.id === req.params.id);
+    if (!set) return res.status(404).json({ error: 'Набор не найден' });
+    if (set.status !== 'free') return res.status(409).json({ error: 'Набор уже зарезервирован/назначен. Атомарное назначение невозможно.' });
+    const { userId } = req.body;
+    set.status = 'assigned';
+    set.assignedTo = userId || null;
+    saveStore();
+    audit(who, 'pool.assign', set.id, { newValue: `assigned to ${userId}` });
+    res.json({ success: true, set });
+  });
+
+  router.patch('/address-pool/:id', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const set = store.addressPool.find((s: any) => s.id === req.params.id);
+    if (!set) return res.status(404).json({ error: 'Набор не найден' });
+    const oldStatus = set.status;
+    if (req.body.status) set.status = req.body.status;
+    if (req.body.note !== undefined) set.note = req.body.note;
+    saveStore();
+    audit(who, 'pool.update', set.id, { oldValue: oldStatus, newValue: set.status, reason: req.body.reason });
+    res.json({ success: true, set });
+  });
+
+  // --------------------------------------------------------------------------
+  // ISSUE A WALLET TO A USER  (writes a real wallet into the shared app ledger,
+  // so the recipient can import the exact same address in the wallet app).
+  // Balances always start empty and are credited only via the journal — never
+  // fabricated here. Private keys are never generated or stored in admin.
+  // --------------------------------------------------------------------------
+  router.post('/issue-wallet', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { name, email, phone, note, poolSetId } = req.body;
+    let address = (req.body.address || '').trim();
+
+    // Optionally take the address from a free pool set instead of manual input.
+    let linkedSet: any = null;
+    if (poolSetId) {
+      linkedSet = store.addressPool.find((s: any) => s.id === poolSetId);
+      if (!linkedSet) return res.status(404).json({ error: 'Набор из пула не найден' });
+      if (linkedSet.status !== 'free') return res.status(409).json({ error: 'Набор уже занят. Выберите свободный.' });
+      address = linkedSet.publicAddress;
+    }
+    if (!address) return res.status(400).json({ error: 'Укажите адрес кошелька или выберите набор из пула' });
+
+    const ledger = getLedger();
+    if (findPrimary(address)) return res.status(409).json({ error: 'Этот адрес уже привязан к существующему кошельку' });
+
+    const primary = normalize(address);
+    const chainAddr = (k: string) => {
+      const v = req.body[k];
+      return v && String(v).trim() ? String(v).trim() : undefined;
+    };
+    const tronAddress = chainAddr('tronAddress');
+    const btcAddress = chainAddr('btcAddress');
+    const solAddress = chainAddr('solAddress');
+    const tonAddress = chainAddr('tonAddress');
+
+    const wallet: any = {
+      id: `w-${Date.now()}`,
+      name: name || 'Кошелёк пользователя',
+      address,
+      tronAddress, btcAddress, solAddress, tonAddress,
+      balances: {},
+      issuedBy: who.name,
+      issuedAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    // Register in the shared ledger exactly like the app's own /api/wallet/register.
+    ledger.wallets[primary] = wallet;
+    ledger.transactions[primary] = ledger.transactions[primary] || [];
+    ledger.pendingAlerts[primary] = ledger.pendingAlerts[primary] || [];
+    ledger.addressMap[primary] = primary;
+    for (const k of ['tronAddress', 'btcAddress', 'solAddress', 'tonAddress']) {
+      if (wallet[k]) ledger.addressMap[normalize(wallet[k])] = primary;
+    }
+    saveLedger();
+
+    // Create/refresh the admin profile so the user appears in the Users list.
+    const prof = ensureProfile(primary, wallet);
+    if (email) prof.email = email;
+    if (phone) prof.phone = phone;
+    if (note) prof.note = note;
+    prof.lastActiveAt = Date.now();
+
+    if (linkedSet) { linkedSet.status = 'assigned'; linkedSet.assignedTo = prof.id; }
+    saveStore();
+
+    audit(who, 'wallet.issue', primary, { newValue: `${address} (${wallet.name})`, reason: note });
+    notifyAdmin('wallet', 'Выдан кошелёк', `${address.slice(0, 10)}… → ${prof.email}`, 'info', '/users');
+    res.json({ success: true, wallet, profile: prof });
+  });
+
+  // =========================================================================
+  // DEPOSIT WALLETS (operator's own top-up addresses + custom QR per coin).
+  // Configured here and shown to wallet-app users on the Receive/Deposit screen.
+  // =========================================================================
+  // Public read used by the wallet app (no auth) — returns the operator wallets.
+  router.get('/deposit-settings/public', (_req: Request, res: Response) => {
+    const deposits = Object.values(store.depositSettings)
+      .filter((d) => d.enabled && d.address)
+      .sort((a, b) => a.symbol.localeCompare(b.symbol) || a.network.localeCompare(b.network));
+    res.json({ deposits });
+  });
+
+  router.get('/deposit-settings', guard('pool.read'), (_req: Request, res: Response) => {
+    res.json({ depositSettings: store.depositSettings });
+  });
+
+  router.patch('/deposit-settings', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { id, symbol, name, network, address, memo, label, minDeposit, confirmations, qrImage, enabled } = req.body;
+    if (!symbol) return res.status(400).json({ error: 'Укажите тикер монеты' });
+    if (!address || !String(address).trim()) return res.status(400).json({ error: 'Укажите адрес кошелька пополнения' });
+    if (qrImage && typeof qrImage === 'string' && qrImage.length > 1_500_000) {
+      return res.status(400).json({ error: 'QR-изображение слишком большое (макс. ~1.1 МБ base64)' });
+    }
+    const prev = id && store.depositSettings[id] ? store.depositSettings[id] : undefined;
+    const key = prev ? prev.id : nowId('dep');
+    const setting: DepositSetting = {
+      id: key,
+      symbol: String(symbol).trim().toUpperCase(),
+      name: (name || prev?.name || String(symbol).trim().toUpperCase()).trim(),
+      network: (network ?? prev?.network ?? '').toString().trim(),
+      address: String(address).trim(),
+      memo: (memo ?? prev?.memo ?? '').toString().trim(),
+      label: label ?? prev?.label ?? '',
+      minDeposit: minDeposit !== undefined ? Number(minDeposit) || undefined : prev?.minDeposit,
+      confirmations: confirmations !== undefined ? Number(confirmations) || undefined : prev?.confirmations,
+      qrImage: qrImage === undefined ? (prev?.qrImage ?? null) : (qrImage || null),
+      enabled: enabled !== undefined ? !!enabled : (prev?.enabled ?? true),
+      updatedAt: Date.now(),
+    };
+    store.depositSettings[key] = setting;
+    saveStore();
+    audit(who, prev ? 'deposit.update' : 'deposit.create', key, { newValue: `${setting.symbol} (${setting.network}) -> ${setting.address}`, reason: label });
+    res.json({ success: true, setting });
+  });
+
+  router.post('/deposit-settings/remove', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const key = String(req.body.id || req.body.symbol || '');
+    if (!store.depositSettings[key]) return res.status(404).json({ error: 'Не найдено' });
+    const removed = store.depositSettings[key];
+    delete store.depositSettings[key];
+    saveStore();
+    audit(who, 'deposit.remove', key, { oldValue: `${removed.symbol} (${removed.network})` });
+    res.json({ success: true });
+  });
+
+  // =========================================================================
+  // RESTRICTIONS
+  // =========================================================================
+  router.get('/restrictions', guard('restrictions.read'), (_req: Request, res: Response) => {
+    res.json({ restrictions: store.restrictions });
+  });
+
+  router.post('/restrictions', guard('restrictions.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { userId, scope, reason, clientMessage, endsAt } = req.body;
+    if (!userId || !scope || !reason) return res.status(400).json({ error: 'Укажите пользователя, тип и причину' });
+    const r = {
+      id: nowId('rst'), userId, scope, reason, clientMessage: clientMessage || 'Операция временно недоступна.',
+      startedAt: Date.now(), endsAt: endsAt || null, active: true, author: who.name,
+    };
+    store.restrictions.unshift(r);
+    // Reflect on user profile status
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === userId);
+    if (primary) store.profiles[primary].status = 'restricted';
+    saveStore();
+    audit(who, 'restriction.create', r.id, { newValue: `${scope} for ${userId}`, reason });
+    notifyAdmin('restriction', 'Установлено ограничение', `${scope} для пользователя ${userId}`, 'warning', '/restrictions');
+    res.json({ success: true, restriction: r });
+  });
+
+  router.post('/restrictions/:id/release', guard('restrictions.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const r = store.restrictions.find((x: any) => x.id === req.params.id);
+    if (!r) return res.status(404).json({ error: 'Не найдено' });
+    r.active = false;
+    r.releasedAt = Date.now();
+    r.releasedBy = who.name;
+    const stillActive = store.restrictions.some((x: any) => x.userId === r.userId && x.active);
+    if (!stillActive) {
+      const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === r.userId);
+      if (primary) store.profiles[primary].status = 'active';
+    }
+    saveStore();
+    audit(who, 'restriction.release', r.id, { reason: req.body.reason });
+    res.json({ success: true, restriction: r });
+  });
+
+  // =========================================================================
+  // SUPPORT CHAT
+  // =========================================================================
+  router.get('/support', guard('support.read'), (_req: Request, res: Response) => {
+    res.json({ chats: store.supportChats });
+  });
+
+  router.post('/support', guard('support.read'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { userId, subject, text } = req.body;
+    const chat = {
+      id: nowId('chat'), userId, subject: subject || 'Общее обращение', status: 'open',
+      assignee: null, createdAt: Date.now(),
+      messages: [{ id: nowId('msg'), chatId: '', userId, from: 'admin', text: text || '', createdAt: Date.now(), read: true }],
+    };
+    chat.messages[0].chatId = chat.id;
+    store.supportChats.unshift(chat);
+    saveStore();
+    audit(who, 'support.create', chat.id, { newValue: subject });
+    res.json({ success: true, chat });
+  });
+
+  router.post('/support/:id/messages', guard('support.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const chat = store.supportChats.find((c: any) => c.id === req.params.id);
+    if (!chat) return res.status(404).json({ error: 'Чат не найден' });
+    const { text, internal } = req.body;
+    chat.messages.push({
+      id: nowId('msg'), chatId: chat.id, userId: chat.userId,
+      from: internal ? 'internal_note' : 'admin', text, createdAt: Date.now(), read: true,
+    });
+    saveStore();
+    audit(who, internal ? 'support.internal_note' : 'support.reply', chat.id);
+    res.json({ success: true, chat });
+  });
+
+  router.patch('/support/:id', guard('support.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const chat = store.supportChats.find((c: any) => c.id === req.params.id);
+    if (!chat) return res.status(404).json({ error: 'Чат не найден' });
+    if (req.body.status) chat.status = req.body.status;
+    if (req.body.assignee !== undefined) chat.assignee = req.body.assignee;
+    saveStore();
+    audit(who, 'support.update', chat.id, { newValue: `status=${chat.status}` });
+    res.json({ success: true, chat });
+  });
+
+  // =========================================================================
+  // INTERNAL TOKENS
+  // =========================================================================
+  router.get('/tokens', guard('tokens.read'), (_req: Request, res: Response) => {
+    res.json({ tokens: store.internalTokens, priceHistory: store.tokenPriceHistory });
+  });
+
+  router.post('/tokens', guard('tokens.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const t = req.body;
+    if (!t.symbol || !t.name) return res.status(400).json({ error: 'Укажите тикер и название' });
+    const token = {
+      symbol: t.symbol.toUpperCase(), name: t.name, network: t.network || '', contract: t.contract || '',
+      decimals: t.decimals ?? 18, priceSource: t.priceSource || 'internal', priceMethod: t.priceMethod || 'Внутренняя расчётная цена',
+      price: Number(t.price) || 0, circulatingSupply: Number(t.circulatingSupply) || 0, status: 'active',
+      availableInStaking: !!t.availableInStaking, availableInStakingPro: !!t.availableInStakingPro,
+      limits: t.limits || '', updatedAt: Date.now(),
+    };
+    store.internalTokens.unshift(token);
+    saveStore();
+    audit(who, 'token.create', token.symbol, { newValue: `${token.name} @ ${token.price}` });
+    res.json({ success: true, token });
+  });
+
+  router.patch('/tokens/:symbol', guard('tokens.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const token = store.internalTokens.find((t: any) => t.symbol === req.params.symbol);
+    if (!token) return res.status(404).json({ error: 'Токен не найден' });
+    if (token.priceSource !== 'internal') return res.status(403).json({ error: 'Внешнюю рыночную цену менять нельзя — только из оракула' });
+    const { price, circulatingSupply, status, reason } = req.body;
+    if (!reason) return res.status(400).json({ error: 'Изменение цены требует указания причины' });
+    // History preserved (never overwritten)
+    store.tokenPriceHistory.unshift({ symbol: token.symbol, oldPrice: token.price, newPrice: price ?? token.price, oldSupply: token.circulatingSupply, newSupply: circulatingSupply ?? token.circulatingSupply, author: who.name, reason, createdAt: Date.now() });
+    const oldValue = `price=${token.price}, supply=${token.circulatingSupply}`;
+    if (price !== undefined) token.price = Number(price);
+    if (circulatingSupply !== undefined) token.circulatingSupply = Number(circulatingSupply);
+    if (status !== undefined) token.status = status;
+    token.updatedAt = Date.now();
+    saveStore();
+    audit(who, 'token.update', token.symbol, { oldValue, newValue: `price=${token.price}, supply=${token.circulatingSupply}`, reason });
+    res.json({ success: true, token });
+  });
+
+  // =========================================================================
+  // STAKING / STAKING PRO (read-only catalog + positions from ledger)
+  // =========================================================================
+  router.get('/staking', guard('staking.read'), (_req: Request, res: Response) => {
+    res.json({
+      programs: [
+        { id: 'sp-trx', asset: 'TRX', network: 'TRON (TRC-20)', mode: 'Flexible', apy: 4.2, apySource: 'Валидатор-провайдер', minStake: 10, lockDuration: 'Гибкий', unlock: 'Мгновенно', fee: 0.2, status: 'active', updatedAt: Date.now() },
+        { id: 'sp-sol', asset: 'SOL', network: 'Solana', mode: 'Bonded', apy: 6.8, apySource: 'Провайдер стейкинга', minStake: 1, lockDuration: '2-3 дня', unlock: 'Эпоха', fee: 0.5, status: 'active', updatedAt: Date.now() },
+        { id: 'sp-atom', asset: 'ATOM', network: 'Cosmos', mode: 'Bonded', apy: 15.1, apySource: 'Провайдер стейкинга', minStake: 5, lockDuration: '21 день', unlock: 'Unbonding', fee: 0.3, status: 'active', updatedAt: Date.now() },
+      ],
+      positions: store.journal.filter((j: any) => j.type === 'reward'),
+    });
+  });
+
+  router.patch('/staking/:id', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    audit(who, 'staking.program_update', req.params.id, { newValue: `status=${req.body.status}`, reason: req.body.reason });
+    res.json({ success: true, message: 'Изменение статуса программы зафиксировано в аудите. Условия провайдера не изменяются задним числом.' });
+  });
+
+  router.get('/staking-pro', guard('staking.read'), (_req: Request, res: Response) => {
+    res.json({
+      assets: store.stakingProAssets,
+      positions: store.stakingProPositions.map((p) => {
+        const prof = Object.values(store.profiles).find((x: any) => x.id === p.userId) as any;
+        const asset = store.stakingProAssets.find((a) => a.id === p.assetId);
+        return {
+          ...p,
+          currentPrice: p.status === 'open' && asset ? asset.currentPrice : p.currentPrice,
+          email: prof?.email || '—',
+          address: getLedger().wallets[p.walletPrimary]?.address || p.walletPrimary,
+        };
+      }),
+    });
+  });
+
+  // ---- Staking Pro helpers ------------------------------------------------
+  function refreshLivePrices() {
+    store.stakingProPositions.forEach((p) => {
+      if (p.status === 'open') {
+        const a = store.stakingProAssets.find((x) => x.id === p.assetId);
+        if (a) p.currentPrice = a.currentPrice;
+      }
+    });
+  }
+
+  function computePnl(p: { direction: string; entryPrice: number; currentPrice: number; leverage: number; collateralUsd: number; openingFeeUsd: number; estClosingFeeUsd: number; accruedFundingUsd: number }) {
+    const diff = p.direction === 'long' ? p.currentPrice - p.entryPrice : p.entryPrice - p.currentPrice;
+    const rawPct = (diff / (p.entryPrice || 1)) * p.leverage;
+    const gross = p.collateralUsd * rawPct;
+    const net = gross - p.openingFeeUsd - p.estClosingFeeUsd - p.accruedFundingUsd;
+    return { net, pct: rawPct * 100 };
+  }
+
+  function resolvePrimary(body: any): string | null {
+    if (body.walletPrimary) return body.walletPrimary;
+    if (body.address) return findPrimary(body.address);
+    if (body.userId) return Object.keys(store.profiles).find((pr) => store.profiles[pr].id === body.userId) || null;
+    return null;
+  }
+
+  // Project a stored position into the wallet-app StakingProPosition shape.
+  function toAppPosition(p: StakingProPositionRow) {
+    const estTpPct = p.entryPrice > 0 ? ((p.direction === 'long' ? ((p.takeProfitPrice - p.entryPrice) / p.entryPrice) : ((p.entryPrice - p.takeProfitPrice) / p.entryPrice)) * p.leverage * 100) : 0;
+    const estSlPct = p.entryPrice > 0 ? ((p.direction === 'long' ? ((p.stopLossPrice - p.entryPrice) / p.entryPrice) : ((p.entryPrice - p.stopLossPrice) / p.entryPrice)) * p.leverage * 100) : 0;
+    return {
+      id: p.id, assetId: p.assetId, assetSymbol: p.assetSymbol, assetName: p.assetName,
+      direction: p.direction, executionType: p.executionType, entryPrice: p.entryPrice,
+      currentPrice: p.currentPrice, positionSizeUsd: p.positionSizeUsd, collateralUsd: p.collateralUsd,
+      leverage: p.leverage, takeProfitPrice: p.takeProfitPrice, stopLossPrice: p.stopLossPrice,
+      estProfitTpUsd: (p.collateralUsd * estTpPct) / 100, estProfitTpPercent: estTpPct,
+      estLossSlUsd: (p.collateralUsd * estSlPct) / 100, estLossSlPercent: estSlPct,
+      liquidationPrice: p.liquidationPrice, openingFeeUsd: p.openingFeeUsd, estClosingFeeUsd: p.estClosingFeeUsd,
+      spreadCostUsd: p.spreadCostUsd, fundingRate8h: p.fundingRate8h, accruedFundingUsd: p.accruedFundingUsd,
+      stakingYieldUsd: p.stakingYieldUsd, status: p.status,
+      openedAt: new Date(p.openedAt).toLocaleString('ru-RU'),
+      closedAt: p.closedAt ? new Date(p.closedAt).toLocaleString('ru-RU') : undefined,
+      closePrice: p.closePrice, realizedPnlUsd: p.realizedPnlUsd,
+    };
+  }
+
+  // Reserve collateral (debit USDT via journal). Returns error string or null.
+  function reserveCollateral(primary: string, userId: string, amount: number, author: string, source: string): string | null {
+    const ledger = getLedger();
+    const w = ledger.wallets[primary];
+    if (!w) return 'Кошелёк не найден';
+    if (Number(w.balances.USDT || 0) < amount) return 'Недостаточно USDT для обеспечения позиции';
+    w.balances.USDT = Number(w.balances.USDT || 0) - amount;
+    w.updatedAt = Date.now();
+    saveLedger();
+    store.journal.unshift({
+      id: nowId('jr'), userId, walletPrimary: primary, asset: 'USDT', amount: -amount, amountUsd: -amount,
+      type: 'staking_reserve', reason: `Бронирование обеспечения Staking Pro`, source, author,
+      createdAt: Date.now(), approved: true, requiresSecondApproval: false,
+    });
+    saveStore();
+    return null;
+  }
+
+  // Release collateral (credit USDT via journal) after close.
+  function releaseCollateral(primary: string, userId: string, amount: number, author: string, source: string, pnl: number) {
+    const ledger = getLedger();
+    const w = ledger.wallets[primary];
+    if (w) {
+      w.balances.USDT = Number(w.balances.USDT || 0) + amount;
+      w.updatedAt = Date.now();
+      saveLedger();
+    }
+    store.journal.unshift({
+      id: nowId('jr'), userId, walletPrimary: primary, asset: 'USDT', amount, amountUsd: amount,
+      type: 'staking_release', reason: `Закрытие Staking Pro позиции (PnL ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)})`,
+      source, author, createdAt: Date.now(), approved: true, requiresSecondApproval: false,
+    });
+    saveStore();
+  }
+
+  function buildPositionFromInput(input: any, asset: StakingProAssetRow, primary: string, userId: string, source: 'admin' | 'client', openedBy: string): StakingProPositionRow {
+    const leverage = Math.max(1, Math.min(Number(input.leverage) || 1, asset.maxLeverage));
+    const positionSizeUsd = Number(input.positionSizeUsd) || 0;
+    const collateralUsd = positionSizeUsd / leverage;
+    const entryPrice = Number(input.entryPrice) || asset.currentPrice;
+    const dir = input.direction === 'short' ? 'short' : 'long';
+    const liquidationPrice = dir === 'long' ? entryPrice * (1 - (1 / leverage) * 0.9) : entryPrice * (1 + (1 / leverage) * 0.9);
+    const openingFeeUsd = (positionSizeUsd * asset.takerFeePercent) / 100;
+    const spreadCostUsd = positionSizeUsd * (asset.spread / (asset.currentPrice || 1));
+    return {
+      id: input.id || nowId('pos'), userId, walletPrimary: primary, assetId: asset.id,
+      assetSymbol: asset.symbol, assetName: asset.name, direction: dir,
+      executionType: input.executionType === 'limit' ? 'limit' : 'market',
+      entryPrice, currentPrice: asset.currentPrice, positionSizeUsd, collateralUsd, leverage,
+      takeProfitPrice: Number(input.takeProfitPrice) || 0, stopLossPrice: Number(input.stopLossPrice) || 0,
+      liquidationPrice, openingFeeUsd, estClosingFeeUsd: openingFeeUsd, spreadCostUsd,
+      fundingRate8h: asset.fundingRate8h, accruedFundingUsd: 0, stakingYieldUsd: 0,
+      openedAt: Date.now(), status: 'open', source, openedBy, updatedAt: Date.now(),
+    };
+  }
+
+  function validateTpSl(dir: 'long' | 'short', entry: number, tp: number, sl: number): string | null {
+    // TP/SL are optional: 0 means "not set". Only validate the levels that are provided.
+    if (tp > 0) {
+      if (dir === 'long' && !(tp > entry)) return 'Для Long: тейк-профит должен быть выше цены входа';
+      if (dir === 'short' && !(tp < entry)) return 'Для Short: тейк-профит должен быть ниже цены входа';
+    }
+    if (sl > 0) {
+      if (dir === 'long' && !(sl < entry)) return 'Для Long: стоп-лосс должен быть ниже цены входа';
+      if (dir === 'short' && !(sl > entry)) return 'Для Short: стоп-лосс должен быть выше цены входа';
+    }
+    return null;
+  }
+
+  // ---- Catalog management ------------------------------------------------
+  router.post('/staking-pro/assets', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const b = req.body;
+    if (!b.symbol || !b.name) return res.status(400).json({ error: 'Нужны символ и название актива' });
+    const now = Date.now();
+    const id = b.id || String(b.symbol).toLowerCase();
+    const existing = store.stakingProAssets.find((a) => a.id === id);
+    const row: StakingProAssetRow = {
+      id, symbol: String(b.symbol).toUpperCase(), name: b.name, network: b.network || 'Multi-Chain',
+      currentPrice: Number(b.currentPrice) || 0, change24h: Number(b.change24h) || 0,
+      minPositionUsd: Number(b.minPositionUsd) || 10, maxLeverage: Number(b.maxLeverage) || 10,
+      fundingRate8h: Number(b.fundingRate8h) || 0, fundingDirection: b.fundingDirection === 'receive' ? 'receive' : 'pay',
+      spread: Number(b.spread) || 0, makerFeePercent: Number(b.makerFeePercent) || 0, takerFeePercent: Number(b.takerFeePercent) || 0,
+      enabled: b.enabled !== false, updatedAt: now,
+    };
+    if (existing) Object.assign(existing, row);
+    else store.stakingProAssets.push(row);
+    saveStore();
+    audit(who, 'staking_pro.asset_upsert', id, { newValue: `${row.symbol} price=${row.currentPrice} lev=${row.maxLeverage}`, reason: b.reason });
+    res.json({ success: true, asset: row });
+  });
+
+  router.patch('/staking-pro/assets/:id', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const a = store.stakingProAssets.find((x) => x.id === req.params.id);
+    if (!a) return res.status(404).json({ error: 'Актив не найден' });
+    const old = JSON.stringify(a);
+    const b = req.body;
+    ['symbol', 'name', 'network'].forEach((k) => { if (b[k] !== undefined) (a as any)[k] = k === 'symbol' ? String(b[k]).toUpperCase() : b[k]; });
+    ['currentPrice', 'change24h', 'minPositionUsd', 'maxLeverage', 'fundingRate8h', 'spread', 'makerFeePercent', 'takerFeePercent']
+      .forEach((k) => { if (b[k] !== undefined) (a as any)[k] = Number(b[k]); });
+    if (b.fundingDirection !== undefined) a.fundingDirection = b.fundingDirection === 'receive' ? 'receive' : 'pay';
+    if (b.enabled !== undefined) a.enabled = !!b.enabled;
+    a.updatedAt = Date.now();
+    saveStore();
+    refreshLivePrices();
+    audit(who, 'staking_pro.asset_update', a.id, { oldValue: old, newValue: JSON.stringify(a), reason: b.reason });
+    res.json({ success: true, asset: a });
+  });
+
+  router.delete('/staking-pro/assets/:id', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const a = store.stakingProAssets.find((x) => x.id === req.params.id);
+    if (!a) return res.status(404).json({ error: 'Актив не найден' });
+    const openCount = store.stakingProPositions.filter((p) => p.assetId === a.id && p.status === 'open').length;
+    if (openCount > 0) return res.status(409).json({ error: `Нельзя удалить: ${openCount} открытых позиций по этому активу. Отключите актив.` });
+    store.stakingProAssets = store.stakingProAssets.filter((x) => x.id !== a.id);
+    saveStore();
+    audit(who, 'staking_pro.asset_delete', a.id, { oldValue: JSON.stringify(a), reason: req.body.reason });
+    res.json({ success: true });
+  });
+
+  // ---- Per-user position management (admin) ------------------------------
+  router.post('/staking-pro/positions', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const b = req.body;
+    const primary = resolvePrimary(b);
+    const ledger = getLedger();
+    if (!primary || !ledger.wallets[primary]) return res.status(404).json({ error: 'Кошелёк пользователя не найден' });
+    const prof = ensureProfile(primary, ledger.wallets[primary]);
+    const asset = store.stakingProAssets.find((a) => a.id === b.assetId);
+    if (!asset) return res.status(404).json({ error: 'Актив не найден в каталоге' });
+    if (!asset.enabled) return res.status(400).json({ error: 'Актив отключён администратором' });
+    const pos = buildPositionFromInput(b, asset, primary, prof.id, 'admin', who.name);
+    if (pos.positionSizeUsd < asset.minPositionUsd) return res.status(400).json({ error: `Минимальный размер позиции: $${asset.minPositionUsd}` });
+    const tpErr = validateTpSl(pos.direction, pos.entryPrice, pos.takeProfitPrice, pos.stopLossPrice);
+    if (tpErr) return res.status(400).json({ error: tpErr });
+    const reserveErr = reserveCollateral(primary, prof.id, pos.collateralUsd, who.name, 'admin');
+    if (reserveErr) return res.status(400).json({ error: reserveErr });
+    store.stakingProPositions.unshift(pos);
+    saveStore();
+    audit(who, 'staking_pro.position_open', pos.id, { newValue: `${prof.email} ${pos.assetSymbol} ${pos.direction} ${pos.leverage}x size=$${pos.positionSizeUsd} collateral=$${pos.collateralUsd.toFixed(2)}`, reason: b.reason });
+    notifyAdmin('staking_pro', 'Открыта Pro-позиция', `${pos.assetSymbol} ${pos.direction.toUpperCase()} ${pos.leverage}x для ${prof.email}`, 'info', '/staking-pro');
+    res.json({ success: true, position: pos });
+  });
+
+  router.patch('/staking-pro/positions/:id', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const p = store.stakingProPositions.find((x) => x.id === req.params.id);
+    if (!p) return res.status(404).json({ error: 'Позиция не найдена' });
+    const b = req.body;
+    if (!b.reason) return res.status(400).json({ error: 'Укажите причину изменения' });
+    const old = { takeProfitPrice: p.takeProfitPrice, stopLossPrice: p.stopLossPrice };
+    if (b.takeProfitPrice !== undefined) p.takeProfitPrice = Number(b.takeProfitPrice);
+    if (b.stopLossPrice !== undefined) p.stopLossPrice = Number(b.stopLossPrice);
+    const tpErr = validateTpSl(p.direction, p.entryPrice, p.takeProfitPrice, p.stopLossPrice);
+    if (tpErr) return res.status(400).json({ error: tpErr });
+    p.updatedAt = Date.now();
+    saveStore();
+    audit(who, 'staking_pro.position_update', p.id, { oldValue: JSON.stringify(old), newValue: JSON.stringify({ takeProfitPrice: p.takeProfitPrice, stopLossPrice: p.stopLossPrice }), reason: b.reason });
+    res.json({ success: true, position: p });
+  });
+
+  router.post('/staking-pro/positions/:id/close', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const p = store.stakingProPositions.find((x) => x.id === req.params.id);
+    if (!p) return res.status(404).json({ error: 'Позиция не найдена' });
+    if (p.status !== 'open') return res.status(400).json({ error: 'Позиция уже закрыта' });
+    if (!req.body.reason) return res.status(400).json({ error: 'Укажите причину закрытия' });
+    const asset = store.stakingProAssets.find((a) => a.id === p.assetId);
+    p.currentPrice = Number(req.body.closePrice) || (asset ? asset.currentPrice : p.currentPrice);
+    const { net } = computePnl(p);
+    const returnCollateral = Math.max(0, p.collateralUsd + net);
+    p.status = req.body.liquidated ? 'liquidated' : 'closed';
+    p.closePrice = p.currentPrice;
+    p.realizedPnlUsd = net;
+    p.closedAt = Date.now();
+    p.updatedAt = Date.now();
+    releaseCollateral(p.walletPrimary, p.userId, returnCollateral, who.name, 'admin', net);
+    saveStore();
+    audit(who, 'staking_pro.position_close', p.id, { newValue: `PnL $${net.toFixed(2)}, возврат $${returnCollateral.toFixed(2)}`, reason: req.body.reason });
+    res.json({ success: true, position: p, returnCollateral, realizedPnlUsd: net });
+  });
+
+  // Auto-liquidation sweep: closes any open position whose live price has crossed
+  // its liquidation price. Collateral is released via the journal, each event audited.
+  router.post('/staking-pro/liquidate-sweep', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    refreshLivePrices();
+    const liquidated: any[] = [];
+    for (const p of store.stakingProPositions) {
+      if (p.status !== 'open') continue;
+      const hit = p.direction === 'long'
+        ? p.currentPrice <= p.liquidationPrice
+        : p.currentPrice >= p.liquidationPrice;
+      if (!hit) continue;
+      const { net } = computePnl(p);
+      const returnCollateral = Math.max(0, p.collateralUsd + net);
+      p.status = 'liquidated';
+      p.closePrice = p.currentPrice;
+      p.realizedPnlUsd = net;
+      p.closedAt = Date.now();
+      p.updatedAt = Date.now();
+      releaseCollateral(p.walletPrimary, p.userId, returnCollateral, who.name, 'admin', net);
+      audit(who, 'staking_pro.position_liquidate', p.id, { newValue: `${p.assetSymbol} ${p.direction} @ $${p.currentPrice} <= liq $${p.liquidationPrice.toFixed(2)}; возврат $${returnCollateral.toFixed(2)}`, reason: req.body.reason || 'Автоматическая ликвидация по цене ликвидации' });
+      liquidated.push({ id: p.id, assetSymbol: p.assetSymbol, direction: p.direction, returnCollateral, realizedPnlUsd: net });
+    }
+    saveStore();
+    if (liquidated.length) notifyAdmin('staking_pro', 'Автоматическая ликвидация', `Закрыто позиций: ${liquidated.length}`, 'warning', '/staking-pro');
+    res.json({ success: true, liquidated, count: liquidated.length });
+  });
+
+  // ---- Public (wallet app, no auth, addressed by wallet) -----------------
+  router.get('/staking-pro/public', (req: Request, res: Response) => {
+    refreshLivePrices();
+    const primary = req.query.address ? findPrimary(String(req.query.address)) : null;
+    const assets = store.stakingProAssets.filter((a) => a.enabled).map((a) => ({
+      id: a.id, name: a.name, symbol: a.symbol, network: a.network, currentPrice: a.currentPrice,
+      change24h: a.change24h, minPositionUsd: a.minPositionUsd, maxLeverage: a.maxLeverage,
+      fundingRate8h: a.fundingRate8h, fundingDirection: a.fundingDirection, spread: a.spread,
+      makerFeePercent: a.makerFeePercent, takerFeePercent: a.takerFeePercent,
+    }));
+    const positions = primary
+      ? store.stakingProPositions.filter((p) => p.walletPrimary === primary).map(toAppPosition)
+      : [];
+    res.json({ assets, positions, known: !!primary });
+  });
+
+  router.post('/staking-pro/client/open', (req: Request, res: Response) => {
+    const b = req.body;
+    const primary = findPrimary(b.address);
+    const ledger = getLedger();
+    if (!primary || !ledger.wallets[primary]) return res.status(404).json({ error: 'Кошелёк не найден' });
+    const prof = ensureProfile(primary, ledger.wallets[primary]);
+    const asset = store.stakingProAssets.find((a) => a.id === b.assetId && a.enabled);
+    if (!asset) return res.status(400).json({ error: 'Актив недоступен' });
+    const pos = buildPositionFromInput(b, asset, primary, prof.id, 'client', 'client');
+    if (pos.positionSizeUsd < asset.minPositionUsd) return res.status(400).json({ error: `Минимальный размер: $${asset.minPositionUsd}` });
+    const tpErr = validateTpSl(pos.direction, pos.entryPrice, pos.takeProfitPrice, pos.stopLossPrice);
+    if (tpErr) return res.status(400).json({ error: tpErr });
+    const reserveErr = reserveCollateral(primary, prof.id, pos.collateralUsd, 'client', 'client');
+    if (reserveErr) return res.status(400).json({ error: reserveErr });
+    store.stakingProPositions.unshift(pos);
+    saveStore();
+    res.json({ success: true, position: toAppPosition(pos) });
+  });
+
+  router.post('/staking-pro/client/close', (req: Request, res: Response) => {
+    const b = req.body;
+    const primary = findPrimary(b.address);
+    const p = store.stakingProPositions.find((x) => x.id === b.positionId && x.walletPrimary === primary);
+    if (!p) return res.status(404).json({ error: 'Позиция не найдена' });
+    if (p.status !== 'open') return res.json({ success: true });
+    const asset = store.stakingProAssets.find((a) => a.id === p.assetId);
+    p.currentPrice = Number(b.closePrice) || (asset ? asset.currentPrice : p.currentPrice);
+    const { net } = computePnl(p);
+    const returnCollateral = Math.max(0, p.collateralUsd + net);
+    p.status = 'closed'; p.closePrice = p.currentPrice; p.realizedPnlUsd = net; p.closedAt = Date.now(); p.updatedAt = Date.now();
+    releaseCollateral(p.walletPrimary, p.userId, returnCollateral, 'client', 'client', net);
+    saveStore();
+    res.json({ success: true, position: toAppPosition(p), returnCollateral, realizedPnlUsd: net });
+  });
+
+  router.post('/staking-pro/client/update', (req: Request, res: Response) => {
+    const b = req.body;
+    const primary = findPrimary(b.address);
+    const p = store.stakingProPositions.find((x) => x.id === b.positionId && x.walletPrimary === primary);
+    if (!p) return res.status(404).json({ error: 'Позиция не найдена' });
+    if (b.takeProfitPrice !== undefined) p.takeProfitPrice = Number(b.takeProfitPrice);
+    if (b.stopLossPrice !== undefined) p.stopLossPrice = Number(b.stopLossPrice);
+    const tpErr = validateTpSl(p.direction, p.entryPrice, p.takeProfitPrice, p.stopLossPrice);
+    if (tpErr) return res.status(400).json({ error: tpErr });
+    p.updatedAt = Date.now();
+    saveStore();
+    res.json({ success: true, position: toAppPosition(p) });
+  });
+
+  // =========================================================================
+  // NOTIFICATIONS
+  // =========================================================================
+  router.get('/notifications', guard('users.read'), (_req: Request, res: Response) => {
+    res.json({ notifications: store.notifications });
+  });
+
+  router.post('/notifications/:id/read', guard('users.read'), (req: Request, res: Response) => {
+    const n = store.notifications.find((x: any) => x.id === req.params.id);
+    if (n) { n.read = true; saveStore(); }
+    res.json({ success: true });
+  });
+
+  router.post('/notifications/broadcast', guard('settings.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { title, message, audience } = req.body;
+    store.notifications.unshift({ id: nowId('notif'), type: 'broadcast', title, message, severity: 'info', link: null, createdAt: Date.now(), read: false, audience: audience || 'client' });
+    saveStore();
+    audit(who, 'notification.broadcast', 'client', { newValue: title });
+    res.json({ success: true });
+  });
+
+  // =========================================================================
+  // REPORTS & AUDIT
+  // =========================================================================
+  router.get('/audit', guard('reports.read'), (_req: Request, res: Response) => {
+    res.json({ auditLog: store.auditLog });
+  });
+
+  router.get('/reports', guard('reports.read'), (_req: Request, res: Response) => {
+    const ledger = getLedger();
+    const primaries = Object.keys(ledger.wallets);
+    const totalUnderManagement = primaries.reduce((sum, p) => sum + computeBalanceUsd(p), 0);
+    const byType: Record<string, { count: number; usd: number }> = {};
+    store.journal.forEach((j: any) => {
+      byType[j.type] = byType[j.type] || { count: 0, usd: 0 };
+      byType[j.type].count++;
+      byType[j.type].usd += j.amountUsd;
+    });
+    const completedWithdrawals = store.withdrawals.filter((w: any) => w.status === 'completed');
+    res.json({
+      period: { generatedAt: Date.now(), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      totalUnderManagement,
+      journalByType: byType,
+      withdrawalsCompleted: { count: completedWithdrawals.length, usd: completedWithdrawals.reduce((s, w: any) => s + w.amount * priceOf(w.asset), 0) },
+      reconciliation: primaries.map((p) => ({ wallet: ledger.wallets[p].address, bookUsd: computeBalanceUsd(p) })),
+      promoBonusUsd: store.journal.filter((j: any) => j.type === 'bonus').reduce((s, j: any) => s + j.amountUsd, 0),
+    });
+  });
+
+  // =========================================================================
+  // SETTINGS / ROLES / SECURITY
+  // =========================================================================
+  router.get('/settings', (_req: Request, res: Response) => {
+    res.json({
+      adminAccounts: store.adminAccounts.map((a: any) => ({ ...a })),
+      permissions: PERMISSIONS,
+      secondApprovalThresholdUsd: SECOND_APPROVAL_THRESHOLD_USD,
+      sessionTimeoutMinutes: SESSION_TTL_MS / 60000,
+      unlockPeriodHours: store.config?.unlockPeriodHours ?? DEFAULT_UNLOCK_PERIOD_HOURS,
+    });
+  });
+
+  router.patch('/settings/config', guard('settings.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { unlockPeriodHours } = req.body;
+    if (!store.config) store.config = {};
+    if (unlockPeriodHours !== undefined) {
+      const val = Number(unlockPeriodHours);
+      if (isNaN(val) || val < 1 || val > 720) return res.status(400).json({ error: 'Значение должно быть от 1 до 720 часов' });
+      store.config.unlockPeriodHours = val;
+    }
+    saveStore();
+    audit(who, 'settings.update_config', 'config', { newValue: store.config });
+    res.json({ success: true, config: store.config });
+  });
+
+  router.post('/settings/accounts', guard('settings.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const { username, name, role, mfaEnabled } = req.body;
+    if (!username || !role) return res.status(400).json({ error: 'Укажите логин и роль' });
+    if (store.adminAccounts.some((a: any) => a.username === username)) return res.status(400).json({ error: 'Логин уже существует' });
+    const acct = { id: nowId('adm'), username, name: name || username, role, mfaEnabled: !!mfaEnabled, active: true, lastLogin: null };
+    store.adminAccounts.push(acct);
+    saveStore();
+    audit(who, 'settings.create_account', acct.id, { newValue: `${username} (${role})` });
+    res.json({ success: true, account: acct });
+  });
+
+  router.patch('/settings/accounts/:id', guard('settings.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const acct = store.adminAccounts.find((a: any) => a.id === req.params.id);
+    if (!acct) return res.status(404).json({ error: 'Аккаунт не найден' });
+    const oldValue = JSON.stringify({ role: acct.role, active: acct.active, mfaEnabled: acct.mfaEnabled });
+    if (req.body.role) acct.role = req.body.role;
+    if (req.body.active !== undefined) acct.active = !!req.body.active;
+    if (req.body.mfaEnabled !== undefined) acct.mfaEnabled = !!req.body.mfaEnabled;
+    saveStore();
+    audit(who, 'settings.update_account', acct.id, { oldValue, newValue: JSON.stringify({ role: acct.role, active: acct.active, mfaEnabled: acct.mfaEnabled }) });
+    res.json({ success: true, account: acct });
+  });
+
+  // =========================================================================
+  // PUBLIC WALLET STATUS (for wallet app, no auth, by address)
+  // =========================================================================
+  router.get('/wallet-status/public', (req: Request, res: Response) => {
+    const address = String(req.query.address || '').trim();
+    if (!address) return res.json({ pendingWithdrawals: [], restrictions: [], supportMessages: [] });
+    const primary = findPrimary(address);
+    if (!primary) return res.json({ pendingWithdrawals: [], restrictions: [], supportMessages: [] });
+    const prof = store.profiles[primary];
+    if (!prof) return res.json({ pendingWithdrawals: [], restrictions: [], supportMessages: [] });
+
+    // Pending withdrawals: in processing (not completed/rejected)
+    const pendingWithdrawals = store.withdrawals
+      .filter((w: any) => w.walletPrimary === primary && !['completed', 'rejected'].includes(w.status))
+      .map((w: any) => ({
+        id: w.id,
+        asset: w.asset,
+        amount: w.amount,
+        status: w.status,
+        createdAt: w.createdAt,
+        txHash: w.txHash || null
+      }));
+
+    // Active restrictions (blocked/frozen)
+    const restrictions = store.restrictions
+      .filter((r: any) => r.userId === prof.id && r.active)
+      .map((r: any) => ({
+        id: r.id,
+        type: r.type,
+        reason: r.reason,
+        createdAt: r.createdAt
+      }));
+
+    // Incoming support messages (unread chats)
+    const supportMessages = store.supportChats
+      .filter((c: any) => c.userId === prof.id && c.status === 'open')
+      .map((c: any) => ({
+        id: c.id,
+        subject: c.subject,
+        status: c.status,
+        createdAt: c.createdAt
+      }));
+
+    res.json({ pendingWithdrawals, restrictions, supportMessages });
+  });
+
+  return router;
+}

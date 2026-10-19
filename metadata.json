@@ -1,0 +1,6 @@
+{
+  "name": "Vaultspring Wallet",
+  "description": "Full mobile replica of Trust Wallet 2026 for Android: multi-chain crypto wallet, decentralized swap, staking, dApp browser, and biometric security.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
