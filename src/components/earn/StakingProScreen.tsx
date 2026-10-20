@@ -764,7 +764,7 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
       {/* STEP 6 — confirmation sheet */}
       {showConfirmation && selectedInstrument && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end justify-center">
-          <div className="w-full max-w-lg bg-[#0F1420] border-t border-white/10 rounded-t-3xl p-5 pb-6 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
+          <div className="w-full max-w-lg bg-[#0F1420] border-t border-white/10 rounded-t-3xl p-5 pb-24 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
               <span className="text-base font-bold text-white">Подтверждение Trade Pro</span>
               <button
