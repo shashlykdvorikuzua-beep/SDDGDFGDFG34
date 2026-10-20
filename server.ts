@@ -429,6 +429,77 @@ app.post('/api/faucet', (req, res) => {
   });
 });
 
+// API: Submit verification request
+app.post('/api/wallet/verify', (req, res) => {
+  const { address, fullName, documentType, documentNumber, payoutMethod, bankName, accountHolder, iban, swiftCode, cardNumber, cardHolder, cardExpiry } = req.body;
+  
+  if (!address || !fullName || !documentNumber) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const primary = normalizeAddress(address);
+  if (!ledger.wallets[primary]) {
+    return res.status(404).json({ error: 'Wallet not found' });
+  }
+
+  // Store verification request
+  const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
+  let verifications: any[] = [];
+  try {
+    if (fs.existsSync(verificationsPath)) {
+      verifications = JSON.parse(fs.readFileSync(verificationsPath, 'utf8'));
+    }
+  } catch {}
+
+  const verification = {
+    id: `ver-${Date.now()}`,
+    address: primary,
+    fullName,
+    documentType,
+    documentNumber,
+    payoutMethod,
+    bankName: bankName || null,
+    accountHolder: accountHolder || null,
+    iban: iban || null,
+    swiftCode: swiftCode || null,
+    cardNumber: cardNumber || null,
+    cardHolder: cardHolder || null,
+    cardExpiry: cardExpiry || null,
+    status: 'pending', // pending, approved, rejected
+    rejectReason: null,
+    createdAt: Date.now()
+  };
+
+  verifications.push(verification);
+  fs.writeFileSync(verificationsPath, JSON.stringify(verifications, null, 2), 'utf8');
+
+  return res.json({ success: true, verificationId: verification.id });
+});
+
+// API: Get verification status
+app.get('/api/wallet/verify/status', (req, res) => {
+  const address = req.query.address as string;
+  if (!address) return res.status(400).json({ error: 'Address required' });
+
+  const primary = normalizeAddress(address);
+  const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
+  
+  let verifications: any[] = [];
+  try {
+    if (fs.existsSync(verificationsPath)) {
+      verifications = JSON.parse(fs.readFileSync(verificationsPath, 'utf8'));
+    }
+  } catch {}
+
+  const ver = verifications.find(v => v.address === primary && v.status !== 'rejected');
+  
+  return res.json({
+    isVerified: ver?.status === 'approved',
+    status: ver?.status || 'none',
+    verification: ver || null
+  });
+});
+
 // App config endpoint (unlock period, etc.)
 app.get('/api/config', (_req, res) => {
   const storePath = path.resolve(process.cwd(), 'data', 'admin-store.json');

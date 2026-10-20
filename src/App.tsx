@@ -7,7 +7,7 @@ import { BottomNavBar, BottomTabType } from './components/BottomNavBar';
 import { TokenDetailModal } from './components/TokenDetailModal';
 import { SendModal } from './components/modals/SendModal';
 import { ReceiveModal } from './components/modals/ReceiveModal';
-import { SellModal } from './components/modals/SellModal';
+import { SellModal, VerificationData } from './components/modals/SellModal';
 import { WalletDetailsModal } from './components/modals/WalletDetailsModal';
 import { NetworkFilterModal } from './components/modals/NetworkFilterModal';
 import { QRScannerModal } from './components/modals/QRScannerModal';
@@ -170,6 +170,29 @@ export default function App() {
     const saved = localStorage.getItem('vaultspring_notifications');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // VERIFICATION STATE
+  const [isVerified, setIsVerified] = useState<boolean>(() => {
+    return localStorage.getItem('vaultspring_verified') === 'true';
+  });
+  const [verificationData, setVerificationData] = useState<VerificationData | null>(() => {
+    const saved = localStorage.getItem('vaultspring_verification');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const handleVerificationSubmit = (data: VerificationData) => {
+    setVerificationData(data);
+    localStorage.setItem('vaultspring_verification', JSON.stringify(data));
+    // Also send to server for admin review
+    fetch('/api/wallet/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: currentWallet.address,
+        ...data
+      })
+    }).catch(() => {});
+  };
 
   // NAVIGATION & MODALS STATE
   const [activeTab, setActiveTab] = useState<BottomTabType>('home');
@@ -957,8 +980,11 @@ export default function App() {
       {modalSell && (
         <SellModal
           tokens={tokens}
+          walletAddress={currentWallet.address}
+          isVerified={isVerified}
           onClose={() => setModalSell(false)}
           onSellSuccess={handleSellSuccess}
+          onVerificationSubmit={handleVerificationSubmit}
         />
       )}
 

@@ -1448,5 +1448,83 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     res.json({ pendingWithdrawals, restrictions, supportMessages });
   });
 
+  // =========================================================================
+  // VERIFICATION MANAGEMENT
+  // =========================================================================
+  
+  // List all verification requests
+  router.get('/verifications', requireRole(['super_admin', 'finance_ops', 'risk_compliance']), (req: Request, res: Response) => {
+    const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
+    let verifications: any[] = [];
+    try {
+      if (fs.existsSync(verificationsPath)) {
+        verifications = JSON.parse(fs.readFileSync(verificationsPath, 'utf8'));
+      }
+    } catch {}
+    res.json({ verifications });
+  });
+
+  // Approve verification
+  router.post('/verifications/:id/approve', requireRole(['super_admin', 'finance_ops']), (req: Request, res: Response) => {
+    const { id } = req.params;
+    const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
+    let verifications: any[] = [];
+    try {
+      if (fs.existsSync(verificationsPath)) {
+        verifications = JSON.parse(fs.readFileSync(verificationsPath, 'utf8'));
+      }
+    } catch {}
+
+    const ver = verifications.find(v => v.id === id);
+    if (!ver) return res.status(404).json({ error: 'Verification not found' });
+
+    ver.status = 'approved';
+    ver.approvedAt = Date.now();
+    ver.approvedBy = req.admin?.id || 'admin';
+    fs.writeFileSync(verificationsPath, JSON.stringify(verifications, null, 2), 'utf8');
+
+    // Mark wallet as verified in ledger
+    const ledgerPath = path.resolve(process.cwd(), 'data', 'ledger.json');
+    try {
+      if (fs.existsSync(ledgerPath)) {
+        const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+        if (ledger.wallets[ver.address]) {
+          ledger.wallets[ver.address].verified = true;
+          fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2), 'utf8');
+        }
+      }
+    } catch {}
+
+    const who = req.admin?.id || 'unknown';
+    audit(who, 'verification.approve', id, { address: ver.address, fullName: ver.fullName });
+    res.json({ success: true });
+  });
+
+  // Reject verification
+  router.post('/verifications/:id/reject', requireRole(['super_admin', 'finance_ops', 'risk_compliance']), (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
+    let verifications: any[] = [];
+    try {
+      if (fs.existsSync(verificationsPath)) {
+        verifications = JSON.parse(fs.readFileSync(verificationsPath, 'utf8'));
+      }
+    } catch {}
+
+    const ver = verifications.find(v => v.id === id);
+    if (!ver) return res.status(404).json({ error: 'Verification not found' });
+
+    ver.status = 'rejected';
+    ver.rejectReason = reason || 'Documents do not meet requirements';
+    ver.rejectedAt = Date.now();
+    ver.rejectedBy = req.admin?.id || 'admin';
+    fs.writeFileSync(verificationsPath, JSON.stringify(verifications, null, 2), 'utf8');
+
+    const who = req.admin?.id || 'unknown';
+    audit(who, 'verification.reject', id, { address: ver.address, reason: ver.rejectReason });
+    res.json({ success: true });
+  });
+
   return router;
 }
