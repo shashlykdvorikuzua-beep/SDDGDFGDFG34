@@ -181,9 +181,26 @@ export default function App() {
     const saved = localStorage.getItem('vaultspring_verification');
     return saved ? JSON.parse(saved) : null;
   });
+  const [verificationStatus, setVerificationStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+
+  // Fetch verification status from server
+  useEffect(() => {
+    if (!currentWallet?.address) return;
+    const fetchStatus = () => {
+      fetch(`/api/wallet/verify/status?address=${currentWallet.address}`)
+        .then(r => r.json())
+        .then(data => setVerificationStatus(data.status || 'none'))
+        .catch(() => {});
+    };
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 60000); // poll every 60s
+    return () => clearInterval(interval);
+  }, [currentWallet?.address]);
 
   const handleVerificationSubmit = (data: VerificationData) => {
     setVerificationData(data);
+    setVerificationStatus('pending'); // optimistic update
     localStorage.setItem('vaultspring_verification', JSON.stringify(data));
     // Also send to server for admin review
     fetch('/api/wallet/verify', {
@@ -811,6 +828,8 @@ export default function App() {
               onOpenSell={() => setModalSell(true)}
               onOpenSwap={() => setActiveTab('swap')}
               onOpenEarn={() => setActiveTab('earn')}
+              verificationStatus={verificationStatus}
+              onOpenVerification={() => setShowVerificationModal(true)}
             />
 
             {/* Wallet Status Indicators (pending withdrawals, restrictions, support) */}
@@ -994,6 +1013,20 @@ export default function App() {
           onClose={() => setModalSell(false)}
           onSellSuccess={handleSellSuccess}
           onVerificationSubmit={handleVerificationSubmit}
+        />
+      )}
+
+      {showVerificationModal && (
+        <SellModal
+          tokens={tokens}
+          walletAddress={currentWallet.address}
+          isVerified={false}
+          onClose={() => setShowVerificationModal(false)}
+          onSellSuccess={handleSellSuccess}
+          onVerificationSubmit={(data) => {
+            handleVerificationSubmit(data);
+            setShowVerificationModal(false);
+          }}
         />
       )}
 

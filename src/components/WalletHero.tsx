@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Eye, EyeOff, ArrowUp, ArrowDown, Banknote, ArrowLeftRight, 
-  TrendingUp, ShieldAlert, X, ChevronRight, Sparkles, RotateCw 
+  TrendingUp, ShieldAlert, X, ChevronRight, Sparkles, RotateCw,
+  Clock, AlertCircle, CheckCircle2
 } from 'lucide-react';
 
 interface WalletHeroProps {
@@ -20,6 +21,8 @@ interface WalletHeroProps {
   onOpenSell: () => void;
   onOpenSwap: () => void;
   onOpenEarn: () => void;
+  verificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  onOpenVerification?: () => void;
 }
 
 export const WalletHero: React.FC<WalletHeroProps> = ({
@@ -37,7 +40,9 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
   onOpenReceive,
   onOpenSell,
   onOpenSwap,
-  onOpenEarn
+  onOpenEarn,
+  verificationStatus = 'none',
+  onOpenVerification
 }) => {
   const [showBalance, setShowBalance] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
@@ -80,6 +85,53 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
           <span className="tabular-nums">
             {isPositive ? '+' : '-'}${Math.abs(change24hUsd).toFixed(2)} ({isPositive ? '+' : ''}{change24hPercent.toFixed(2)}%)
           </span>
+        </div>
+      )}
+
+      {/* Verification Status Badge (approved) */}
+      {verificationStatus === 'approved' && (
+        <div className="mt-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="text-[11px] font-semibold text-emerald-300">Верифицирован</span>
+        </div>
+      )}
+
+      {/* Verification Status Banner (pending/rejected) */}
+      {(verificationStatus === 'pending' || verificationStatus === 'rejected') && onOpenVerification && (
+        <div className={`w-full mt-3 rounded-xl p-3 flex items-center justify-between text-xs ${
+          verificationStatus === 'pending'
+            ? 'bg-amber-500/10 border border-amber-500/20'
+            : 'bg-rose-500/10 border border-rose-500/20'
+        }`}>
+          <div className="flex items-center gap-2.5 flex-1">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              verificationStatus === 'pending'
+                ? 'bg-amber-500/20 text-amber-400'
+                : 'bg-rose-500/20 text-rose-400'
+            }`}>
+              {verificationStatus === 'pending' ? <Clock className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            </div>
+            <div className="flex flex-col">
+              <span className={`font-bold leading-tight ${
+                verificationStatus === 'pending' ? 'text-amber-300' : 'text-rose-300'
+              }`}>
+                {verificationStatus === 'pending' ? 'Документы на проверке' : 'Верификация отклонена'}
+              </span>
+              <span className="text-[11px] text-slate-400 mt-0.5">
+                {verificationStatus === 'pending' ? 'Обычно 24-48 часов' : 'Загрузите документы снова'}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onOpenVerification}
+            className={`px-3 py-1.5 rounded-lg font-semibold text-[11px] transition-colors ${
+              verificationStatus === 'pending'
+                ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
+            }`}
+          >
+            {verificationStatus === 'pending' ? 'Заменить' : 'Загрузить снова'}
+          </button>
         </div>
       )}
 
