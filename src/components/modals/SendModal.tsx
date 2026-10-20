@@ -61,6 +61,14 @@ export const SendModal: React.FC<SendModalProps> = ({
   const totalNeeded = numAmount + (isNativeToken ? gasFee : 0);
   const insufficientBalance = numAmount > 0 && totalNeeded > selectedToken.balance;
 
+  // TRX gas fee check for TRON network (non-TRX tokens)
+  const trxToken = tokens.find(t => t.symbol === 'TRX');
+  const trxBalance = trxToken?.balance || 0;
+  const tronGasFeeInTRX = isTron 
+    ? (gasSpeed === 'slow' ? 8 : gasSpeed === 'normal' ? 13.7 : 20)
+    : 0;
+  const insufficientTrxForGas = isTron && !isNativeToken && numAmount > 0 && trxBalance < tronGasFeeInTRX;
+
   const handleMax = () => {
     const maxCrypto = isNativeToken ? Math.max(0, selectedToken.balance - gasFee) : selectedToken.balance;
     if (amountMode === 'fiat') {
@@ -319,7 +327,11 @@ export const SendModal: React.FC<SendModalProps> = ({
                 <p className="text-[11px] text-rose-400 px-1">Недостаточно средств (сумма + комиссия превышают баланс)</p>
               )}
               {!isNativeToken && isTron && numAmount > 0 && (
-                <p className="text-[10px] text-amber-400 px-1">⚠ Комиссия оплачивается в TRX. Убедитесь что у вас есть TRX для газа.</p>
+                <p className={`text-[10px] px-1 ${insufficientTrxForGas ? 'text-rose-400 font-semibold' : 'text-amber-400'}`}>
+                  {insufficientTrxForGas 
+                    ? `❌ Недостаточно TRX для газа. Нужно: ${tronGasFeeInTRX} TRX, у вас: ${trxBalance.toFixed(2)} TRX` 
+                    : `⚠ Комиссия оплачивается в TRX. У вас: ${trxBalance.toFixed(2)} TRX`}
+                </p>
               )}
             </div>
 
@@ -356,7 +368,7 @@ export const SendModal: React.FC<SendModalProps> = ({
 
             {/* Next Button */}
             <button
-              disabled={!numAmount || numAmount <= 0 || numAmount > selectedToken.balance || !!addressError || insufficientBalance}
+              disabled={!numAmount || numAmount <= 0 || numAmount > selectedToken.balance || !!addressError || insufficientBalance || insufficientTrxForGas}
               onClick={() => setStep('confirm')}
               className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none text-white font-bold text-xs tracking-wide transition-colors flex items-center justify-center gap-2 mt-2 cursor-pointer shadow-lg shadow-blue-600/20"
             >
