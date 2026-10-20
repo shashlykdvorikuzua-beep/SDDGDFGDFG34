@@ -1037,6 +1037,11 @@ export default function App() {
           onLockApp={() => setIsLocked(true)}
           onResetWallet={handleResetWallet}
           onClose={() => setModalWalletSwitcher(false)}
+          verificationStatus={verificationStatus}
+          onOpenVerification={() => {
+            setModalWalletSwitcher(false);
+            setShowVerificationModal(true);
+          }}
         />
       )}
 

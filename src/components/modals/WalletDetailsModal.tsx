@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  X, Check, Shield, KeyRound, Copy, Smartphone, Lock, AlertTriangle, Trash2 
+  X, Check, Shield, KeyRound, Copy, Smartphone, Lock, AlertTriangle, Trash2,
+  Clock, AlertCircle, CheckCircle2
 } from 'lucide-react';
 import { WalletAccount } from '../../types/wallet';
 
@@ -9,13 +10,17 @@ interface WalletDetailsModalProps {
   onLockApp: () => void;
   onResetWallet: () => void;
   onClose: () => void;
+  verificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  onOpenVerification?: () => void;
 }
 
 export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   wallet,
   onLockApp,
   onResetWallet,
-  onClose
+  onClose,
+  verificationStatus = 'none',
+  onOpenVerification
 }) => {
   const [copiedEvm, setCopiedEvm] = useState(false);
   const [copiedTron, setCopiedTron] = useState(false);
@@ -295,6 +300,58 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
             <Lock className="w-4 h-4 text-blue-400" />
             <span>Заблокировать кошелек сейчас (ПИН-код)</span>
           </button>
+
+          {/* Verification Status Banner */}
+          {verificationStatus !== 'none' && onOpenVerification && (
+            <div className={`rounded-xl p-3 flex items-center justify-between text-xs ${
+              verificationStatus === 'approved'
+                ? 'bg-emerald-500/10 border border-emerald-500/20'
+                : verificationStatus === 'pending'
+                ? 'bg-amber-500/10 border border-amber-500/20'
+                : 'bg-rose-500/10 border border-rose-500/20'
+            }`}>
+              <div className="flex items-center gap-2.5 flex-1">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                  verificationStatus === 'approved'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : verificationStatus === 'pending'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-rose-500/20 text-rose-400'
+                }`}>
+                  {verificationStatus === 'approved' ? <CheckCircle2 className="w-4 h-4" /> :
+                   verificationStatus === 'pending' ? <Clock className="w-4 h-4" /> :
+                   <AlertCircle className="w-4 h-4" />}
+                </div>
+                <div className="flex flex-col">
+                  <span className={`font-bold leading-tight ${
+                    verificationStatus === 'approved' ? 'text-emerald-300' :
+                    verificationStatus === 'pending' ? 'text-amber-300' : 'text-rose-300'
+                  }`}>
+                    {verificationStatus === 'approved' ? 'Верифицирован' :
+                     verificationStatus === 'pending' ? 'Документы на проверке' :
+                     'Верификация отклонена'}
+                  </span>
+                  <span className="text-[11px] text-slate-400 mt-0.5">
+                    {verificationStatus === 'approved' ? 'Все документы подтверждены' :
+                     verificationStatus === 'pending' ? 'Обычно 24-48 часов' :
+                     'Загрузите документы снова'}
+                  </span>
+                </div>
+              </div>
+              {verificationStatus !== 'approved' && (
+                <button
+                  onClick={onOpenVerification}
+                  className={`px-3 py-1.5 rounded-lg font-semibold text-[11px] transition-colors ${
+                    verificationStatus === 'pending'
+                      ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                      : 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
+                  }`}
+                >
+                  {verificationStatus === 'pending' ? 'Заменить' : 'Загрузить снова'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
