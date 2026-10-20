@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   ArrowLeft, Info, TrendingUp, TrendingDown, ShieldAlert, CheckCircle2, 
-  ChevronDown, Search, Sliders, AlertTriangle, X, Check, Edit3 
+  ChevronDown, Search, Sliders, AlertTriangle, X, Check, Edit3, Star
 } from 'lucide-react';
 import { StakingProAsset, StakingProPosition, PositionDirection, ExecutionType } from '../../types/stakingPro';
 import { Token, Transaction } from '../../types/wallet';
 import { CryptoIcon } from '../common/CryptoIcon';
 import { PinVerifyModal } from '../common/PinVerifyModal';
+import { TRADING_INSTRUMENTS, TradingInstrument, AssetCategory } from '../../data/stakingProData';
 
 interface StakingProScreenProps {
   assets: StakingProAsset[];
@@ -33,10 +34,16 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'open_strategy' | 'my_positions'>('open_strategy');
   
-  // STRATEGY BUILDER STATE
-  const [selectedAsset, setSelectedAsset] = useState<StakingProAsset>(assets[0]);
-  const [showAssetPicker, setShowAssetPicker] = useState(false);
-  const [assetSearch, setAssetSearch] = useState('');
+  // Category & Instrument Selection
+  const [selectedCategory, setSelectedCategory] = useState<AssetCategory>('crypto');
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('Все');
+  const [selectedAsset, setSelectedAsset] = useState<TradingInstrument>(TRADING_INSTRUMENTS[0]);
+  const [showInstrumentPicker, setShowInstrumentPicker] = useState(false);
+  const [instrumentSearch, setInstrumentSearch] = useState('');
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('vaultspring_favorites');
+    return saved ? new Set(JSON.parse(saved)) : new Set(['bitcoin']);
+  });
   
   // Direction: Long vs Short (Unified interface)
   const [direction, setDirection] = useState<PositionDirection>('long');
@@ -112,9 +119,9 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
     }
   };
 
-  const handleAssetSelect = (asset: StakingProAsset) => {
+  const handleAssetSelect = (asset: TradingInstrument) => {
     setSelectedAsset(asset);
-    setShowAssetPicker(false);
+    setShowInstrumentPicker(false);
     const p = asset.currentPrice;
     if (direction === 'long') {
       setTpPrice((p * 1.08).toFixed(2));
@@ -123,6 +130,40 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
       setTpPrice((p * 0.92).toFixed(2));
       setSlPrice((p * 1.05).toFixed(2));
     }
+  };
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      localStorage.setItem('vaultspring_favorites', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  // Filtered instruments by category, sub-category, and search
+  const filteredInstruments = useMemo(() => {
+    return TRADING_INSTRUMENTS.filter(inst => {
+      if (inst.category !== selectedCategory) return false;
+      if (selectedSubCategory !== 'Все' && inst.subCategory !== selectedSubCategory) return false;
+      if (instrumentSearch) {
+        const q = instrumentSearch.toLowerCase();
+        return inst.symbol.toLowerCase().includes(q) || inst.name.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [selectedCategory, selectedSubCategory, instrumentSearch]);
+
+  // Sub-categories for current category
+  const subCategories = useMemo(() => {
+    const cats = new Set(TRADING_INSTRUMENTS.filter(i => i.category === selectedCategory).map(i => i.subCategory));
+    return ['Все', ...Array.from(cats)];
+  }, [selectedCategory]);
+
+  const handleCategoryChange = (cat: AssetCategory) => {
+    setSelectedCategory(cat);
+    setSelectedSubCategory('Все');
+    setInstrumentSearch('');
   };
 
   const handleOpenConfirmation = () => {
@@ -262,7 +303,31 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 space-y-4">
         {activeTab === 'open_strategy' ? (
           <div className="space-y-4">
-            {/* 1. Trading Pair Card */}
+            {/* 1. Category Tabs */}
+            <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+              {([
+                { id: 'crypto', label: 'Крипто', icon: '' },
+                { id: 'forex', label: 'Форекс', icon: '' },
+                { id: 'commodities', label: 'Сырьё', icon: '💧' },
+                { id: 'stocks', label: 'Акции', icon: '🍎' },
+                { id: 'indices', label: 'Индексы', icon: '📈' },
+              ] as { id: AssetCategory; label: string; icon: string }[]).map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                    selectedCategory === cat.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white/[0.04] text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 2. Trading Pair Card */}
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-400">Торговая пара</span>
@@ -280,7 +345,7 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
                   </div>
                   <span className="text-xs text-slate-500 mx-1">/</span>
                   <div
-                    onClick={() => setShowAssetPicker(!showAssetPicker)}
+                    onClick={() => setShowInstrumentPicker(!showInstrumentPicker)}
                     className="flex items-center gap-2 cursor-pointer hover:bg-white/[0.05] rounded-lg px-2 py-1 transition-colors"
                   >
                     <CryptoIcon symbol={selectedAsset.symbol} network={selectedAsset.network} size={28} />
@@ -295,27 +360,130 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
                   <span className="text-xs text-slate-400 font-mono block">
                     1 {selectedAsset.symbol} = ${selectedAsset.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
+                  <span className={`text-[10px] font-mono block ${selectedAsset.change24h >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {selectedAsset.change24h >= 0 ? '+' : ''}{selectedAsset.change24h.toFixed(2)}%
+                  </span>
                 </div>
               </div>
 
-              {/* Asset Dropdown */}
-              {showAssetPicker && (
-                <div className="bg-[#141B2D] border border-white/10 rounded-2xl p-2 max-h-48 overflow-y-auto divide-y divide-white/[0.04] shadow-2xl">
-                  {assets.map((a) => (
-                    <div
-                      key={a.id}
-                      onClick={() => handleAssetSelect(a)}
-                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/[0.05] cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <CryptoIcon symbol={a.symbol} network={a.network} size={26} />
-                        <span className="text-xs font-bold text-white">{a.name}</span>
-                      </div>
-                      <span className="text-xs text-slate-300 font-mono">
-                        ${a.currentPrice.toFixed(2)}
-                      </span>
+              {/* Instrument Picker Modal */}
+              {showInstrumentPicker && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={() => setShowInstrumentPicker(false)}>
+                  <div className="w-full max-w-lg bg-[#0d1117] rounded-t-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
+                      <h3 className="text-sm font-bold text-white">Выбрать инструмент</h3>
+                      <button onClick={() => setShowInstrumentPicker(false)} className="p-1 text-slate-400 hover:text-white">
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
-                  ))}
+
+                    {/* Category Tabs */}
+                    <div className="flex gap-1 px-4 py-2 overflow-x-auto scrollbar-hide border-b border-white/[0.06]">
+                      {([
+                        { id: 'crypto', label: 'Крипто' },
+                        { id: 'forex', label: 'Форекс' },
+                        { id: 'commodities', label: 'Сырьё' },
+                        { id: 'stocks', label: 'Акции' },
+                        { id: 'indices', label: 'Индексы' },
+                      ] as { id: AssetCategory; label: string }[]).map(cat => (
+                        <button
+                          key={cat.id}
+                          onClick={() => handleCategoryChange(cat.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                            selectedCategory === cat.id
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white/[0.04] text-slate-400'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Sub-category Tabs */}
+                    <div className="flex gap-1 px-4 py-2 overflow-x-auto scrollbar-hide border-b border-white/[0.06]">
+                      {subCategories.map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => setSelectedSubCategory(sub)}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold whitespace-nowrap transition-all ${
+                            selectedSubCategory === sub
+                              ? 'bg-white/[0.1] text-white'
+                              : 'text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search */}
+                    <div className="px-4 py-2">
+                      <div className="flex items-center gap-2 bg-white/[0.04] rounded-lg px-3 py-2">
+                        <Search className="w-4 h-4 text-slate-500" />
+                        <input
+                          type="text"
+                          value={instrumentSearch}
+                          onChange={e => setInstrumentSearch(e.target.value)}
+                          placeholder={
+                            selectedCategory === 'crypto' ? 'Поиск криптоактивов...'
+                            : selectedCategory === 'forex' ? 'Поиск валютных пар...'
+                            : selectedCategory === 'commodities' ? 'Поиск сырья...'
+                            : selectedCategory === 'stocks' ? 'Поиск акций...'
+                            : 'Поиск индексов...'
+                          }
+                          className="bg-transparent text-xs text-white placeholder-slate-500 outline-none flex-1"
+                        />
+                        {instrumentSearch && (
+                          <button onClick={() => setInstrumentSearch('')} className="text-slate-500">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Instruments List */}
+                    <div className="flex-1 overflow-y-auto px-2 pb-4">
+                      {filteredInstruments.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500 text-xs">Ничего не найдено</div>
+                      ) : (
+                        filteredInstruments.map(inst => (
+                          <div
+                            key={inst.id}
+                            onClick={() => handleAssetSelect(inst)}
+                            className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${
+                              selectedAsset.id === inst.id ? 'bg-blue-600/10 border border-blue-500/30' : 'hover:bg-white/[0.04]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 flex-1">
+                              <CryptoIcon symbol={inst.symbol} size={28} />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-white">{inst.symbol}</span>
+                                <span className="text-[10px] text-slate-500">{inst.name}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <span className="text-xs text-white font-mono block">
+                                  ${inst.currentPrice.toLocaleString('en-US', { minimumFractionDigits: inst.currentPrice < 1 ? 4 : 2 })}
+                                </span>
+                                <span className={`text-[10px] font-mono ${inst.change24h >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  {inst.change24h >= 0 ? '+' : ''}{inst.change24h.toFixed(2)}%
+                                </span>
+                              </div>
+                              <button
+                                onClick={e => { e.stopPropagation(); toggleFavorite(inst.id); }}
+                                className="p-1"
+                              >
+                                <Star className={`w-4 h-4 ${favorites.has(inst.id) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 

@@ -8,7 +8,7 @@ export interface StakingProAsset {
   id: string;
   name: string;
   symbol: string;
-  network: NetworkType;
+  network: string;
   currentPrice: number;
   change24h: number;
   minPositionUsd: number;

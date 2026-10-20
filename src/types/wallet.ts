@@ -63,7 +63,7 @@ export interface Transaction {
   status: 'completed' | 'pending' | 'failed';
   hash: string;
   fee: number;
-  network: NetworkType;
+  network: string;
 }
 
 export interface StakingPool {
