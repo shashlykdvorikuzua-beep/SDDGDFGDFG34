@@ -457,8 +457,8 @@ export default function App() {
     // Add notification
     const alert: AppNotification = {
       id: `n-${Date.now()}`,
-      title: 'Отправлено успешно',
-      message: `Отправлено ${newTx.amount} ${newTx.tokenSymbol} на ${newTx.toAddress.substring(0, 10)}...`,
+      title: 'В обработке',
+      message: `Отправлено ${newTx.amount} ${newTx.tokenSymbol} на ${newTx.toAddress.substring(0, 10)}... Ожидает подтверждения`,
       time: 'Только что',
       type: 'tx',
       subtype: 'send',
