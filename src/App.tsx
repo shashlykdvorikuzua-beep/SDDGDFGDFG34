@@ -880,7 +880,7 @@ export default function App() {
             activeDeposits={activeDeposits}
             proPositions={proPositions}
             proAssets={proAssets}
-            availableBalanceUsd={usdtBalance}
+            availableBalanceUsd={availableBalanceUsd}
             unlockPeriodHours={unlockPeriodHours}
             onDepositSuccess={handleClassicDepositSuccess}
             onUnstakeSuccess={handleClassicUnstakeSuccess}
