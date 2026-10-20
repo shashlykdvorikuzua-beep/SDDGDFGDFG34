@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import { createAdminRouter } from './adminRouter';
+import { fetchForexRates, getForexRate, getForexChange24h } from './src/services/forexService';
 
 const app = express();
 app.use(express.json());
@@ -513,6 +514,31 @@ app.get('/api/config', (_req, res) => {
     }
   } catch {}
   res.json({ unlockPeriodHours });
+});
+
+// Forex rates endpoint (public)
+app.get('/api/forex/rates', async (_req, res) => {
+  try {
+    const rates = await fetchForexRates();
+    res.json({ success: true, rates, timestamp: Date.now() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch forex rates' });
+  }
+});
+
+// Forex rate for specific pair
+app.get('/api/forex/rate', async (req, res) => {
+  const { base, quote } = req.query;
+  if (!base || !quote) {
+    return res.status(400).json({ success: false, error: 'base and quote required' });
+  }
+  try {
+    const rate = await getForexRate(base as string, quote as string);
+    const change24h = getForexChange24h();
+    res.json({ success: true, rate, change24h, timestamp: Date.now() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch forex rate' });
+  }
 });
 
 // Start server and mount Vite
