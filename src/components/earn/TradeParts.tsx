@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Check, Star } from 'lucide-react';
+import { AlertTriangle, Check, Star, TrendingUp, DollarSign, BarChart3, Apple, LineChart } from 'lucide-react';
 import { TradingInstrument, TradingMarket, FutureMarket } from '../../types/stakingPro';
 import { CryptoIcon } from '../common/CryptoIcon';
 import { formatInstrumentPrice, TRADE_QUOTE_ASSET } from '../../data/tradeCatalog';
@@ -10,55 +10,99 @@ export const MarketGrid: React.FC<{
   counts: Record<string, number>;
   selected: TradingMarket['id'];
   onSelect: (id: TradingMarket['id']) => void;
-}> = ({ markets, counts, selected, onSelect }) => (
-  <div className="space-y-2">
-    <div className="grid grid-cols-2 gap-2">
-      {markets.map((m) => {
-        const isActive = m.id === selected;
-        const pending = m.providerStatus === 'pending';
-        return (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => onSelect(m.id)}
-            className={`text-left p-3 rounded-2xl border transition-all ${
-              isActive
-                ? 'bg-blue-600/10 border-blue-500/40 shadow-lg shadow-blue-900/20'
-                : 'bg-white/[0.03] border-white/[0.06] hover:border-white/[0.12]'
-            }`}
-          >
-            <div className="flex items-start justify-between">
-              <span className="text-lg leading-none">{m.icon}</span>
-              {isActive && <Check className="w-4 h-4 text-blue-400" />}
-            </div>
-            <div className="mt-2 space-y-0.5">
-              <span className="block text-xs font-bold text-white">{m.title}</span>
-              <span className="block text-[10px] text-slate-400">
-                {m.subtitle} · {counts[m.id] || 0} инстр.
-              </span>
-            </div>
-            <span
-              className={`mt-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${
-                pending
-                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/25'
-                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
+}> = ({ markets, counts, selected, onSelect }) => {
+  // Градиенты и иконки для каждого рынка
+  const marketStyles: Record<string, { gradient: string; icon: React.ReactNode }> = {
+    crypto: {
+      gradient: 'from-orange-500/20 via-amber-500/10 to-transparent',
+      icon: <TrendingUp className="w-6 h-6 text-orange-400" />
+    },
+    forex: {
+      gradient: 'from-blue-500/20 via-cyan-500/10 to-transparent',
+      icon: <DollarSign className="w-6 h-6 text-blue-400" />
+    },
+    commodities: {
+      gradient: 'from-red-500/20 via-rose-500/10 to-transparent',
+      icon: <BarChart3 className="w-6 h-6 text-red-400" />
+    },
+    stocks: {
+      gradient: 'from-green-500/20 via-emerald-500/10 to-transparent',
+      icon: <Apple className="w-6 h-6 text-green-400" />
+    },
+    indices: {
+      gradient: 'from-purple-500/20 via-violet-500/10 to-transparent',
+      icon: <LineChart className="w-6 h-6 text-purple-400" />
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        {markets.map((m) => {
+          const isActive = m.id === selected;
+          const pending = m.providerStatus === 'pending';
+          const style = marketStyles[m.id] || marketStyles.crypto;
+          
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => onSelect(m.id)}
+              className={`relative text-left p-4 rounded-2xl border-2 transition-all duration-200 overflow-hidden group ${
+                isActive
+                  ? 'border-blue-500 shadow-lg shadow-blue-900/30 scale-[1.02]'
+                  : 'border-white/10 hover:border-white/20 hover:scale-[1.01]'
               }`}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${pending ? 'bg-amber-400' : 'bg-emerald-400'}`} />
-              {pending ? 'Нет провайдера' : 'Live'}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+              {/* Градиентный фон */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${style.gradient} opacity-${isActive ? '100' : '60'} transition-opacity`} />
+              
+              {/* Контент */}
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-3">
+                  <div className={`p-2 rounded-xl ${isActive ? 'bg-white/10' : 'bg-white/5'} backdrop-blur-sm`}>
+                    {style.icon}
+                  </div>
+                  {isActive && (
+                    <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/50">
+                      <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  <span className="block text-sm font-bold text-white">{m.title}</span>
+                  <span className="block text-[11px] text-slate-300">
+                    {m.subtitle} · {counts[m.id] || 0} инстр.
+                  </span>
+                </div>
+                
+                <div className="mt-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold backdrop-blur-sm ${
+                      pending
+                        ? 'bg-amber-500/20 text-amber-200 border border-amber-500/30'
+                        : 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/30'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${pending ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`} />
+                    {pending ? 'Нет провайдера' : 'Live'}
+                  </span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-    <p className="text-[10px] text-slate-500 leading-snug">
-      Базовая валюта обеспечения — {TRADE_QUOTE_ASSET}. Баланс USDT сам по себе не открывает доступ к
-      Форексу, акциям, индексам или сырьё: каждый рынок требует провайдера, который поддерживает
-      соответствующие инструменты и обеспечение в USDT.
-    </p>
-  </div>
-);
+      <p className="text-[10px] text-slate-500 leading-snug px-1">
+        Базовая валюта обеспечения — {TRADE_QUOTE_ASSET}. Баланс USDT сам по себе не открывает доступ к
+        Форексу, акциям, индексам или сырьё: каждый рынок требует провайдера, который поддерживает
+        соответствующие инструменты и обеспечение в USDT.
+      </p>
+    </div>
+  );
+};
 
 /** Per-market provider / product-type notice (implementation notes from the catalog). */
 export const MarketNotice: React.FC<{ market: TradingMarket }> = ({ market }) => {
