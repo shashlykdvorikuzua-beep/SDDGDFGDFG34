@@ -140,9 +140,16 @@ export const SellModal: React.FC<SellModalProps> = ({
                   onChange={(e) => setCryptoAmount(e.target.value)}
                   className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-3.5 pr-20 py-3 text-lg font-bold text-white focus:outline-none focus:border-blue-500 font-mono"
                 />
-                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 font-mono">
-                  {selectedToken.symbol}
-                </span>
+                <button
+                  onClick={() => setShowTokenPicker(!showTokenPicker)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white/[0.06] hover:bg-white/[0.1] rounded-lg px-2 py-1.5 transition-colors cursor-pointer"
+                >
+                  <CryptoIcon symbol={selectedToken.symbol} size={18} />
+                  <span className="text-xs font-bold text-white font-mono">
+                    {selectedToken.symbol}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-slate-400" />
+                </button>
               </div>
             </div>
 
