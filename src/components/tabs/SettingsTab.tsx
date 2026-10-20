@@ -597,7 +597,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               </div>
 
               {/* Auto-lock */}
-              <div className="flex items-center justify-between py-3">
+              <div
+                onClick={() => {
+                  // TODO: Open auto-lock settings
+                  alert('Автоблокировка: настройка времени автоблокировки');
+                }}
+                className="flex items-center justify-between py-3 cursor-pointer hover:bg-white/[0.02] rounded-lg px-2 -mx-2 transition-colors"
+              >
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-white">Автоблокировка</span>
                   <span className="text-[11px] text-slate-400">Мгновенно</span>
@@ -644,13 +650,25 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               </div>
 
               {/* Confirmations */}
-              <div className="flex items-center justify-between py-3">
+              <div
+                onClick={() => {
+                  // TODO: Open confirmations settings
+                  alert('Подтверждения: настройка подтверждений транзакций');
+                }}
+                className="flex items-center justify-between py-3 cursor-pointer hover:bg-white/[0.02] rounded-lg px-2 -mx-2 transition-colors"
+              >
                 <span className="text-sm font-semibold text-white">Подтверждения</span>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </div>
 
               {/* Transfer Assets */}
-              <div className="flex items-center justify-between py-3">
+              <div
+                onClick={() => {
+                  // TODO: Open transfer assets
+                  alert('Переместить активы: перевод активов между кошельками');
+                }}
+                className="flex items-center justify-between py-3 cursor-pointer hover:bg-white/[0.02] rounded-lg px-2 -mx-2 transition-colors"
+              >
                 <span className="text-sm font-semibold text-white">Переместить активы</span>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </div>
