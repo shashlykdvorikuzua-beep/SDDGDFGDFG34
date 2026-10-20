@@ -6,6 +6,10 @@ import {
   Field, inputCls, useToast, StatCard,
 } from '../ui';
 import type { Role } from '../types';
+import {
+  TRADING_MARKETS, MARKET_BY_ID, formatInstrumentPrice, priceStep, TRADE_QUOTE_ASSET,
+} from '../../data/tradeCatalog';
+import type { MarketCategory } from '../../types/stakingPro';
 
 const canWrite = (role: Role) => role === 'super_admin' || role === 'finance_ops';
 
@@ -14,6 +18,9 @@ interface Asset {
   change24h: number; minPositionUsd: number; maxLeverage: number; fundingRate8h: number;
   fundingDirection: 'pay' | 'receive'; spread: number; makerFeePercent: number;
   takerFeePercent: number; enabled: boolean; updatedAt: number;
+  // Trade Pro market metadata. Legacy rows without a category are treated as crypto.
+  category?: MarketCategory; ticker?: string; pricePrecision?: number;
+  productType?: string; tradingHours?: string;
 }
 interface Position {
   id: string; userId: string; walletPrimary: string; email: string; address: string;
@@ -23,8 +30,16 @@ interface Position {
   stopLossPrice: number; liquidationPrice: number; openingFeeUsd: number; estClosingFeeUsd: number;
   accruedFundingUsd: number; openedAt: number; closedAt?: number; closePrice?: number;
   realizedPnlUsd?: number; status: string; source: string; openedBy: string;
+  category?: MarketCategory; ticker?: string; pricePrecision?: number;
 }
 interface UserRow { id: string; email: string; address: string; balanceUsd: number; status: string; }
+
+const marketOf = (a: { category?: MarketCategory }) => MARKET_BY_ID[a.category || 'crypto'];
+/** Display price with the instrument's own precision (Forex pairs need 3-5 digits). */
+const dispPrice = (value: number, precision?: number) => formatInstrumentPrice(value, precision ?? 2);
+/** Label used everywhere a position/instrument is named: "BTC/USDT" + market. */
+const instrLabel = (x: { ticker?: string; assetSymbol?: string; symbol?: string }) =>
+  x.ticker || `${(x.assetSymbol || x.symbol || '').toUpperCase()}/${TRADE_QUOTE_ASSET}`;
 
 // Net PnL for an open position — mirrors the server computation for a live preview.
 function netPnl(p: { direction: string; entryPrice: number; currentPrice: number; leverage: number; collateralUsd: number; openingFeeUsd: number; estClosingFeeUsd: number; accruedFundingUsd: number }) {
@@ -39,6 +54,7 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
   const [positions, setPositions] = useState<Position[] | null>(null);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [statusFilter, setStatusFilter] = useState<'open' | 'closed' | 'all'>('open');
+  const [marketFilter, setMarketFilter] = useState<MarketCategory | 'all'>('all');
   const [assetEdit, setAssetEdit] = useState<Asset | 'new' | null>(null);
   const [openPos, setOpenPos] = useState(false);
   const [adjust, setAdjust] = useState<Position | null>(null);
@@ -58,10 +74,17 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const inMarket = (c?: MarketCategory) => marketFilter === 'all' || (c || 'crypto') === marketFilter;
+
   const shown = useMemo(() => {
     if (!positions) return [];
-    return statusFilter === 'all' ? positions : positions.filter((p) => (statusFilter === 'open' ? p.status === 'open' : p.status !== 'open'));
-  }, [positions, statusFilter]);
+    return positions
+      .filter((p) => (statusFilter === 'all' ? true : statusFilter === 'open' ? p.status === 'open' : p.status !== 'open'))
+      .filter((p) => inMarket(p.category));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positions, statusFilter, marketFilter]);
+
+  const shownAssets = useMemo(() => (assets || []).filter((a) => inMarket(a.category)), [assets, marketFilter]);
 
   const openPositions = positions?.filter((p) => p.status === 'open') || [];
   const totalCollateral = openPositions.reduce((s, p) => s + p.collateralUsd, 0);
@@ -72,8 +95,8 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
   return (
     <div>
       <SectionTitle
-        title="Staking Pro / Управление"
-        subtitle="Каталог активов и позиции клиентов. Всё настраивается здесь и сразу видно пользователям в приложении. Обеспечение резервируется/возвращается через журнал и фиксируется в аудите."
+        title="Trade Pro / Управление"
+        subtitle="Каталог торговых инструментов по рынкам и позиции клиентов. Обеспечение всегда в USDT. Всё настраивается здесь и сразу видно пользователям в приложении; обеспечение резервируется/возвращается через журнал и фиксируется в аудите."
         action={writable && (
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setTab(tab === 'positions' ? 'catalog' : 'positions')}>
@@ -94,8 +117,32 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
         <StatCard label="Открытых позиций" value={openPositions.length} />
         <StatCard label="Обеспечение (Hold)" value={fmtUsd(totalCollateral)} />
         <StatCard label="Плавающий PnL" value={fmtUsd(totalPnl)} tone={totalPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'} />
-        <StatCard label="Активов в каталоге" value={`${assets.filter((a) => a.enabled).length} / ${assets.length}`} />
+        <StatCard label="Инструментов в каталоге" value={`${assets.filter((a) => a.enabled).length} / ${assets.length}`} />
       </div>
+
+      {/* Market filter — same control for positions and catalog. */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <MarketChip active={marketFilter === 'all'} onClick={() => setMarketFilter('all')} label="Все рынки" />
+        {TRADING_MARKETS.map((m) => (
+          <MarketChip
+            key={m.id}
+            active={marketFilter === m.id}
+            onClick={() => setMarketFilter(m.id)}
+            label={`${m.label} (${assets.filter((a) => (a.category || 'crypto') === m.id).length})`}
+            pending={m.providerStatus === 'pending'}
+          />
+        ))}
+      </div>
+      {marketFilter === 'stocks' && (
+        <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3">
+          По акциям нужно зафиксировать тип продукта (CFD / токенизированная акция / иной разрешённый инструмент) — см. поле «Тип продукта» у инструмента.
+        </div>
+      )}
+      {marketFilter !== 'all' && marketFilter !== 'crypto' && (
+        <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 mb-3">
+          {marketOf({ category: marketFilter }).provider}. Наличие USDT на балансе само по себе не даёт доступ к рынку — инструменты остаются отключены, пока провайдер и условия не подтверждены.
+        </div>
+      )}
 
       {tab === 'positions' ? (
         <div>
@@ -109,10 +156,11 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
           </div>
 
           {shown.length === 0 ? <Empty text="Позиций нет. Откройте позицию для пользователя кнопкой выше." /> : (
-            <Table columns={['Пользователь', 'Актив', 'Направление', 'Размер', 'Обеспеч.', 'Вход / Сейчас', 'PnL', 'TP / SL', 'Статус', '']}>
+            <Table columns={['Пользователь', 'Инструмент', 'Направление', 'Размер', 'Обеспеч.', 'Вход / Сейчас', 'PnL', 'TP / SL', 'Статус', '']}>
               {shown.map((p) => {
                 const pnl = p.status === 'open' ? netPnl(p) : (p.realizedPnlUsd ?? 0);
                 const isLong = p.direction === 'long';
+                const prec = p.pricePrecision;
                 return (
                   <tr key={p.id} className="hover:bg-slate-50">
                     <Td>
@@ -120,7 +168,10 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
                       <div className="text-[11px] text-slate-400 font-mono">{p.address?.slice(0, 12)}…</div>
                       <div className="text-[10px] text-slate-400">{p.source === 'admin' ? `открыл: ${p.openedBy}` : 'сам клиент'} · {fmtDate(p.openedAt)}</div>
                     </Td>
-                    <Td className="font-semibold">{p.assetSymbol}</Td>
+                    <Td className="font-semibold">
+                      <div>{instrLabel(p)}</div>
+                      <div className="text-[10px] font-normal text-slate-400">{marketOf(p).label}</div>
+                    </Td>
                     <Td>
                       <span className={`inline-flex items-center gap-1 text-xs font-bold ${isLong ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {isLong ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
@@ -130,13 +181,13 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
                     <Td className="font-mono">{fmtUsd(p.positionSizeUsd)}</Td>
                     <Td className="font-mono text-slate-600">{fmtUsd(p.collateralUsd)}</Td>
                     <Td className="font-mono text-xs">
-                      <div>${fmtNum(p.entryPrice, 2)}</div>
-                      <div className="text-slate-400">→ ${fmtNum(p.currentPrice, 2)}</div>
+                      <div>${dispPrice(p.entryPrice, prec)}</div>
+                      <div className="text-slate-400">→ ${dispPrice(p.currentPrice, prec)}</div>
                     </Td>
                     <Td className={`font-mono font-bold ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{pnl >= 0 ? '+' : ''}{fmtUsd(pnl)}</Td>
                     <Td className="font-mono text-[11px]">
-                      <div className="text-emerald-600">TP ${fmtNum(p.takeProfitPrice, 2)}</div>
-                      <div className="text-rose-600">SL ${fmtNum(p.stopLossPrice, 2)}</div>
+                      <div className="text-emerald-600">TP ${dispPrice(p.takeProfitPrice, prec)}</div>
+                      <div className="text-rose-600">SL ${dispPrice(p.stopLossPrice, prec)}</div>
                     </Td>
                     <Td>
                       <Badge tone={p.status === 'open' ? 'green' : p.status === 'liquidated' ? 'red' : 'neutral'}>
@@ -159,15 +210,18 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
         </div>
       ) : (
         <div>
-          <Table columns={['Актив', 'Сеть', 'Цена', '24ч', 'Мин. позиция', 'Плечо', 'Funding/8ч', 'Комис. taker', 'Доступен', '']}>
-            {assets.map((a) => (
+          <Table columns={['Инструмент', 'Рынок', 'Цена', '24ч', 'Мин. позиция', 'Плечо', 'Funding/8ч', 'Комис. taker', 'Доступен', '']}>
+            {shownAssets.map((a) => (
               <tr key={a.id} className="hover:bg-slate-50">
                 <Td>
-                  <div className="font-bold text-slate-800">{a.symbol}</div>
+                  <div className="font-bold text-slate-800">{a.ticker || `${a.symbol}/${TRADE_QUOTE_ASSET}`}</div>
                   <div className="text-[11px] text-slate-400">{a.name}</div>
                 </Td>
-                <Td className="text-xs text-slate-500">{a.network}</Td>
-                <Td className="font-mono">${fmtNum(a.currentPrice, 4)}</Td>
+                <Td className="text-xs text-slate-500">
+                  <div>{marketOf(a).label}</div>
+                  {marketOf(a).providerStatus === 'pending' && <Badge tone="amber">нет провайдера</Badge>}
+                </Td>
+                <Td className="font-mono">${dispPrice(a.currentPrice, a.pricePrecision)}</Td>
                 <Td className={`font-mono text-xs ${a.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{a.change24h >= 0 ? '+' : ''}{a.change24h}%</Td>
                 <Td className="text-xs">${fmtNum(a.minPositionUsd, 0)}</Td>
                 <Td className="text-xs font-semibold">{a.maxLeverage}x</Td>
@@ -193,7 +247,7 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
             ))}
           </Table>
           <p className="text-[11px] text-slate-400 mt-3">
-            <Power className="w-3 h-3 inline mr-1" /> Выключенный актив исчезает из приложения у всех пользователей, но открытые по нему позиции сохраняются.
+            <Power className="w-3 h-3 inline mr-1" /> Выключенный инструмент исчезает из приложения у всех пользователей, но открытые по нему позиции сохраняются. Каталог пополняется автоматически из списка торговых инструментов при старте сервера — правки оператора не перезаписываются.
           </p>
         </div>
       )}
@@ -206,6 +260,13 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
     </div>
   );
 };
+
+export const MarketChip: React.FC<{ active: boolean; label: string; pending?: boolean; onClick: () => void }> = ({ active, label, pending, onClick }) => (
+  <button onClick={onClick}
+    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${active ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>
+    {label}{pending && !active && <span className="ml-1 text-[10px] text-amber-600">•</span>}
+  </button>
+);
 
 async function toggleAsset(a: Asset, reload: () => void, show: (t: string, tone?: 'green' | 'red') => void) {
   try { await api.patch(`/staking-pro/assets/${a.id}`, { enabled: !a.enabled, reason: `Админ переключил доступность актива ${a.symbol}` }); reload(); }
@@ -221,7 +282,7 @@ async function runSweep(reload: () => void, show: (t: string, tone?: 'green' | '
 }
 
 function exportCsv(positions: Position[]) {
-  const cols = ['id', 'email', 'address', 'assetSymbol', 'direction', 'leverage', 'positionSizeUsd', 'collateralUsd', 'entryPrice', 'currentPrice', 'takeProfitPrice', 'stopLossPrice', 'liquidationPrice', 'realizedPnlUsd', 'status', 'source', 'openedBy'];
+  const cols = ['id', 'email', 'address', 'assetSymbol', 'ticker', 'category', 'direction', 'leverage', 'positionSizeUsd', 'collateralUsd', 'entryPrice', 'currentPrice', 'takeProfitPrice', 'stopLossPrice', 'liquidationPrice', 'realizedPnlUsd', 'status', 'source', 'openedBy'];
   const rows = [cols.join(','), ...positions.map((p) => cols.map((c) => {
     const v = (p as any)[c];
     const s = v === undefined || v === null ? '' : String(v);
@@ -234,7 +295,7 @@ function exportCsv(positions: Position[]) {
   a.click(); URL.revokeObjectURL(url);
 }
 async function removeAsset(a: Asset, reload: () => void, show: (t: string, tone?: 'green' | 'red') => void) {
-  if (!window.confirm(`Удалить актив ${a.symbol} из каталога?`)) return;
+  if (!window.confirm(`Удалить инструмент ${a.ticker || a.symbol} из каталога?`)) return;
   try { await api.del(`/staking-pro/assets/${a.id}`, { reason: `Удаление актива ${a.symbol} из каталога` }); reload(); }
   catch (e: any) { show(e.message, 'red'); }
 }
@@ -247,17 +308,24 @@ const OpenPositionModal: React.FC<{ users: UserRow[]; assets: Asset[]; onClose: 
   const [err, setErr] = useState<string | null>(null);
 
   const asset = enabledAssets.find((a) => a.id === f.assetId);
+  const prec = asset?.pricePrecision ?? 2;
   const entry = asset?.currentPrice || 0;
   const lev = Math.max(1, Math.min(f.leverage, asset?.maxLeverage || 10));
   const collateral = lev > 0 ? (f.positionSizeUsd || 0) / lev : 0;
   const liq = asset ? (f.direction === 'long' ? entry * (1 - (1 / lev) * 0.9) : entry * (1 + (1 / lev) * 0.9)) : 0;
   const user = users.find((u) => u.id === f.userId);
 
+  // Instruments grouped by market, so the operator sees the same 5 markets as the user.
+  const groupedMarkets = TRADING_MARKETS
+    .map((m) => ({ market: m, rows: enabledAssets.filter((a) => (a.category || 'crypto') === m.id) }))
+    .filter((g) => g.rows.length > 0);
+
   // Sensible default TP/SL when asset/direction changes.
   useEffect(() => {
     if (!asset) return;
-    if (f.direction === 'long') { setF((s) => ({ ...s, takeProfitPrice: (asset.currentPrice * 1.08).toFixed(2), stopLossPrice: (asset.currentPrice * 0.95).toFixed(2) })); }
-    else { setF((s) => ({ ...s, takeProfitPrice: (asset.currentPrice * 0.92).toFixed(2), stopLossPrice: (asset.currentPrice * 1.05).toFixed(2) })); }
+    const p = asset.pricePrecision ?? 2;
+    if (f.direction === 'long') { setF((s) => ({ ...s, takeProfitPrice: (asset.currentPrice * 1.08).toFixed(p), stopLossPrice: (asset.currentPrice * 0.95).toFixed(p) })); }
+    else { setF((s) => ({ ...s, takeProfitPrice: (asset.currentPrice * 0.92).toFixed(p), stopLossPrice: (asset.currentPrice * 1.05).toFixed(p) })); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.assetId, f.direction]);
 
@@ -276,7 +344,7 @@ const OpenPositionModal: React.FC<{ users: UserRow[]; assets: Asset[]; onClose: 
   };
 
   return (
-    <Modal open onClose={onClose} title="Открыть Staking Pro позицию для пользователя" wide>
+    <Modal open onClose={onClose} title="Открыть Trade Pro позицию для пользователя" wide>
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Пользователь">
@@ -284,9 +352,13 @@ const OpenPositionModal: React.FC<{ users: UserRow[]; assets: Asset[]; onClose: 
               {users.map((u) => <option key={u.id} value={u.id}>{u.email} · {fmtUsd(u.balanceUsd)}</option>)}
             </select>
           </Field>
-          <Field label="Актив">
+          <Field label="Инструмент (рынок → тикер)">
             <select className={inputCls} value={f.assetId} onChange={(e) => setF({ ...f, assetId: e.target.value })}>
-              {enabledAssets.map((a) => <option key={a.id} value={a.id}>{a.symbol} · ${fmtNum(a.currentPrice, 2)} (до {a.maxLeverage}x)</option>)}
+              {groupedMarkets.map((g) => (
+                <optgroup key={g.market.id} label={`${g.market.label} — ${g.market.providerStatus === 'pending' ? 'провайдер не подключён' : 'live'}`}>
+                  {g.rows.map((a) => <option key={a.id} value={a.id}>{a.ticker || a.symbol} · ${dispPrice(a.currentPrice, a.pricePrecision)} (до {a.maxLeverage}x)</option>)}
+                </optgroup>
+              ))}
             </select>
           </Field>
         </div>
@@ -307,23 +379,28 @@ const OpenPositionModal: React.FC<{ users: UserRow[]; assets: Asset[]; onClose: 
           </Field>
         </div>
 
-        <Field label="Номинальный размер позиции (USD)" hint={`Минимум актива: $${asset?.minPositionUsd}`}>
+        <Field label="Номинальный размер позиции (USDT)" hint={`Минимум инструмента: ${asset?.minPositionUsd} USDT · обеспечение списывается из USDT`}>
           <input type="number" min={asset?.minPositionUsd || 1} className={inputCls} value={f.positionSizeUsd} onChange={(e) => setF({ ...f, positionSizeUsd: Number(e.target.value) })} />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Тейк-профит (цена)">
-            <input type="number" step="0.01" className={inputCls} value={f.takeProfitPrice} onChange={(e) => setF({ ...f, takeProfitPrice: e.target.value })} />
+            <input type="number" step={priceStep(prec)} className={inputCls} value={f.takeProfitPrice} onChange={(e) => setF({ ...f, takeProfitPrice: e.target.value })} />
           </Field>
           <Field label="Стоп-лосс (цена)">
-            <input type="number" step="0.01" className={inputCls} value={f.stopLossPrice} onChange={(e) => setF({ ...f, stopLossPrice: e.target.value })} />
+            <input type="number" step={priceStep(prec)} className={inputCls} value={f.stopLossPrice} onChange={(e) => setF({ ...f, stopLossPrice: e.target.value })} />
           </Field>
         </div>
 
         <div className="bg-violet-50 border border-violet-200 rounded-xl p-3 text-sm grid grid-cols-3 gap-2">
-          <div><div className="text-[11px] text-slate-500">Цена входа</div><div className="font-mono font-bold">${fmtNum(entry, 2)}</div></div>
+          <div><div className="text-[11px] text-slate-500">Цена входа</div><div className="font-mono font-bold">${dispPrice(entry, prec)}</div></div>
           <div><div className="text-[11px] text-slate-500">Нужно обеспечения</div><div className="font-mono font-bold text-violet-700">{fmtUsd(collateral)}</div></div>
-          <div><div className="text-[11px] text-slate-500">Цена ликвидации</div><div className="font-mono font-bold text-rose-600">${fmtNum(liq, 2)}</div></div>
+          <div><div className="text-[11px] text-slate-500">Цена ликвидации</div><div className="font-mono font-bold text-rose-600">${dispPrice(liq, prec)}</div></div>
+          {asset && (
+            <div className="col-span-3 text-[11px] text-slate-500 border-t border-violet-200 pt-2">
+              Рынок: {marketOf(asset).label} · Тип продукта: {asset.productType || marketOf(asset).productType} · Часы: {asset.tradingHours || marketOf(asset).tradingHours}
+            </div>
+          )}
           <div className="col-span-3 text-[11px] text-slate-500">
             Доступно у пользователя: {user ? fmtUsd(user.balanceUsd) : '—'} · Обеспечение спишется из USDT через журнал и вернётся при закрытии.
           </div>
@@ -356,12 +433,12 @@ const AdjustModal: React.FC<{ pos: Position; onClose: () => void; onDone: () => 
     catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   };
   return (
-    <Modal open onClose={onClose} title={`Изменить TP / SL — ${pos.assetSymbol} ${pos.direction.toUpperCase()}`}>
+    <Modal open onClose={onClose} title={`Изменить TP / SL — ${instrLabel(pos)} ${pos.direction.toUpperCase()}`}>
       <form onSubmit={submit} className="space-y-4">
-        <div className="text-sm text-slate-500">Цена входа: <span className="font-mono">${fmtNum(pos.entryPrice, 2)}</span> · {pos.direction === 'long' ? 'TP выше входа, SL ниже' : 'TP ниже входа, SL выше'}</div>
+        <div className="text-sm text-slate-500">Цена входа: <span className="font-mono">${dispPrice(pos.entryPrice, pos.pricePrecision)}</span> · {pos.direction === 'long' ? 'TP выше входа, SL ниже' : 'TP ниже входа, SL выше'}</div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Новый тейк-профит"><input type="number" step="0.01" className={inputCls} value={tp} onChange={(e) => setTp(e.target.value)} /></Field>
-          <Field label="Новый стоп-лосс"><input type="number" step="0.01" className={inputCls} value={sl} onChange={(e) => setSl(e.target.value)} /></Field>
+          <Field label="Новый тейк-профит"><input type="number" step={priceStep(pos.pricePrecision ?? 2)} className={inputCls} value={tp} onChange={(e) => setTp(e.target.value)} /></Field>
+          <Field label="Новый стоп-лосс"><input type="number" step={priceStep(pos.pricePrecision ?? 2)} className={inputCls} value={sl} onChange={(e) => setSl(e.target.value)} /></Field>
         </div>
         <Field label="Причина (обязательно)"><input className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
         {err && <div className="text-sm text-rose-600">{err}</div>}
@@ -384,10 +461,10 @@ const CloseModal: React.FC<{ pos: Position; onClose: () => void; onDone: () => v
     catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   };
   return (
-    <Modal open onClose={onClose} title={`Закрыть позицию — ${pos.assetSymbol} ${pos.direction.toUpperCase()} ${pos.leverage}x`}>
+    <Modal open onClose={onClose} title={`Закрыть позицию — ${instrLabel(pos)} ${pos.direction.toUpperCase()} ${pos.leverage}x`}>
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-3 gap-2 text-sm bg-slate-50 border border-slate-200 rounded-xl p-3">
-          <div><div className="text-[11px] text-slate-500">Текущая цена</div><div className="font-mono font-bold">${fmtNum(pos.currentPrice, 2)}</div></div>
+          <div><div className="text-[11px] text-slate-500">Текущая цена</div><div className="font-mono font-bold">${dispPrice(pos.currentPrice, pos.pricePrecision)}</div></div>
           <div><div className="text-[11px] text-slate-500">Фин. результат</div><div className={`font-mono font-bold ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{pnl >= 0 ? '+' : ''}{fmtUsd(pnl)}</div></div>
           <div><div className="text-[11px] text-slate-500">Возврат в USDT</div><div className="font-mono font-bold text-violet-700">{fmtUsd(ret)}</div></div>
         </div>
@@ -405,6 +482,8 @@ const AssetModal: React.FC<{ asset: Asset | 'new'; onClose: () => void; onDone: 
   const a = isNew ? null : (asset as Asset);
   const [f, setF] = useState({
     id: a?.id || '', symbol: a?.symbol || '', name: a?.name || '', network: a?.network || 'Multi-Chain',
+    category: (a?.category || 'crypto') as MarketCategory, ticker: a?.ticker || '', pricePrecision: a?.pricePrecision ?? 2,
+    productType: a?.productType || '', tradingHours: a?.tradingHours || '',
     currentPrice: a?.currentPrice ?? 0, change24h: a?.change24h ?? 0, minPositionUsd: a?.minPositionUsd ?? 10,
     maxLeverage: a?.maxLeverage ?? 10, fundingRate8h: a?.fundingRate8h ?? 0.01, fundingDirection: a?.fundingDirection || 'pay',
     spread: a?.spread ?? 0, makerFeePercent: a?.makerFeePercent ?? 0.02, takerFeePercent: a?.takerFeePercent ?? 0.05,
@@ -412,24 +491,69 @@ const AssetModal: React.FC<{ asset: Asset | 'new'; onClose: () => void; onDone: 
   });
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Switching market adopts that market's product terms unless the operator already set them.
+  const pickMarket = (m: MarketCategory) => {
+    const meta = MARKET_BY_ID[m];
+    setF((s) => ({
+      ...s,
+      category: m,
+      network: s.network === meta.label ? meta.title : s.network,
+      productType: s.productType || meta.productType,
+      tradingHours: s.tradingHours || meta.tradingHours,
+    }));
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null);
+    // Empty optional text fields are dropped so the server keeps its own defaults.
+    const { ticker, productType, tradingHours, ...rest } = f;
+    const payload: Record<string, unknown> = { ...rest };
+    if (ticker?.trim()) payload.ticker = ticker.trim();
+    if (productType?.trim()) payload.productType = productType.trim();
+    if (tradingHours?.trim()) payload.tradingHours = tradingHours.trim();
     try {
-      if (isNew) await api.post('/staking-pro/assets', f);
-      else await api.patch(`/staking-pro/assets/${a!.id}`, { ...f, reason: f.reason || `Изменение актива ${f.symbol} в каталоге` });
+      if (isNew) await api.post('/staking-pro/assets', payload);
+      else await api.patch(`/staking-pro/assets/${a!.id}`, { ...payload, reason: f.reason || `Изменение актива ${f.symbol} в каталоге` });
       onDone();
     } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   };
   return (
-    <Modal open onClose={onClose} title={isNew ? 'Добавить актив в каталог Staking Pro' : `Редактировать ${a?.symbol}`} wide>
+    <Modal open onClose={onClose} title={isNew ? 'Добавить инструмент в каталог Trade Pro' : `Редактировать ${a?.ticker || a?.symbol}`} wide>
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
+          <Field label="Рынок">
+            <select className={inputCls} value={f.category} onChange={(e) => pickMarket(e.target.value as MarketCategory)}>
+              {TRADING_MARKETS.map((m) => <option key={m.id} value={m.id}>{m.label} ({m.subtitle})</option>)}
+            </select>
+          </Field>
           <Field label="Символ"><input className={inputCls} value={f.symbol} onChange={(e) => setF({ ...f, symbol: e.target.value })} placeholder="BTC" /></Field>
-          <Field label="Название"><input className={inputCls} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Bitcoin" /></Field>
-          <Field label="Сеть"><input className={inputCls} value={f.network} onChange={(e) => setF({ ...f, network: e.target.value })} /></Field>
+          <Field label="Тикер" hint={`Остав пустым — будет ${f.symbol?.toUpperCase() || 'SYMBOL'}/${TRADE_QUOTE_ASSET}`}>
+            <input className={inputCls} value={f.ticker} onChange={(e) => setF({ ...f, ticker: e.target.value })} placeholder="BTC/USDT" />
+          </Field>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Текущая цена (USD)"><input type="number" step="0.0001" className={inputCls} value={f.currentPrice} onChange={(e) => setF({ ...f, currentPrice: Number(e.target.value) })} /></Field>
+          <Field label="Название"><input className={inputCls} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Bitcoin" /></Field>
+          <Field label="Сегмент / сеть"><input className={inputCls} value={f.network} onChange={(e) => setF({ ...f, network: e.target.value })} /></Field>
+          <Field label="Знаков в цене" hint="Форекс/JPY требует 3–5 знаков">
+            <input type="number" min={0} max={8} className={inputCls} value={f.pricePrecision} onChange={(e) => setF({ ...f, pricePrecision: Number(e.target.value) })} />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Тип продукта">
+            <input className={inputCls} value={f.productType} onChange={(e) => setF({ ...f, productType: e.target.value })} placeholder={MARKET_BY_ID[f.category].productType} />
+          </Field>
+          <Field label="Часы торгов">
+            <input className={inputCls} value={f.tradingHours} onChange={(e) => setF({ ...f, tradingHours: e.target.value })} placeholder={MARKET_BY_ID[f.category].tradingHours} />
+          </Field>
+        </div>
+        {f.category !== 'crypto' && (
+          <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            {MARKET_BY_ID[f.category].provider}. Включение этого инструмента без подтверждённого провайдера делает рынок доступным для открытия позиций — подтвердите тикеры, часы, комиссии и правила ликвидации до включения.
+          </div>
+        )}
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Текущая цена (USD)"><input type="number" step={priceStep(f.pricePrecision || 2)} className={inputCls} value={f.currentPrice} onChange={(e) => setF({ ...f, currentPrice: Number(e.target.value) })} /></Field>
           <Field label="Изменение 24ч (%)"><input type="number" step="0.01" className={inputCls} value={f.change24h} onChange={(e) => setF({ ...f, change24h: Number(e.target.value) })} /></Field>
           <Field label="Спред (USD)"><input type="number" step="0.0001" className={inputCls} value={f.spread} onChange={(e) => setF({ ...f, spread: Number(e.target.value) })} /></Field>
         </div>

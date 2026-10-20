@@ -70,7 +70,7 @@ export const Dashboard: React.FC<{ onNavigate: (k: string) => void }> = ({ onNav
             ))}
           </div>
           <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
-            <DollarSign className="w-3.5 h-3.5" /> Открытые Staking Pro: {data.summary.openProPositions}
+            <DollarSign className="w-3.5 h-3.5" /> Открытые Trade Pro позиции: {data.summary.openProPositions}
           </div>
         </Card>
       </div>

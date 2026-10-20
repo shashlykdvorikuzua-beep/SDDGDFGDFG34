@@ -55,7 +55,7 @@ const App: React.FC = () => {
     { key: 'deposits', label: 'Пополнения и зачисления', icon: <ArrowDownToLine className="w-4.5 h-4.5" />, screen: <DepositsScreen role={role} /> },
     { key: 'withdrawals', label: 'Выводы', icon: <ArrowUpFromLine className="w-4.5 h-4.5" />, screen: <WithdrawalsScreen role={role} /> },
     { key: 'staking', label: 'Staking', icon: <Layers className="w-4.5 h-4.5" />, screen: <StakingScreen role={role} /> },
-    { key: 'staking-pro', label: 'Staking Pro / Позиции', icon: <Gauge className="w-4.5 h-4.5" />, screen: <StakingProScreen role={role} /> },
+    { key: 'staking-pro', label: 'Trade Pro / Каталог и позиции', icon: <Gauge className="w-4.5 h-4.5" />, screen: <StakingProScreen role={role} /> },
     { key: 'tokens', label: 'Внутренние токены', icon: <Coins className="w-4.5 h-4.5" />, screen: <TokensScreen role={role} /> },
     { key: 'restrictions', label: 'Блокировки и ограничения', icon: <ShieldAlert className="w-4.5 h-4.5" />, screen: <RestrictionsScreen role={role} /> },
     { key: 'support', label: 'Чат поддержки', icon: <MessageSquare className="w-4.5 h-4.5" />, screen: <SupportScreen role={role} /> },

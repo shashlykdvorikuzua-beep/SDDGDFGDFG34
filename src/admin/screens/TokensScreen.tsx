@@ -105,7 +105,7 @@ const AddTokenModal: React.FC<{ onClose: () => void; onDone: () => void; toast: 
         <Field label="Метод расчёта"><input className={inputCls} value={f.priceMethod} onChange={(e) => setF({ ...f, priceMethod: e.target.value })} /></Field>
         <div className="flex gap-4 text-sm">
           <label className="flex items-center gap-1.5"><input type="checkbox" checked={f.availableInStaking} onChange={(e) => setF({ ...f, availableInStaking: e.target.checked })} /> Staking</label>
-          <label className="flex items-center gap-1.5"><input type="checkbox" checked={f.availableInStakingPro} onChange={(e) => setF({ ...f, availableInStakingPro: e.target.checked })} /> Staking Pro</label>
+          <label className="flex items-center gap-1.5"><input type="checkbox" checked={f.availableInStakingPro} onChange={(e) => setF({ ...f, availableInStakingPro: e.target.checked })} /> Trade Pro</label>
         </div>
         <Field label="Лимиты"><input className={inputCls} value={f.limits} onChange={(e) => setF({ ...f, limits: e.target.value })} placeholder="min/max stake, vesting…" /></Field>
         <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={onClose}>Отмена</Button><Button type="submit">Создать</Button></div>

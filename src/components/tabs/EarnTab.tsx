@@ -9,6 +9,7 @@ import { ClassicStakingScreen } from '../earn/ClassicStakingScreen';
 import { StakingProScreen } from '../earn/StakingProScreen';
 import { LearnMoreModal } from '../earn/LearnMoreModal';
 import { CryptoIcon } from '../common/CryptoIcon';
+import { TRADING_MARKETS, instrumentCount } from '../../data/tradeCatalog';
 
 interface EarnTabProps {
   tokens: Token[];
@@ -84,7 +85,7 @@ export const EarnTab: React.FC<EarnTabProps> = ({
       <div className="flex items-center justify-between pb-1">
         <div className="flex flex-col">
           <span className="text-xl font-extrabold text-white tracking-tight">Earn / Доходность</span>
-          <span className="text-xs text-slate-400">Два продукта: классический стейкинг и Pro-стратегии</span>
+          <span className="text-xs text-slate-400">Два продукта: классический стейкинг и торговый каталог Trade Pro</span>
         </div>
       </div>
 
@@ -110,7 +111,7 @@ export const EarnTab: React.FC<EarnTabProps> = ({
                 ${totalProCollateralUsd.toFixed(2)}
               </span>
               <span className="text-[10px] text-slate-400 mt-0.5">
-                {proPositions.length} активных стратегий
+                {proPositions.length} открытых позиций
               </span>
             </div>
           )}
@@ -182,18 +183,18 @@ export const EarnTab: React.FC<EarnTabProps> = ({
         </div>
       </div>
 
-      {/* КАРТОЧКА B — STAKING PRO (Требование 3 ТЗ) */}
+      {/* КАРТОЧКА B — TRADE PRO / МУЛЬТИ-РЫНОК (Требование 3 ТЗ) */}
       <div className="w-full bg-[#0F1422] border border-blue-500/20 rounded-3xl p-5 space-y-4 shadow-xl relative overflow-hidden">
         <div className="flex items-start justify-between">
           <div className="space-y-1 max-w-[260px]">
             <div className="flex items-center gap-2">
               <span className="text-lg font-extrabold text-white tracking-tight">Trade Pro</span>
               <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30">
-                Стратегия
+                5 рынков
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Одна стратегия: выберите актив, направление цены и уровни закрытия позиции.
+              Каталог инструментов: крипто, форекс, сырьё, акции и индексы. Обеспечение — в USDT, направление цены и уровни закрытия выбираете вы.
             </p>
           </div>
 
@@ -232,8 +233,20 @@ export const EarnTab: React.FC<EarnTabProps> = ({
           </div>
         </div>
 
+        {/* Market availability — access comes from the provider, not from the USDT balance */}
+        <div className="flex flex-wrap gap-1.5">
+          {TRADING_MARKETS.map((m) => (
+            <span
+              key={m.id}
+              className={`px-2 py-1 rounded-lg text-[10px] font-semibold border ${m.providerStatus === 'live' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-white/[0.03] text-slate-400 border-white/[0.06]'}`}
+            >
+              {m.icon} {m.label} · {instrumentCount(m.id)}
+            </span>
+          ))}
+        </div>
+
         <div className="text-[11px] text-slate-400 leading-snug">
-          Без гарантированного APY. Результат зависит от рынка; возможен риск убытка.
+          Доступ к рынку определяет подключённый провайдер ликвидности, а не остаток USDT. Без гарантированного APY; возможен риск убытка.
         </div>
 
         {/* Buttons: Основная и Информационная */}

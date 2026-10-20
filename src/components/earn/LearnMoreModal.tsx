@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, ArrowLeft, ShieldAlert, CheckCircle2, AlertTriangle, Layers, TrendingUp, TrendingDown } from 'lucide-react';
+import { TRADING_MARKETS, instrumentCount } from '../../data/tradeCatalog';
 
 interface LearnMoreModalProps {
   type: 'staking' | 'staking_pro';
@@ -25,7 +26,7 @@ export const LearnMoreModal: React.FC<LearnMoreModalProps> = ({
               <ArrowLeft className="w-4 h-4" />
             </button>
             <span className="text-base font-bold text-white">
-              {type === 'staking' ? 'О стейкинге' : 'О Staking Pro'}
+              {type === 'staking' ? 'О стейкинге' : 'О Trade Pro'}
             </span>
           </div>
 
@@ -107,7 +108,7 @@ export const LearnMoreModal: React.FC<LearnMoreModalProps> = ({
                 Что такое Trade Pro?
               </h4>
               <p className="text-slate-400">
-                Trade Pro — это стратегия, в которой вы выбираете криптоактив, сумму и направление движения цены. Вы можете открыть позицию на рост (Long) или на падение (Short), а также заранее указать уровень, при котором позиция должна закрыться с целью зафиксировать прибыль, и уровень для ограничения убытка.
+                Trade Pro — это торговый каталог с плечом и единым обеспечением в USDT. Вы выбираете рынок (крипто, форекс, сырьё, акции, индексы), затем инструмент и направление цены — рост (Long) или падение (Short), указываете размер позиции в USDT и плечо, а также заранее задаёте уровень фиксации прибыли (тейк-профит) и уровень ограничения убытка (стоп-лосс).
               </p>
             </div>
 
@@ -115,13 +116,31 @@ export const LearnMoreModal: React.FC<LearnMoreModalProps> = ({
             <div className="space-y-2 bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3.5">
               <h4 className="text-xs font-bold text-white">Как это работает?</h4>
               <ol className="space-y-1.5 text-slate-300 list-decimal list-inside pl-1 text-[11px]">
-                <li>Вы выбираете монету.</li>
-                <li>Указываете сумму позиции и направление — Рост (Long) или Падение (Short).</li>
-                <li>Проверяете цену входа, размер позиции, требуемое обеспечение и возможные расходы.</li>
-                <li>Задаёте тейк-профит и стоп-лосс.</li>
-                <li>Проверяете итоговый экран и подтверждаете открытие.</li>
-                <li>Отслеживаете результат в «Мои стратегии» и закрываете позицию вручную или по заданным условиям.</li>
+                <li>Вы выбираете рынок.</li>
+                <li>В каталоге находите инструмент — по названию или тикеру, с текущей ценой.</li>
+                <li>Выбираете инструмент и направление: Long или Short.</li>
+                <li>Указываете размер позиции в USDT и плечо.</li>
+                <li>До подтверждения видите обеспечение, тейк-профит, стоп-лосс, комиссии и расчётную цену ликвидации.</li>
+                <li>Подтверждаете открытие и отслеживаете позицию в «Мои позиции», закрывая её вручную или по заданным условиям.</li>
               </ol>
+            </div>
+
+            {/* Market availability — driven by the connected liquidity provider */}
+            <div className="space-y-2 bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3.5">
+              <h4 className="text-xs font-bold text-white">Доступность рынков</h4>
+              <div className="space-y-1.5">
+                {TRADING_MARKETS.map((m) => (
+                  <div key={m.id} className="flex items-start justify-between gap-2 text-[11px]">
+                    <span className="text-slate-300">{m.icon} {m.title} <span className="text-slate-500">· {instrumentCount(m.id)} инстр.</span></span>
+                    <span className={`shrink-0 font-semibold ${m.providerStatus === 'live' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {m.providerStatus === 'live' ? 'Доступно' : 'Ждёт провайдера'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-500 leading-relaxed">
+                Наличие USDT на балансе само по себе не открывает доступ к рынку: каждому рынку нужен провайдер, действительно поддерживающий эти инструменты с обеспечением в USDT. Типы продуктов, тикеры, часы торгов, комиссии, funding/swap и правила ликвидации подтверждаются отдельно. Каталог предназначен для проектирования интерфейса и не является инвестиционной рекомендацией или гарантией доступности в вашем регионе.
+              </p>
             </div>
 
             {/* Long vs Short */}
@@ -152,10 +171,10 @@ export const LearnMoreModal: React.FC<LearnMoreModalProps> = ({
             <div className="space-y-1.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl p-3 text-rose-200">
               <div className="flex items-center gap-1.5 font-bold text-xs text-rose-300">
                 <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-                <span>Риски стратегии</span>
+                <span>Риски торговли с плечом</span>
               </div>
               <p className="text-[11px] leading-relaxed text-rose-100/90">
-                Можно потерять часть или весь капитал, выделенный на стратегию; при плече убыток может наступить быстрее. Стоп-лосс не гарантирует цену исполнения при резком движении или недостаточной ликвидности. Для Short рост цены означает убыток. Могут применяться комиссии, спред, funding/swap и комиссии сети.
+                Можно потерять часть или весь капитал, выделенный на позицию; при плече убыток может наступить быстрее. Стоп-лосс не гарантирует цену исполнения при резком движении или недостаточной ликвидности. Для Short рост цены означает убыток. Позиции вне биржевых сессий (форекс, акции, индексы, сырьё) могут быть недоступны или иметь расширенный спред. Могут применяться комиссии, спред, funding/swap и комиссии сети.
               </p>
             </div>
 
@@ -165,7 +184,7 @@ export const LearnMoreModal: React.FC<LearnMoreModalProps> = ({
                 onClick={onAction}
                 className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer shadow-lg shadow-blue-600/20"
               >
-                Попробовать Staking Pro
+                Попробовать Trade Pro
               </button>
               <button
                 onClick={onClose}

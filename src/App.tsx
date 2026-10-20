@@ -30,7 +30,7 @@ import {
 } from './data/mockWalletData';
 import { Token, NFTItem, Transaction, StakingPool, DAppItem, WalletAccount, AppNotification, NetworkType } from './types/wallet';
 import { StakingProAsset, StakingProPosition, StakingActiveDeposit } from './types/stakingPro';
-import { STAKING_PRO_ASSETS, INITIAL_ACTIVE_DEPOSITS, INITIAL_PRO_POSITIONS } from './data/stakingProData';
+import { TRADING_INSTRUMENTS, INITIAL_ACTIVE_DEPOSITS, INITIAL_PRO_POSITIONS } from './data/stakingProData';
 import { fetchLiveCryptoPrices } from './services/priceService';
 import { registerWalletWithServer, syncWalletWithServer, playChimeSound } from './services/walletSyncService';
 
@@ -110,7 +110,9 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [proAssets, setProAssets] = useState<StakingProAsset[]>(STAKING_PRO_ASSETS);
+  // Full multi-market catalog (Crypto / Forex / Commodities / Stocks / Indices)
+  // until the operator-managed catalog arrives from the backend.
+  const [proAssets, setProAssets] = useState<StakingProAsset[]>(TRADING_INSTRUMENTS);
 
   const [unlockPeriodHours, setUnlockPeriodHours] = useState(48);
 
@@ -124,7 +126,7 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // Load the operator-configured Staking Pro catalog + this wallet's positions from
+  // Load the operator-configured Trade Pro catalog + this wallet's positions from
   // the admin backend, so everything managed in the admin panel shows up here.
   const loadStakingPro = React.useCallback(() => {
     const addr = currentWallet?.address;
@@ -458,15 +460,22 @@ export default function App() {
     .forEach((d) => {
       stakedAmountBySymbol[d.tokenSymbol] = (stakedAmountBySymbol[d.tokenSymbol] || 0) + d.amount;
     });
-  const tradingSymbols: Record<string, number> = {};
-  tradingPositions.forEach((p) => {
-    tradingSymbols[p.assetSymbol] = (tradingSymbols[p.assetSymbol] || 0) + p.collateralUsd / (tokens.find((t) => t.symbol === p.assetSymbol)?.price || 1);
-  });
   const availableBalanceUsd = tokens.reduce((acc, t) => {
     const staked = stakedAmountBySymbol[t.symbol] || 0;
     const availableAmount = Math.max(0, t.balance - staked);
     return acc + availableAmount * t.price;
   }, 0) - tradingCollateralUsd;
+
+  // Trade Pro collateral is USDT (single base currency for every market), so the
+  // free margin the trading screen can use is the free USDT balance — not the
+  // whole portfolio value. USDT exists on several networks, so every row counts.
+  // Wallets without any USDT row keep the previous portfolio-based fallback.
+  const usdtCollateralBalance = tokens
+    .filter((t) => t.symbol === 'USDT')
+    .reduce((acc, t) => acc + (t.balanceUsd || t.balance * t.price), 0);
+  const tradeCollateralAvailableUsd = tokens.some((t) => t.symbol === 'USDT')
+    ? Math.max(0, usdtCollateralBalance - tradingCollateralUsd)
+    : Math.max(0, availableBalanceUsd);
 
   // Keep detail modal token updated with live prices
   const activeDetailToken = selectedTokenDetail
@@ -524,7 +533,7 @@ export default function App() {
     setNotifications((prev) => [alert, ...prev]);
   };
 
-  // STAKING & STAKING PRO HANDLERS
+  // STAKING & TRADE PRO (multi-market catalog) HANDLERS
   const handleClassicDepositSuccess = (deposit: StakingActiveDeposit, updatedToken: Token, tx: Transaction) => {
     setActiveDeposits((prev) => [deposit, ...prev]);
     setTokens((prev) => prev.map((t) => (t.id === updatedToken.id ? updatedToken : t)));
@@ -655,7 +664,7 @@ export default function App() {
     const alert: AppNotification = {
       id: `n-${Date.now()}`,
       title: 'Trade Pro: Стратегия открыта',
-      message: `Позиция ${position.direction.toUpperCase()} (${position.assetSymbol}) ${position.leverage}x открыта`,
+      message: `Позиция ${position.direction.toUpperCase()} (${position.ticker || position.assetSymbol}) ${position.leverage}x открыта`,
       time: 'Только что',
       type: 'tx',
       read: false
@@ -880,7 +889,7 @@ export default function App() {
             activeDeposits={activeDeposits}
             proPositions={proPositions}
             proAssets={proAssets}
-            availableBalanceUsd={availableBalanceUsd}
+            availableBalanceUsd={tradeCollateralAvailableUsd}
             unlockPeriodHours={unlockPeriodHours}
             onDepositSuccess={handleClassicDepositSuccess}
             onUnstakeSuccess={handleClassicUnstakeSuccess}

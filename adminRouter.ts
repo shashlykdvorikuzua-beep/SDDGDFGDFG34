@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { TRADING_INSTRUMENTS } from './src/data/tradeCatalog';
+import type { TradingInstrument } from './src/types/stakingPro';
 
 // ---------------------------------------------------------------------------
 // VaultSpring Wallet — Admin Panel backend
@@ -37,6 +39,8 @@ const PERMISSIONS: Record<string, Role[]> = {
   'staking.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
   'staking.write': ['super_admin', 'finance_ops'],
   'reports.read': ['super_admin', 'finance_ops', 'risk_compliance', 'auditor'],
+  'verification.read': ['super_admin', 'finance_ops', 'risk_compliance'],
+  'verification.write': ['super_admin', 'finance_ops'],
   'settings.write': ['super_admin'],
 };
 
@@ -94,6 +98,12 @@ export interface StakingProAssetRow {
   takerFeePercent: number;
   enabled: boolean;
   updatedAt: number;
+  // Trade Pro market metadata. Legacy rows without a category are crypto.
+  category?: TradingInstrument['category'];
+  ticker?: string;
+  pricePrecision?: number;
+  productType?: string;
+  tradingHours?: string;
 }
 
 // A Staking Pro position belongs to a specific user (walletPrimary) and is
@@ -105,6 +115,9 @@ export interface StakingProPositionRow {
   assetId: string;
   assetSymbol: string;
   assetName: string;
+  category?: TradingInstrument['category'];
+  ticker?: string;
+  pricePrecision?: number;
   direction: 'long' | 'short';
   executionType: 'market' | 'limit';
   entryPrice: number;
@@ -155,6 +168,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
         if (!parsed.stakingProAssets) parsed.stakingProAssets = [];
         if (!parsed.stakingProPositions) parsed.stakingProPositions = [];
         if (parsed.stakingProAssets.length === 0) parsed.stakingProAssets = defaultStakingProAssets();
+        else mergeCatalogAssets(parsed.stakingProAssets);
         return parsed;
       }
     } catch (err) {
@@ -168,18 +182,53 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     };
   }
 
-  // Seed the Staking Pro catalog so the admin/app have a working baseline set.
+  // Seed the Trade Pro catalog from the shared instrument catalog so every
+  // market in the wallet has a matching, admin-manageable row (ids line up with
+  // the client, which is what allows a position to be opened on any market).
   function defaultStakingProAssets(): StakingProAssetRow[] {
     const now = Date.now();
-    const base = [
-      { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', network: 'All Networks', currentPrice: 96420.50, change24h: 3.42, minPositionUsd: 20, maxLeverage: 10, fundingRate8h: 0.012, spread: 1.50, makerFeePercent: 0.02, takerFeePercent: 0.05 },
-      { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', network: 'Ethereum', currentPrice: 3840.25, change24h: 4.18, minPositionUsd: 10, maxLeverage: 10, fundingRate8h: 0.010, spread: 0.25, makerFeePercent: 0.02, takerFeePercent: 0.05 },
-      { id: 'solana', symbol: 'SOL', name: 'Solana', network: 'Solana', currentPrice: 218.40, change24h: 7.64, minPositionUsd: 10, maxLeverage: 10, fundingRate8h: 0.015, spread: 0.08, makerFeePercent: 0.02, takerFeePercent: 0.05 },
-      { id: 'bnb', symbol: 'BNB', name: 'BNB', network: 'BNB Smart Chain', currentPrice: 645.80, change24h: 1.85, minPositionUsd: 10, maxLeverage: 10, fundingRate8h: 0.009, spread: 0.15, makerFeePercent: 0.02, takerFeePercent: 0.05 },
-      { id: 'vaultspring', symbol: 'VLT', name: 'VaultSpring Token', network: 'BNB Smart Chain', currentPrice: 5.50, change24h: 2.83, minPositionUsd: 5, maxLeverage: 5, fundingRate8h: 0.020, spread: 0.01, makerFeePercent: 0.01, takerFeePercent: 0.04 },
-      { id: 'tron', symbol: 'TRX', name: 'TRON', network: 'TRON (TRC-20)', currentPrice: 0.335, change24h: 1.20, minPositionUsd: 5, maxLeverage: 10, fundingRate8h: 0.012, spread: 0.001, makerFeePercent: 0.02, takerFeePercent: 0.05 },
-    ];
-    return base.map((a) => ({ ...a, fundingDirection: 'pay' as const, enabled: true, updatedAt: now }));
+    const rows: StakingProAssetRow[] = TRADING_INSTRUMENTS.map((i) => catalogRowFromInstrument(i, now));
+    // Native token stays tradable for existing installs that already seeded it.
+    rows.push({
+      id: 'vaultspring', symbol: 'VLT', name: 'VaultSpring Token', network: 'BNB Smart Chain',
+      category: 'crypto', ticker: 'VLT/USDT', pricePrecision: 3, currentPrice: 5.5, change24h: 2.83,
+      minPositionUsd: 5, maxLeverage: 5, fundingRate8h: 0.02, fundingDirection: 'pay', spread: 0.01,
+      makerFeePercent: 0.01, takerFeePercent: 0.04, productType: 'USDT-маржинальный бессрочный контракт',
+      tradingHours: '24/7', enabled: true, updatedAt: now,
+    });
+    return rows;
+  }
+
+  function catalogRowFromInstrument(i: TradingInstrument, now: number): StakingProAssetRow {
+    return {
+      id: i.id, symbol: i.symbol, name: i.name, network: i.network,
+      category: i.category, ticker: i.ticker, pricePrecision: i.pricePrecision,
+      productType: i.productType, tradingHours: i.tradingHours,
+      currentPrice: i.currentPrice, change24h: i.change24h, minPositionUsd: i.minPositionUsd,
+      maxLeverage: i.maxLeverage, fundingRate8h: i.fundingRate8h, fundingDirection: i.fundingDirection,
+      spread: i.spread, makerFeePercent: i.makerFeePercent, takerFeePercent: i.takerFeePercent,
+      enabled: true, updatedAt: now,
+    };
+  }
+
+  // Idempotent upgrade for stores written before the multi-market catalog: adds
+  // missing instruments and back-fills market metadata. Anything the operator
+  // edited (price, leverage, enabled) is left untouched.
+  function mergeCatalogAssets(rows: StakingProAssetRow[]): StakingProAssetRow[] {
+    const now = Date.now();
+    for (const inst of TRADING_INSTRUMENTS) {
+      const existing = rows.find((a) => a.id === inst.id);
+      if (!existing) {
+        rows.push(catalogRowFromInstrument(inst, now));
+        continue;
+      }
+      if (!existing.category) existing.category = inst.category;
+      if (!existing.ticker) existing.ticker = inst.ticker;
+      if (existing.pricePrecision === undefined) existing.pricePrecision = inst.pricePrecision;
+      if (!existing.productType) existing.productType = inst.productType;
+      if (!existing.tradingHours) existing.tradingHours = inst.tradingHours;
+    }
+    return rows;
   }
 
   function saveStore() {
@@ -978,7 +1027,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     });
   });
 
-  // ---- Staking Pro helpers ------------------------------------------------
+  // ---- Trade Pro helpers --------------------------------------------------
   function refreshLivePrices() {
     store.stakingProPositions.forEach((p) => {
       if (p.status === 'open') {
@@ -1009,6 +1058,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const estSlPct = p.entryPrice > 0 ? ((p.direction === 'long' ? ((p.stopLossPrice - p.entryPrice) / p.entryPrice) : ((p.entryPrice - p.stopLossPrice) / p.entryPrice)) * p.leverage * 100) : 0;
     return {
       id: p.id, assetId: p.assetId, assetSymbol: p.assetSymbol, assetName: p.assetName,
+      category: p.category, ticker: p.ticker, pricePrecision: p.pricePrecision,
       direction: p.direction, executionType: p.executionType, entryPrice: p.entryPrice,
       currentPrice: p.currentPrice, positionSizeUsd: p.positionSizeUsd, collateralUsd: p.collateralUsd,
       leverage: p.leverage, takeProfitPrice: p.takeProfitPrice, stopLossPrice: p.stopLossPrice,
@@ -1034,7 +1084,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     saveLedger();
     store.journal.unshift({
       id: nowId('jr'), userId, walletPrimary: primary, asset: 'USDT', amount: -amount, amountUsd: -amount,
-      type: 'staking_reserve', reason: `Бронирование обеспечения Staking Pro`, source, author,
+      type: 'staking_reserve', reason: `Бронирование обеспечения Trade Pro`, source, author,
       createdAt: Date.now(), approved: true, requiresSecondApproval: false,
     });
     saveStore();
@@ -1052,7 +1102,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     }
     store.journal.unshift({
       id: nowId('jr'), userId, walletPrimary: primary, asset: 'USDT', amount, amountUsd: amount,
-      type: 'staking_release', reason: `Закрытие Staking Pro позиции (PnL ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)})`,
+      type: 'staking_release', reason: `Закрытие Trade Pro позиции (PnL ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)})`,
       source, author, createdAt: Date.now(), approved: true, requiresSecondApproval: false,
     });
     saveStore();
@@ -1069,7 +1119,10 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const spreadCostUsd = positionSizeUsd * (asset.spread / (asset.currentPrice || 1));
     return {
       id: input.id || nowId('pos'), userId, walletPrimary: primary, assetId: asset.id,
-      assetSymbol: asset.symbol, assetName: asset.name, direction: dir,
+      assetSymbol: asset.symbol, assetName: asset.name,
+      category: asset.category || 'crypto', ticker: asset.ticker || asset.symbol,
+      pricePrecision: asset.pricePrecision ?? 2,
+      direction: dir,
       executionType: input.executionType === 'limit' ? 'limit' : 'market',
       entryPrice, currentPrice: asset.currentPrice, positionSizeUsd, collateralUsd, leverage,
       takeProfitPrice: Number(input.takeProfitPrice) || 0, stopLossPrice: Number(input.stopLossPrice) || 0,
@@ -1102,6 +1155,9 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const existing = store.stakingProAssets.find((a) => a.id === id);
     const row: StakingProAssetRow = {
       id, symbol: String(b.symbol).toUpperCase(), name: b.name, network: b.network || 'Multi-Chain',
+      category: b.category || 'crypto', ticker: b.ticker || `${String(b.symbol).toUpperCase()}/USDT`,
+      pricePrecision: b.pricePrecision !== undefined ? Number(b.pricePrecision) : undefined,
+      productType: b.productType, tradingHours: b.tradingHours,
       currentPrice: Number(b.currentPrice) || 0, change24h: Number(b.change24h) || 0,
       minPositionUsd: Number(b.minPositionUsd) || 10, maxLeverage: Number(b.maxLeverage) || 10,
       fundingRate8h: Number(b.fundingRate8h) || 0, fundingDirection: b.fundingDirection === 'receive' ? 'receive' : 'pay',
@@ -1122,6 +1178,9 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const old = JSON.stringify(a);
     const b = req.body;
     ['symbol', 'name', 'network'].forEach((k) => { if (b[k] !== undefined) (a as any)[k] = k === 'symbol' ? String(b[k]).toUpperCase() : b[k]; });
+    ['ticker', 'productType', 'tradingHours'].forEach((k) => { if (b[k] !== undefined) (a as any)[k] = b[k]; });
+    if (b.category !== undefined) a.category = b.category;
+    if (b.pricePrecision !== undefined) a.pricePrecision = Number(b.pricePrecision);
     ['currentPrice', 'change24h', 'minPositionUsd', 'maxLeverage', 'fundingRate8h', 'spread', 'makerFeePercent', 'takerFeePercent']
       .forEach((k) => { if (b[k] !== undefined) (a as any)[k] = Number(b[k]); });
     if (b.fundingDirection !== undefined) a.fundingDirection = b.fundingDirection === 'receive' ? 'receive' : 'pay';
@@ -1244,6 +1303,9 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
       change24h: a.change24h, minPositionUsd: a.minPositionUsd, maxLeverage: a.maxLeverage,
       fundingRate8h: a.fundingRate8h, fundingDirection: a.fundingDirection, spread: a.spread,
       makerFeePercent: a.makerFeePercent, takerFeePercent: a.takerFeePercent,
+      // Market metadata drives the Trade Pro catalog in the wallet app.
+      category: a.category || 'crypto', ticker: a.ticker, pricePrecision: a.pricePrecision,
+      productType: a.productType, tradingHours: a.tradingHours,
     }));
     const positions = primary
       ? store.stakingProPositions.filter((p) => p.walletPrimary === primary).map(toAppPosition)
@@ -1453,7 +1515,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
   // =========================================================================
   
   // List all verification requests
-  router.get('/verifications', requireRole(['super_admin', 'finance_ops', 'risk_compliance']), (req: Request, res: Response) => {
+  router.get('/verifications', guard('verification.read'), (_req: Request, res: Response) => {
     const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
     let verifications: any[] = [];
     try {
@@ -1465,7 +1527,8 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
   });
 
   // Approve verification
-  router.post('/verifications/:id/approve', requireRole(['super_admin', 'finance_ops']), (req: Request, res: Response) => {
+  router.post('/verifications/:id/approve', guard('verification.write'), (req: Request, res: Response) => {
+    const who = (req as any).who as { userId: string; role: Role; name: string };
     const { id } = req.params;
     const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
     let verifications: any[] = [];
@@ -1480,7 +1543,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
 
     ver.status = 'approved';
     ver.approvedAt = Date.now();
-    ver.approvedBy = req.admin?.id || 'admin';
+    ver.approvedBy = who.userId;
     fs.writeFileSync(verificationsPath, JSON.stringify(verifications, null, 2), 'utf8');
 
     // Mark wallet as verified in ledger
@@ -1495,13 +1558,13 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
       }
     } catch {}
 
-    const who = req.admin?.id || 'unknown';
     audit(who, 'verification.approve', id, { address: ver.address, fullName: ver.fullName });
     res.json({ success: true });
   });
 
   // Reject verification
-  router.post('/verifications/:id/reject', requireRole(['super_admin', 'finance_ops', 'risk_compliance']), (req: Request, res: Response) => {
+  router.post('/verifications/:id/reject', guard('verification.write'), (req: Request, res: Response) => {
+    const who = (req as any).who as { userId: string; role: Role; name: string };
     const { id } = req.params;
     const { reason } = req.body;
     const verificationsPath = path.resolve(process.cwd(), 'data', 'verifications.json');
@@ -1518,10 +1581,9 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     ver.status = 'rejected';
     ver.rejectReason = reason || 'Documents do not meet requirements';
     ver.rejectedAt = Date.now();
-    ver.rejectedBy = req.admin?.id || 'admin';
+    ver.rejectedBy = who.userId;
     fs.writeFileSync(verificationsPath, JSON.stringify(verifications, null, 2), 'utf8');
 
-    const who = req.admin?.id || 'unknown';
     audit(who, 'verification.reject', id, { address: ver.address, reason: ver.rejectReason });
     res.json({ success: true });
   });
