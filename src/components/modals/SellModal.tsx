@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CheckCircle2, CreditCard, ChevronDown, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { X, CheckCircle2, CreditCard, ChevronDown, ShieldCheck, ArrowUpRight, Clock, AlertCircle } from 'lucide-react';
 import { Token, Transaction } from '../../types/wallet';
 import { CryptoIcon } from '../common/CryptoIcon';
 
@@ -21,6 +21,13 @@ export const SellModal: React.FC<SellModalProps> = ({
   const [provider, setProvider] = useState<'moonpay' | 'transak' | 'ramp'>('moonpay');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [step, setStep] = useState<'input' | 'pending' | 'success'>('input');
+  
+  // Bank details
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [accountHolder, setAccountHolder] = useState('');
+  const [swiftCode, setSwiftCode] = useState('');
 
   const numCrypto = parseFloat(cryptoAmount) || 0;
   const fiatEstimated = numCrypto * selectedToken.price * 0.985; // 1.5% fee
@@ -31,6 +38,7 @@ export const SellModal: React.FC<SellModalProps> = ({
 
   const handleExecuteSell = () => {
     if (numCrypto <= 0 || numCrypto > selectedToken.balance) return;
+    if (!bankName || !accountNumber || !accountHolder) return;
 
     setIsProcessing(true);
     setTimeout(() => {
@@ -41,12 +49,12 @@ export const SellModal: React.FC<SellModalProps> = ({
         tokenName: selectedToken.name,
         amount: numCrypto,
         amountUsd: fiatEstimated,
-        toAddress: `${provider.toUpperCase()} Off-Ramp Bank Account`,
+        toAddress: `${provider.toUpperCase()} - ${bankName}`,
         fromAddress: '0x71C...4e8B',
         timestamp: 'Just now',
-        status: 'completed',
+        status: 'pending',
         hash: `0x${Math.random().toString(16).substring(2, 42)}`,
-        fee: 1.85,
+        fee: fiatEstimated * 0.015,
         network: selectedToken.network
       };
 
@@ -57,9 +65,9 @@ export const SellModal: React.FC<SellModalProps> = ({
       };
 
       setIsProcessing(false);
-      setIsSuccess(true);
+      setStep('pending');
       onSellSuccess(newTx, updatedToken);
-    }, 1500);
+    }, 2000);
   };
 
   return (
@@ -189,13 +197,48 @@ export const SellModal: React.FC<SellModalProps> = ({
               </div>
             </div>
 
+            {/* Bank Details */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-slate-400 font-medium">Bank Details</label>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  placeholder="Bank Name"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Account Holder Name"
+                  value={accountHolder}
+                  onChange={(e) => setAccountHolder(e.target.value)}
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Account Number / IBAN"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                />
+                <input
+                  type="text"
+                  placeholder="SWIFT/BIC Code (optional)"
+                  value={swiftCode}
+                  onChange={(e) => setSwiftCode(e.target.value)}
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
+            </div>
+
             <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pt-1">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>Certified non-custodial crypto off-ramp payout</span>
             </div>
 
             <button
-              disabled={isProcessing || numCrypto <= 0 || numCrypto > selectedToken.balance}
+              disabled={isProcessing || numCrypto <= 0 || numCrypto > selectedToken.balance || !bankName || !accountNumber || !accountHolder}
               onClick={handleExecuteSell}
               className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-bold text-xs tracking-wide transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 cursor-pointer"
             >
@@ -203,7 +246,28 @@ export const SellModal: React.FC<SellModalProps> = ({
                 ? 'Processing Cashout...'
                 : numCrypto > selectedToken.balance
                 ? `Insufficient ${selectedToken.symbol}`
+                : (!bankName || !accountNumber || !accountHolder)
+                ? 'Fill bank details'
                 : `Sell to ${provider.toUpperCase()}`}
+            </button>
+          </div>
+        ) : step === 'pending' ? (
+          <div className="py-6 flex flex-col items-center text-center space-y-3">
+            <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center animate-pulse">
+              <Clock className="w-8 h-8" />
+            </div>
+            <span className="text-lg font-bold text-white">В обработке</span>
+            <p className="text-xs text-slate-400 max-w-xs">
+              Заявка на вывод ${fiatEstimated.toFixed(2)} {fiatCurrency} принята и ожидает проверки оператором.
+            </p>
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300 max-w-xs">
+              Статусы: В обработке → Отправлено → Выполнено
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs mt-4 transition-colors"
+            >
+              Закрыть
             </button>
           </div>
         ) : (
