@@ -207,7 +207,7 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col bg-[#07090E] overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-[#07090E] overflow-hidden">
       {/* Top Header */}
       <div className="px-4 py-3 bg-[#0B0F19] border-b border-white/[0.06] flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
