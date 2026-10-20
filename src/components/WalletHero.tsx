@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Eye, EyeOff, ArrowUp, ArrowDown, Banknote, ArrowLeftRight, 
   TrendingUp, ShieldAlert, X, ChevronRight, Sparkles, RotateCw,
-  Clock, AlertCircle, CheckCircle2
+  Clock, AlertCircle, CheckCircle2, Bell
 } from 'lucide-react';
 
 interface WalletHeroProps {
@@ -23,6 +23,8 @@ interface WalletHeroProps {
   onOpenEarn: () => void;
   verificationStatus?: 'none' | 'pending' | 'approved' | 'rejected';
   onOpenVerification?: () => void;
+  activityCount?: number;
+  onOpenActivity?: () => void;
 }
 
 export const WalletHero: React.FC<WalletHeroProps> = ({
@@ -42,7 +44,9 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
   onOpenSwap,
   onOpenEarn,
   verificationStatus = 'none',
-  onOpenVerification
+  onOpenVerification,
+  activityCount = 0,
+  onOpenActivity
 }) => {
   const [showBalance, setShowBalance] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
@@ -200,6 +204,32 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
           </span>
         </button>
       </div>
+
+      {/* Activity Banner (when there are pending items) */}
+      {activityCount > 0 && onOpenActivity && (
+        <div 
+          onClick={onOpenActivity}
+          className="w-full mt-3 bg-gradient-to-r from-blue-900/30 to-indigo-900/20 border border-blue-500/20 rounded-2xl p-3 flex items-center justify-between text-xs cursor-pointer hover:from-blue-900/40 hover:to-indigo-900/30 transition-all"
+        >
+          <div className="flex items-center gap-2.5 flex-1">
+            <div className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0 relative">
+              <Bell className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                {activityCount}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-bold text-white leading-tight">
+                Активность
+              </span>
+              <span className="text-[11px] text-slate-400 mt-0.5">
+                {activityCount === 1 ? '1 операция в обработке' : `${activityCount} операций в обработке`}
+              </span>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-blue-400" />
+        </div>
+      )}
 
       {/* Trust Wallet Security & Earn Announcement Banner */}
       {showBanner && (

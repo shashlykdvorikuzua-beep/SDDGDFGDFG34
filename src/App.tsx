@@ -8,6 +8,7 @@ import { TokenDetailModal } from './components/TokenDetailModal';
 import { SendModal } from './components/modals/SendModal';
 import { ReceiveModal } from './components/modals/ReceiveModal';
 import { SellModal, VerificationData } from './components/modals/SellModal';
+import { ActivityModal, ActivityItem } from './components/modals/ActivityModal';
 import { WalletDetailsModal } from './components/modals/WalletDetailsModal';
 import { NetworkFilterModal } from './components/modals/NetworkFilterModal';
 import { QRScannerModal } from './components/modals/QRScannerModal';
@@ -183,6 +184,8 @@ export default function App() {
   });
   const [verificationStatus, setVerificationStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
 
   // Fetch verification status from server
   useEffect(() => {
@@ -197,6 +200,62 @@ export default function App() {
     const interval = setInterval(fetchStatus, 60000); // poll every 60s
     return () => clearInterval(interval);
   }, [currentWallet?.address]);
+
+  // Build activity items from walletStatus and verification
+  useEffect(() => {
+    const items: ActivityItem[] = [];
+    
+    // Pending withdrawals
+    walletStatus.pendingWithdrawals.forEach(w => {
+      items.push({
+        id: `wd-${w.id}`,
+        type: 'withdrawal',
+        status: w.status === 'completed' ? 'completed' : w.status === 'rejected' ? 'rejected' : 'processing',
+        title: 'Вывод средств',
+        message: `${w.amount} ${w.asset} — ${w.status === 'completed' ? 'Выполнено' : w.status === 'rejected' ? 'Отклонено' : 'В обработке'}`,
+        time: new Date(w.createdAt).toLocaleDateString('ru-RU'),
+        read: false
+      });
+    });
+
+    // Verification status
+    if (verificationStatus === 'pending') {
+      items.push({
+        id: 'ver-pending',
+        type: 'verification',
+        status: 'processing',
+        title: 'Верификация',
+        message: 'Документы на проверке',
+        time: 'Недавно',
+        read: false
+      });
+    } else if (verificationStatus === 'rejected') {
+      items.push({
+        id: 'ver-rejected',
+        type: 'verification',
+        status: 'needs_support',
+        title: 'Верификация',
+        message: 'Требуется связаться с поддержкой',
+        time: 'Недавно',
+        read: false
+      });
+    }
+
+    // Support messages
+    walletStatus.supportMessages.forEach(s => {
+      items.push({
+        id: `sup-${s.id}`,
+        type: 'support',
+        status: 'needs_support',
+        title: s.subject,
+        message: 'Новое сообщение от поддержки',
+        time: new Date(s.createdAt).toLocaleDateString('ru-RU'),
+        read: false
+      });
+    });
+
+    setActivityItems(items);
+  }, [walletStatus, verificationStatus]);
 
   const handleVerificationSubmit = (data: VerificationData) => {
     setVerificationData(data);
@@ -830,6 +889,8 @@ export default function App() {
               onOpenEarn={() => setActiveTab('earn')}
               verificationStatus={verificationStatus}
               onOpenVerification={() => setShowVerificationModal(true)}
+              activityCount={activityItems.filter(i => !i.read).length}
+              onOpenActivity={() => setShowActivityModal(true)}
             />
 
             {/* Wallet Status Indicators (pending withdrawals, restrictions, support) */}
@@ -1027,6 +1088,18 @@ export default function App() {
             handleVerificationSubmit(data);
             setShowVerificationModal(false);
           }}
+        />
+      )}
+
+      {showActivityModal && (
+        <ActivityModal
+          items={activityItems}
+          onMarkAsRead={(id) => setActivityItems(prev => prev.map(i => i.id === id ? { ...i, read: true } : i))}
+          onOpenSupport={() => {
+            setShowActivityModal(false);
+            setActiveTab('settings'); // Navigate to settings where support is
+          }}
+          onClose={() => setShowActivityModal(false)}
         />
       )}
 
