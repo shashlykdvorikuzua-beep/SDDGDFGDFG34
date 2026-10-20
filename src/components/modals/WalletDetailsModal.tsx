@@ -295,50 +295,6 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
             <Lock className="w-4 h-4 text-blue-400" />
             <span>Заблокировать кошелек сейчас (ПИН-код)</span>
           </button>
-
-          {/* Reset / Wipe Button */}
-          {!showResetConfirm ? (
-            <button
-              onClick={() => setShowResetConfirm(true)}
-              className="w-full py-2.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors flex items-center justify-center gap-1.5"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Сбросить кошелек с этого телефона</span>
-            </button>
-          ) : (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-2.5">
-              <div className="flex items-center gap-2 text-rose-400 text-xs font-bold">
-                <AlertTriangle className="w-4 h-4" />
-                <span>Внимание: Сброс удалит кошелек с телефона</span>
-              </div>
-              <p className="text-[11px] text-slate-300">
-                Убедитесь, что вы сохранили 12 слов фразы восстановления. Введите ПИН-код для подтверждения:
-              </p>
-              <input
-                type="password"
-                maxLength={6}
-                placeholder="ПИН-код подтверждения"
-                value={resetPin}
-                onChange={(e) => setResetPin(e.target.value)}
-                className="w-full bg-black/40 border border-rose-500/30 rounded-xl px-3 py-2 text-center text-sm font-mono tracking-widest text-white focus:outline-none"
-              />
-              {resetError && <span className="text-xs text-rose-400 block">{resetError}</span>}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowResetConfirm(false)}
-                  className="w-1/2 py-2 rounded-xl bg-white/[0.06] text-slate-300 text-xs font-semibold"
-                >
-                  Отмена
-                </button>
-                <button
-                  onClick={handleConfirmReset}
-                  className="w-1/2 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
-                >
-                  Сбросить
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -288,17 +288,6 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         </div>
       </div>
 
-      {/* DANGER ZONE: RESET WALLET */}
-      <div className="pt-2">
-        <button
-          onClick={onResetWallet}
-          className="w-full py-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
-        >
-          <Trash2 className="w-4 h-4" />
-          <span>Сбросить кошелек с этого телефона</span>
-        </button>
-      </div>
-
       {/* CHANGE PIN MODAL */}
       {showChangePinModal && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
