@@ -23,9 +23,15 @@ export const PinVerifyModal: React.FC<PinVerifyModalProps> = ({
       setPin(nextPin);
       setError(null);
       if (nextPin.length === 6) {
-        // Any 6 digits or default demo 123456
+        // Verify against stored PIN
+        const savedPin = localStorage.getItem('vaultspring_pin') || '123456';
         setTimeout(() => {
-          onSuccess();
+          if (nextPin === savedPin) {
+            onSuccess();
+          } else {
+            setError('Неверный PIN-код');
+            setPin('');
+          }
         }, 200);
       }
     }

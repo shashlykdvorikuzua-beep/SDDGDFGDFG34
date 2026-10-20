@@ -204,11 +204,23 @@ export const ClassicStakingScreen: React.FC<ClassicStakingScreenProps> = ({
   };
 
   const handleConfirmPin = () => {
+    // Re-check balance (defense in depth)
+    if (!currentToken || numAmount > currentToken.balance) {
+      setShowPinModal(false);
+      return;
+    }
+
     setShowPinModal(false);
     setIsProcessing(true);
 
     setTimeout(() => {
       if (!selectedAsset || !currentToken || !currentCatalogItem) return;
+
+      // Final balance check
+      if (numAmount > currentToken.balance) {
+        setIsProcessing(false);
+        return;
+      }
 
       const newDeposit: StakingActiveDeposit = {
         id: `dep-${Date.now()}`,
