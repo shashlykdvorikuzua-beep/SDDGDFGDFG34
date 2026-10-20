@@ -48,29 +48,25 @@ export const SendModal: React.FC<SendModalProps> = ({
   const amountUsd = numAmount * selectedToken.price;
   const fiatSymbol = fiatCurrency === 'USD' ? '$' : fiatCurrency === 'EUR' ? '€' : fiatCurrency === 'GBP' ? '£' : fiatCurrency === 'JPY' ? '¥' : fiatCurrency === 'CNY' ? '¥' : fiatCurrency === 'CHF' ? 'CHF ' : fiatCurrency === 'CAD' ? 'C$' : fiatCurrency === 'AUD' ? 'A$' : fiatCurrency === 'PLN' ? 'zł' : fiatCurrency === 'INR' ? '₹' : '$';
   
-  // Realistic gas fees based on network
-  const gasFee = isTron 
-    ? (gasSpeed === 'slow' ? 0.90 : gasSpeed === 'normal' ? 1.45 : 2.20)
-    : (gasSpeed === 'slow' ? 0.20 : gasSpeed === 'normal' ? 0.45 : 1.10);
+  // Fee is deducted FROM the amount (like other wallets)
+  // Fee percentage based on network and speed
+  const feePercentage = isTron 
+    ? (gasSpeed === 'slow' ? 0.005 : gasSpeed === 'normal' ? 0.01 : 0.015) // 0.5%, 1%, 1.5%
+    : (gasSpeed === 'slow' ? 0.002 : gasSpeed === 'normal' ? 0.005 : 0.01); // 0.2%, 0.5%, 1%
+  
+  const feeUsd = amountUsd * feePercentage;
+  const recipientAmountUsd = amountUsd - feeUsd;
+  const feeCrypto = numAmount * feePercentage;
+  const recipientAmountCrypto = numAmount - feeCrypto;
 
   // Address validation
   const addressError = recipient ? validateAddress(selectedToken.network, recipient) : null;
   
-  // Balance check: amount + gas must not exceed balance
-  const isNativeToken = selectedToken.symbol === 'TRX' || selectedToken.symbol === 'ETH' || selectedToken.symbol === 'BNB';
-  const totalNeeded = numAmount + (isNativeToken ? gasFee : 0);
-  const insufficientBalance = numAmount > 0 && totalNeeded > selectedToken.balance;
-
-  // TRX gas fee check for TRON network (non-TRX tokens)
-  const trxToken = tokens.find(t => t.symbol === 'TRX');
-  const trxBalance = trxToken?.balance || 0;
-  const tronGasFeeInTRX = isTron 
-    ? (gasSpeed === 'slow' ? 8 : gasSpeed === 'normal' ? 13.7 : 20)
-    : 0;
-  const insufficientTrxForGas = isTron && !isNativeToken && numAmount > 0 && trxBalance < tronGasFeeInTRX;
+  // Balance check: only check if user has enough for the amount (fee is deducted from it)
+  const insufficientBalance = numAmount > 0 && numAmount > selectedToken.balance;
 
   const handleMax = () => {
-    const maxCrypto = isNativeToken ? Math.max(0, selectedToken.balance - gasFee) : selectedToken.balance;
+    const maxCrypto = selectedToken.balance;
     if (amountMode === 'fiat') {
       setAmount((maxCrypto * selectedToken.price).toFixed(2));
     } else {
@@ -107,7 +103,7 @@ export const SendModal: React.FC<SendModalProps> = ({
       tokenName: selectedToken.name,
       network: selectedToken.network,
       amount: numAmount,
-      fee: gasFee,
+      fee: feeUsd,
       price: selectedToken.price,
       balanceKey: selectedToken.balanceKey || selectedToken.symbol
     });
@@ -324,14 +320,7 @@ export const SendModal: React.FC<SendModalProps> = ({
                 </span>
               </div>
               {insufficientBalance && (
-                <p className="text-[11px] text-rose-400 px-1">Недостаточно средств (сумма + комиссия превышают баланс)</p>
-              )}
-              {!isNativeToken && isTron && numAmount > 0 && (
-                <p className={`text-[10px] px-1 ${insufficientTrxForGas ? 'text-rose-400 font-semibold' : 'text-amber-400'}`}>
-                  {insufficientTrxForGas 
-                    ? `❌ Недостаточно TRX для газа. Нужно: ${tronGasFeeInTRX} TRX, у вас: ${trxBalance.toFixed(2)} TRX` 
-                    : `⚠ Комиссия оплачивается в TRX. У вас: ${trxBalance.toFixed(2)} TRX`}
-                </p>
+                <p className="text-[11px] text-rose-400 px-1">Недостаточно средств</p>
               )}
             </div>
 
@@ -357,9 +346,7 @@ export const SendModal: React.FC<SendModalProps> = ({
                   >
                     <span>{spd}</span>
                     <span className="block text-[10px] text-slate-500 font-mono font-normal">
-                      {isTron
-                        ? (spd === 'slow' ? '$0.90 (8 TRX)' : spd === 'normal' ? '$1.45 (13.7 TRX)' : '$2.20 (20 TRX)')
-                        : (spd === 'slow' ? '$0.20' : spd === 'normal' ? '$0.45' : '$1.10')}
+                      {spd === 'slow' ? '0.5-0.2%' : spd === 'normal' ? '1-0.5%' : '1.5-1%'}
                     </span>
                   </button>
                 ))}
@@ -368,7 +355,7 @@ export const SendModal: React.FC<SendModalProps> = ({
 
             {/* Next Button */}
             <button
-              disabled={!numAmount || numAmount <= 0 || numAmount > selectedToken.balance || !!addressError || insufficientBalance || insufficientTrxForGas}
+              disabled={!numAmount || numAmount <= 0 || numAmount > selectedToken.balance || !!addressError || insufficientBalance}
               onClick={() => setStep('confirm')}
               className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none text-white font-bold text-xs tracking-wide transition-colors flex items-center justify-center gap-2 mt-2 cursor-pointer shadow-lg shadow-blue-600/20"
             >
@@ -403,13 +390,17 @@ export const SendModal: React.FC<SendModalProps> = ({
                 <span className="text-white">{selectedToken.network}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span className="text-slate-400">Est. Network Fee</span>
-                <span className="text-white font-mono">${gasFee.toFixed(2)}</span>
+                <span className="text-slate-400">You Send</span>
+                <span className="text-white font-mono">${amountUsd.toFixed(2)} USD</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-white/[0.04]">
+                <span className="text-slate-400">Network Fee ({(feePercentage * 100).toFixed(1)}%)</span>
+                <span className="text-rose-400 font-mono">-${feeUsd.toFixed(2)} USD</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-400 font-semibold">Total Debited</span>
-                <span className="text-blue-400 font-bold font-mono">
-                  ${(amountUsd + gasFee).toFixed(2)} USD
+                <span className="text-slate-400 font-semibold">Recipient Gets</span>
+                <span className="text-green-400 font-bold font-mono">
+                  ${recipientAmountUsd.toFixed(2)} USD
                 </span>
               </div>
             </div>
