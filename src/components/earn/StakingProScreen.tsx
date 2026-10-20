@@ -262,30 +262,40 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 space-y-4">
         {activeTab === 'open_strategy' ? (
           <div className="space-y-4">
-            {/* 1. Asset & Direction Selector Card */}
+            {/* 1. Trading Pair Card */}
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-400">Криптоактив</span>
+                <span className="text-xs font-semibold text-slate-400">Торговая пара</span>
                 <span className="text-xs text-slate-400 font-mono">
-                  Доступно: ${availableBalanceUsd.toFixed(2)} USD
+                  Баланс USDT: ${availableBalanceUsd.toFixed(2)}
                 </span>
               </div>
 
-              {/* Asset Picker Trigger */}
-              <div
-                onClick={() => setShowAssetPicker(!showAssetPicker)}
-                className="bg-white/[0.04] border border-white/[0.08] hover:border-blue-500/50 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all"
-              >
-                <div className="flex items-center gap-2.5">
-                  <CryptoIcon symbol={selectedAsset.symbol} network={selectedAsset.network} size={32} />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-white">{selectedAsset.name}</span>
-                    <span className="text-xs text-slate-400 font-mono">
-                      ${selectedAsset.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
+              {/* Trading Pair Display */}
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-center">
+                    <CryptoIcon symbol="USDT" size={28} />
+                    <span className="text-[9px] text-slate-400 mt-0.5">Базовая</span>
+                  </div>
+                  <span className="text-xs text-slate-500 mx-1">/</span>
+                  <div
+                    onClick={() => setShowAssetPicker(!showAssetPicker)}
+                    className="flex items-center gap-2 cursor-pointer hover:bg-white/[0.05] rounded-lg px-2 py-1 transition-colors"
+                  >
+                    <CryptoIcon symbol={selectedAsset.symbol} network={selectedAsset.network} size={28} />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-white">{selectedAsset.symbol}</span>
+                      <span className="text-[9px] text-slate-400">Актив</span>
+                    </div>
+                    <ChevronDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </div>
-                <ChevronDown className="w-4 h-4 text-slate-400" />
+                <div className="text-right">
+                  <span className="text-xs text-slate-400 font-mono block">
+                    1 {selectedAsset.symbol} = ${selectedAsset.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
 
               {/* Asset Dropdown */}
