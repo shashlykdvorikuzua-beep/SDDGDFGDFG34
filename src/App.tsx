@@ -11,7 +11,6 @@ import { SellModal, VerificationData } from './components/modals/SellModal';
 import { ActivityModal, ActivityItem } from './components/modals/ActivityModal';
 import { WalletDetailsModal } from './components/modals/WalletDetailsModal';
 import { NetworkFilterModal } from './components/modals/NetworkFilterModal';
-import { QRScannerModal } from './components/modals/QRScannerModal';
 import { NotificationsModal } from './components/modals/NotificationsModal';
 import { ManageTokensModal } from './components/modals/ManageTokensModal';
 import { TrustWalletOnboarding } from './components/onboarding/TrustWalletOnboarding';
@@ -350,7 +349,6 @@ export default function App() {
   const [modalSell, setModalSell] = useState(false);
   const [modalWalletSwitcher, setModalWalletSwitcher] = useState(false);
   const [modalNetworkFilter, setModalNetworkFilter] = useState(false);
-  const [modalQRScanner, setModalQRScanner] = useState(false);
   const [modalNotifications, setModalNotifications] = useState(false);
   const [modalManageTokens, setModalManageTokens] = useState(false);
   const [fiatCurrency, setFiatCurrency] = useState('USD');
@@ -862,7 +860,6 @@ export default function App() {
         unreadCount={unreadCount}
         onOpenWalletSwitcher={() => setModalWalletSwitcher(true)}
         onOpenNetworkFilter={() => setModalNetworkFilter(true)}
-        onOpenQRScanner={() => setModalQRScanner(true)}
         onOpenNotifications={() => setModalNotifications(true)}
       />
 
@@ -1124,16 +1121,6 @@ export default function App() {
           currentNetwork={currentNetwork}
           onSelectNetwork={(net) => setCurrentNetwork(net)}
           onClose={() => setModalNetworkFilter(false)}
-        />
-      )}
-
-      {/* 7. QR Scanner Modal */}
-      {modalQRScanner && (
-        <QRScannerModal
-          onScanResult={(addr) => {
-            setModalSend({ open: true });
-          }}
-          onClose={() => setModalQRScanner(false)}
         />
       )}
 

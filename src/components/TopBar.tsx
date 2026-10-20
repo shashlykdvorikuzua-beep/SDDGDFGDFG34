@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, ScanLine, Bell, Globe, Copy, Check } from 'lucide-react';
+import { ChevronDown, Bell, Globe, Copy, Check } from 'lucide-react';
 import { WalletAccount, NetworkType } from '../types/wallet';
 
 interface TopBarProps {
@@ -8,7 +8,6 @@ interface TopBarProps {
   unreadCount: number;
   onOpenWalletSwitcher: () => void;
   onOpenNetworkFilter: () => void;
-  onOpenQRScanner: () => void;
   onOpenNotifications: () => void;
 }
 
@@ -18,7 +17,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   unreadCount,
   onOpenWalletSwitcher,
   onOpenNetworkFilter,
-  onOpenQRScanner,
   onOpenNotifications
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -77,15 +75,6 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="truncate max-w-[80px]">
             {currentNetwork === 'All Networks' ? 'All' : currentNetwork.split(' ')[0]}
           </span>
-        </button>
-
-        {/* QR Scanner Icon */}
-        <button
-          onClick={onOpenQRScanner}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
-          title="Scan QR Code"
-        >
-          <ScanLine className="w-4 h-4" />
         </button>
 
         {/* Notification Bell */}
