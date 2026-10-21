@@ -84,7 +84,7 @@ export const SellModal: React.FC<SellModalProps> = ({
     };
 
     onVerificationSubmit(verData);
-    setVerStep('pending');
+    onClose();
   };
 
   const handleExecuteSell = () => {

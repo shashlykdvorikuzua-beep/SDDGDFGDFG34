@@ -7,7 +7,7 @@
       "role": "super_admin",
       "mfaEnabled": true,
       "active": true,
-      "lastLogin": 1792492273657
+      "lastLogin": 1792581011113
     },
     {
       "id": "a-finance",
@@ -391,6 +391,45 @@
   ],
   "tokenPriceHistory": [],
   "auditLog": [
+    {
+      "id": "audit-1792581011118-pb29b",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792581011118
+    },
+    {
+      "id": "audit-1792580923047-e05ks",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792580923047
+    },
+    {
+      "id": "audit-1792580889867-jwnmt",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792580889867
+    },
     {
       "id": "audit-1792492273672-tgvrm",
       "actor": "Super Administrator",

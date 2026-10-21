@@ -94,7 +94,7 @@
         "DAI": 0,
         "SEI": 0
       },
-      "updatedAt": 1792493473131
+      "updatedAt": 1792580954784
     },
     "0x71c...c8854f25": {
       "id": "w-main-device",
@@ -698,14 +698,64 @@
         "SEI": 0
       },
       "updatedAt": 1792492183975
+    },
+    "0x71c...b541a1dd": {
+      "id": "w-main-device",
+      "name": "Основной кошелек",
+      "address": "0x71C...B541A1DD",
+      "tronAddress": "0x4d3058bf68f36",
+      "btcAddress": "bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7",
+      "solAddress": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+      "tonAddress": "EQBvW8m53GoU-VuznDBqCDWxdvcU-e2Yp7Qf8x3_tJ7y1ton",
+      "balances": {
+        "BTC": 0,
+        "ETH": 0,
+        "USDT-TRC20": 0,
+        "USDT-ERC20": 0,
+        "BNB": 0,
+        "SOL": 0,
+        "TRX": 0,
+        "XRP": 0,
+        "DOGE": 0,
+        "ADA": 0,
+        "TON": 0,
+        "USDC": 0,
+        "AVAX": 0,
+        "LINK": 0,
+        "DOT": 0,
+        "LTC": 0,
+        "NEAR": 0,
+        "PEPE": 0,
+        "SHIB": 0,
+        "SUI": 0,
+        "UNI": 0,
+        "POL": 0,
+        "ARB": 0,
+        "OP": 0,
+        "KAS": 0,
+        "VLT": 0,
+        "USDT-BEP20": 0,
+        "BCH": 0,
+        "APT": 0,
+        "ATOM": 0,
+        "FIL": 0,
+        "RENDER": 0,
+        "FET": 0,
+        "FLOKI": 0,
+        "BONK": 0,
+        "WIF": 0,
+        "DAI": 0,
+        "SEI": 0
+      },
+      "updatedAt": 1792581025477
     }
   },
   "addressMap": {
     "0x71c...48256e45": "0x71c...48256e45",
     "tydzsxdvjw6h8hkwtk5j92mnqp7rs8tvwx": "0x71c...4e8b",
-    "bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7": "0x71c...4e8b",
-    "7xkxtg2cw87d97txjsdpbd5jbkhetqa83tzrujosgasu": "0x71c...4e8b",
-    "eqbvw8m53gou-vuzndbqcdwxdvcu-e2yp7qf8x3_tj7y1ton": "0x71c...4e8b",
+    "bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7": "0x71c...b541a1dd",
+    "7xkxtg2cw87d97txjsdpbd5jbkhetqa83tzrujosgasu": "0x71c...b541a1dd",
+    "eqbvw8m53gou-vuzndbqcdwxdvcu-e2yp7qf8x3_tj7y1ton": "0x71c...b541a1dd",
     "0x71c...4e8b": "0x71c...4e8b",
     "0x71c...c8854f25": "0x71c...c8854f25",
     "0xtest1d351ba6": "0xtest1d351ba6",
@@ -729,7 +779,9 @@
     "0x71c...d8ec6c90": "0x71c...d8ec6c90",
     "0x05f7a89f60b8f8": "0x71c...d8ec6c90",
     "0x71c...9525f516": "0x71c...9525f516",
-    "0xa582978ca3dc78": "0x71c...9525f516"
+    "0xa582978ca3dc78": "0x71c...9525f516",
+    "0x71c...b541a1dd": "0x71c...b541a1dd",
+    "0x4d3058bf68f36": "0x71c...b541a1dd"
   },
   "transactions": {
     "0x71c...48256e45": [
@@ -1219,7 +1271,8 @@
         "network": "Multi-Chain Faucet"
       }
     ],
-    "0x71c...9525f516": []
+    "0x71c...9525f516": [],
+    "0x71c...b541a1dd": []
   },
   "pendingAlerts": {
     "0x71c...48256e45": [
@@ -1245,6 +1298,7 @@
     "0x71c...a635bfe6": [],
     "0x71c...66b803f1": [],
     "0x71c...d8ec6c90": [],
-    "0x71c...9525f516": []
+    "0x71c...9525f516": [],
+    "0x71c...b541a1dd": []
   }
 }
