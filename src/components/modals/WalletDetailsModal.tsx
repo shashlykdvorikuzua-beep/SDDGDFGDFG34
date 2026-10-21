@@ -111,9 +111,9 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
           <div className="space-y-2 pt-2 border-t border-white/[0.06]">
             {/* EVM Address */}
             <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/[0.04]">
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span className="text-[10px] text-slate-400 font-medium">EVM (ETH, BSC, Polygon, ARB)</span>
-                <span className="text-xs font-mono text-slate-200">{wallet.address}</span>
+                <span className="text-xs font-mono text-slate-200 break-all">{wallet.address}</span>
               </div>
               <button
                 onClick={() => {
@@ -121,7 +121,7 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                   setCopiedEvm(true);
                   setTimeout(() => setCopiedEvm(false), 2000);
                 }}
-                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white"
+                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white shrink-0"
               >
                 {copiedEvm ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
@@ -129,12 +129,12 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
 
             {/* TRON Address */}
             <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/[0.04]">
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-slate-400 font-medium">TRON Network</span>
                   <span className="text-[9px] bg-red-500/20 text-red-300 font-bold px-1.5 py-0.2 rounded">USDT TRC-20</span>
                 </div>
-                <span className="text-xs font-mono text-purple-300">
+                <span className="text-xs font-mono text-purple-300 break-all">
                   {wallet.tronAddress || 'TYDZSxdvjW6H8HkWtK5J92mNqP7rS8tVwX'}
                 </span>
               </div>
@@ -144,7 +144,7 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                   setCopiedTron(true);
                   setTimeout(() => setCopiedTron(false), 2000);
                 }}
-                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white"
+                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white shrink-0"
               >
                 {copiedTron ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
@@ -152,9 +152,9 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
 
             {/* Bitcoin Address */}
             <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/[0.04]">
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span className="text-[10px] text-slate-400 font-medium">Bitcoin Native SegWit</span>
-                <span className="text-xs font-mono text-amber-400">bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7</span>
+                <span className="text-xs font-mono text-amber-400 break-all">bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7</span>
               </div>
               <button
                 onClick={() => {
@@ -162,7 +162,7 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                   setCopiedBtc(true);
                   setTimeout(() => setCopiedBtc(false), 2000);
                 }}
-                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white"
+                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white shrink-0"
               >
                 {copiedBtc ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
@@ -170,9 +170,9 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
 
             {/* Solana Address */}
             <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/[0.04]">
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span className="text-[10px] text-slate-400 font-medium">Solana (SPL)</span>
-                <span className="text-xs font-mono text-emerald-400">7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU</span>
+                <span className="text-xs font-mono text-emerald-400 break-all">7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU</span>
               </div>
               <button
                 onClick={() => {
@@ -180,7 +180,7 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                   setCopiedSol(true);
                   setTimeout(() => setCopiedSol(false), 2000);
                 }}
-                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white"
+                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white shrink-0"
               >
                 {copiedSol ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
@@ -188,9 +188,9 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
 
             {/* TON Address */}
             <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-white/[0.04]">
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span className="text-[10px] text-slate-400 font-medium">The Open Network (TON)</span>
-                <span className="text-xs font-mono text-sky-400">EQBvW8m53GoU-VuznDBqCDWxdvcU-e2Yp7Qf8x3_tJ7y1ton</span>
+                <span className="text-xs font-mono text-sky-400 break-all">EQBvW8m53GoU-VuznDBqCDWxdvcU-e2Yp7Qf8x3_tJ7y1ton</span>
               </div>
               <button
                 onClick={() => {
@@ -198,7 +198,7 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                   setCopiedTon(true);
                   setTimeout(() => setCopiedTon(false), 2000);
                 }}
-                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white"
+                className="p-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white shrink-0"
               >
                 {copiedTon ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>

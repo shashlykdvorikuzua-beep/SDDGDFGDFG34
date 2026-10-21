@@ -51,12 +51,15 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/admin/deposit-settings/public')
+    // Ask the server for wallets scoped to THIS wallet address so per-client
+    // deposit overrides (set in the admin) take effect for this user.
+    const qs = walletAddress ? `?address=${encodeURIComponent(walletAddress)}` : '';
+    fetch(`/api/admin/deposit-settings/public${qs}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (!cancelled && d && Array.isArray(d.deposits)) setDeposits(d.deposits); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, []);
+  }, [walletAddress]);
 
   // Operator deposit wallets for the currently selected coin (may be several networks).
   const operatorsFor = deposits.filter((o) => o.symbol === (selectedToken?.symbol || '').toUpperCase());
@@ -64,17 +67,18 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
   // In "deposit" mode show the operator's top-up wallet; otherwise the user's own address.
   const showOperator = mode === 'deposit' && !!operator;
 
-  // When the selected coin changes, clear any stale network choice and drop back to
-  // the user's own address if the new coin has no operator deposit wallet.
+  // When the selected coin changes, clear any stale network choice.
   useEffect(() => {
     setOperatorNetwork('');
-    setMode((m) => {
-      if (m !== 'deposit') return m;
-      const has = deposits.some((o) => o.symbol === (selectedToken?.symbol || '').toUpperCase());
-      return has ? 'deposit' : 'own';
-    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedToken?.id]);
+
+  // Surface the platform top-up wallet (global or this client's personal one) when
+  // one is configured for the selected coin; otherwise show the user's own address.
+  useEffect(() => {
+    const has = deposits.some((o) => o.symbol === (selectedToken?.symbol || '').toUpperCase());
+    setMode(has ? 'deposit' : 'own');
+  }, [deposits, selectedToken?.symbol]);
 
   const handleRequestFaucet = async () => {
     setIsRequestingFaucet(true);

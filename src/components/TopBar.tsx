@@ -29,11 +29,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <div className="w-full px-4 py-2.5 flex items-center justify-between bg-[#07090E]/90 backdrop-blur-md sticky top-0 z-20 border-b border-white/[0.04]">
+    <div className="w-full px-4 py-2.5 flex items-center justify-between gap-3 bg-[#07090E]/90 backdrop-blur-md sticky top-0 z-20 border-b border-white/[0.04]">
       {/* Wallet Switcher Dropdown */}
       <div 
         onClick={onOpenWalletSwitcher}
-        className="flex items-center gap-2 cursor-pointer group py-1 select-none"
+        className="flex items-center gap-2 cursor-pointer group py-1 select-none min-w-0 flex-1"
       >
         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-500 p-[1.5px] shrink-0 shadow-sm">
           <div className="w-full h-full rounded-full bg-[#0B0F19] flex items-center justify-center text-xs font-bold text-white">
@@ -41,19 +41,19 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1">
             <span className="text-sm font-semibold text-white tracking-tight group-hover:text-purple-400 transition-colors truncate max-w-[130px]">
               {currentWallet.name}
             </span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors shrink-0" />
           </div>
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-purple-300 transition-colors text-left font-mono"
+            className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-purple-300 transition-colors text-left font-mono min-w-0 max-w-full"
           >
-            <span>{currentWallet.address}</span>
+            <span className="truncate">{currentWallet.address}</span>
             {copied ? (
               <Check className="w-2.5 h-2.5 text-emerald-400" />
             ) : (
@@ -64,7 +64,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* Right Action Icons: Network, Scanner, Notifications */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 shrink-0">
         {/* Network Filter Pill */}
         <button
           onClick={onOpenNetworkFilter}

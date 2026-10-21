@@ -13,7 +13,7 @@ import {
   TRADING_INSTRUMENTS, TRADING_MARKETS, FUTURE_MARKETS, MARKET_BY_ID, resolveInstrument,
   formatInstrumentPrice, priceStep, leverageStepsFor, estimateLiquidationPrice, instrumentCount,
 } from '../../data/stakingProData';
-import { MarketNotice, FutureMarketsCard } from './TradeParts';
+import { FutureMarketsCard } from './TradeParts';
 
 interface StakingProScreenProps {
   assets: StakingProAsset[];
@@ -84,7 +84,6 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
   const [tpPrice, setTpPrice] = useState<string>('');
   const [slPrice, setSlPrice] = useState<string>('');
 
-  const [providerAcknowledged, setProviderAcknowledged] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,9 +92,6 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
   const [editTpInput, setEditTpInput] = useState('');
   const [editSlInput, setEditSlInput] = useState('');
   const [positionToClose, setPositionToClose] = useState<StakingProPosition | null>(null);
-
-  const market = MARKET_BY_ID[selectedMarket];
-  const providerPending = market.providerStatus === 'pending';
 
   const marketInstruments = useMemo(
     () => catalog.filter((i) => i.category === selectedMarket),
@@ -174,8 +170,8 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
 
   useEffect(() => {
     if (!selectedInstrument) return;
-    setProviderAcknowledged(!providerPending);
     applyDefaultLevels(selectedInstrument.currentPrice, direction);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedInstrument?.id, selectedMarket]);
 
   const handleSelectMarket = (id: MarketCategory) => {
@@ -223,7 +219,6 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
     !notEnoughMargin &&
     isTpValid &&
     isSlValid &&
-    providerAcknowledged &&
     !isSubmitting;
 
   const handleOpenConfirmation = () => {
@@ -621,9 +616,6 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
               </div>
             </div>
 
-            {/* Provider notice */}
-            <MarketNotice market={market} />
-
             {/* Submit button */}
             <button
               type="button"
@@ -637,6 +629,21 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
             >
               {isSubmitting ? 'Открытие...' : 'Открыть позицию'}
             </button>
+
+            {/* Inline reason when the order can't be submitted yet */}
+            {!canSubmit && !isSubmitting && (
+              <p className="text-center text-[11px] text-amber-300/90 leading-snug">
+                {numPosSize <= 0
+                  ? 'Укажите сумму позиции.'
+                  : belowMinPosition
+                  ? `Минимальный размер позиции: ${selectedInstrument?.minPositionUsd ?? 0} USDT.`
+                  : notEnoughMargin
+                  ? `Недостаточно свободного USDT: требуется ${requiredMargin.toFixed(2)}, доступно ${availableBalanceUsd.toFixed(2)}.`
+                  : !isTpValid
+                  ? 'Тейк-профит должен быть выше цены входа для Long и ниже — для Short.'
+                  : 'Стоп-лосс должен быть ниже цены входа для Long и выше — для Short.'}
+              </p>
+            )}
           </div>
         ) : (
           /* Мои позиции */

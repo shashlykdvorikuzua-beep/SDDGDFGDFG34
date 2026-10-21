@@ -37,6 +37,22 @@ export interface UserDetail {
   transactions: any[];
   restrictions: Restriction[];
   chats: { id: string; subject: string; status: string }[];
+  // Per-client control (set from the admin panel for this wallet only).
+  priceOverrides: Record<string, { currentPrice?: number; change24h?: number }>;
+  depositOverrides: Record<string, ClientDepositOverride>;
+  marketAssets: { id: string; name: string; symbol: string; network: string; category: string; currentPrice: number; change24h: number; pricePrecision?: number }[];
+  coinOptions: string[];
+  operatorDeposits: { symbol: string; network: string; address: string; memo?: string; label?: string; qrImage: string | null }[];
+}
+
+export interface ClientDepositOverride {
+  symbol: string;
+  network: string;
+  address: string;
+  memo?: string;
+  label?: string;
+  qrImage: string | null;
+  updatedAt: number;
 }
 
 export interface JournalEntry {

@@ -159,11 +159,11 @@ export const TokenList: React.FC<TokenListProps> = ({
                     className="flex items-center justify-between py-3.5 group cursor-pointer hover:bg-white/[0.02] -mx-2 px-2 rounded-xl transition-colors select-none"
                   >
                     {/* Left: Token Icon + Name + Subtitle */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <CryptoIcon symbol={token.symbol} network={token.network} size={40} />
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-semibold text-white tracking-tight group-hover:text-blue-400 transition-colors">
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-sm font-semibold text-white tracking-tight group-hover:text-blue-400 transition-colors truncate">
                             {token.name}
                           </span>
                           {token.network === 'TRON (TRC-20)' ? (
@@ -227,7 +227,7 @@ export const TokenList: React.FC<TokenListProps> = ({
                     </div>
 
                     {/* Right: User Balance and USD value */}
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-end shrink-0 pl-2">
                       <span className="text-sm font-semibold text-white font-mono tabular-nums">
                         {token.balance.toLocaleString('en-US', { maximumFractionDigits: 4 })} {token.symbol}
                       </span>
@@ -402,13 +402,13 @@ export const TokenList: React.FC<TokenListProps> = ({
                 <span className="text-slate-400">Network Fee</span>
                 <span className="text-white font-mono">${selectedTx.fee.toFixed(3)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span className="text-slate-400">Recipient / Contract</span>
-                <span className="text-blue-400 font-mono">{selectedTx.toAddress}</span>
+              <div className="flex items-start justify-between gap-3 py-1 border-b border-white/[0.04]">
+                <span className="text-slate-400 shrink-0">Recipient / Contract</span>
+                <span className="text-blue-400 font-mono break-all text-right">{selectedTx.toAddress}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/[0.04]">
-                <span className="text-slate-400">Transaction Hash</span>
-                <span className="text-slate-300 font-mono truncate max-w-[160px]">{selectedTx.hash}</span>
+              <div className="flex items-start justify-between gap-3 py-1 border-b border-white/[0.04]">
+                <span className="text-slate-400 shrink-0">Transaction Hash</span>
+                <span className="text-slate-300 font-mono break-all text-right max-w-[60%]">{selectedTx.hash}</span>
               </div>
             </div>
 

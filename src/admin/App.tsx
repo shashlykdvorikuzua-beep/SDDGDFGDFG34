@@ -22,7 +22,7 @@ import { NotificationsScreen } from './screens/NotificationsScreen';
 import { ReportsScreen } from './screens/ReportsScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 
-interface NavItem { key: string; label: string; icon: React.ReactNode; screen: React.ReactNode; roles?: Role[]; }
+interface NavItem { key: string; label: string; icon: React.ReactNode; screen: React.ReactNode; roles?: Role[]; group: string; }
 
 const App: React.FC = () => {
   const [account, setAccount] = useState<any | null>(null);
@@ -48,20 +48,20 @@ const App: React.FC = () => {
 
   const role: Role = account.role;
   const nav: NavItem[] = [
-    { key: 'dashboard', label: 'Обзор', icon: <LayoutDashboard className="w-4.5 h-4.5" />, screen: <Dashboard onNavigate={setActive} /> },
-    { key: 'users', label: 'Пользователи / Аккаунты', icon: <Users className="w-4.5 h-4.5" />, screen: <UsersScreen role={role} /> },
-    { key: 'pool', label: 'Пул адресов', icon: <Wallet2 className="w-4.5 h-4.5" />, screen: <AddressPoolScreen role={role} /> },
-    { key: 'deposit-wallets', label: 'Кошельки пополнения', icon: <QrCode className="w-4.5 h-4.5" />, screen: <DepositWalletsScreen role={role} /> },
-    { key: 'deposits', label: 'Пополнения и зачисления', icon: <ArrowDownToLine className="w-4.5 h-4.5" />, screen: <DepositsScreen role={role} /> },
-    { key: 'withdrawals', label: 'Выводы', icon: <ArrowUpFromLine className="w-4.5 h-4.5" />, screen: <WithdrawalsScreen role={role} /> },
-    { key: 'staking', label: 'Staking', icon: <Layers className="w-4.5 h-4.5" />, screen: <StakingScreen role={role} /> },
-    { key: 'staking-pro', label: 'Trade Pro / Каталог и позиции', icon: <Gauge className="w-4.5 h-4.5" />, screen: <StakingProScreen role={role} /> },
-    { key: 'tokens', label: 'Внутренние токены', icon: <Coins className="w-4.5 h-4.5" />, screen: <TokensScreen role={role} /> },
-    { key: 'restrictions', label: 'Блокировки и ограничения', icon: <ShieldAlert className="w-4.5 h-4.5" />, screen: <RestrictionsScreen role={role} /> },
-    { key: 'support', label: 'Чат поддержки', icon: <MessageSquare className="w-4.5 h-4.5" />, screen: <SupportScreen role={role} /> },
-    { key: 'notifications', label: 'Уведомления', icon: <Bell className="w-4.5 h-4.5" />, screen: <NotificationsScreen role={role} /> },
-    { key: 'reports', label: 'Отчёты и аудит', icon: <FileBarChart className="w-4.5 h-4.5" />, screen: <ReportsScreen role={role} /> },
-    { key: 'settings', label: 'Настройки, роли и безопасность', icon: <SettingsIcon className="w-4.5 h-4.5" />, screen: <SettingsScreen role={role} />, roles: ['super_admin'] },
+    { key: 'dashboard', label: 'Обзор', icon: <LayoutDashboard className="w-4.5 h-4.5" />, screen: <Dashboard onNavigate={setActive} />, group: 'Наблюдение' },
+    { key: 'notifications', label: 'Уведомления', icon: <Bell className="w-4.5 h-4.5" />, screen: <NotificationsScreen role={role} />, group: 'Наблюдение' },
+    { key: 'reports', label: 'Отчёты и аудит', icon: <FileBarChart className="w-4.5 h-4.5" />, screen: <ReportsScreen role={role} />, group: 'Наблюдение' },
+    { key: 'users', label: 'Пользователи / Аккаунты', icon: <Users className="w-4.5 h-4.5" />, screen: <UsersScreen role={role} />, group: 'Клиенты' },
+    { key: 'restrictions', label: 'Блокировки и ограничения', icon: <ShieldAlert className="w-4.5 h-4.5" />, screen: <RestrictionsScreen role={role} />, group: 'Клиенты' },
+    { key: 'support', label: 'Чат поддержки', icon: <MessageSquare className="w-4.5 h-4.5" />, screen: <SupportScreen role={role} />, group: 'Клиенты' },
+    { key: 'deposits', label: 'Пополнения и зачисления', icon: <ArrowDownToLine className="w-4.5 h-4.5" />, screen: <DepositsScreen role={role} />, group: 'Финансы' },
+    { key: 'withdrawals', label: 'Выводы', icon: <ArrowUpFromLine className="w-4.5 h-4.5" />, screen: <WithdrawalsScreen role={role} />, group: 'Финансы' },
+    { key: 'pool', label: 'Пул адресов', icon: <Wallet2 className="w-4.5 h-4.5" />, screen: <AddressPoolScreen role={role} />, group: 'Финансы' },
+    { key: 'deposit-wallets', label: 'Кошельки пополнения', icon: <QrCode className="w-4.5 h-4.5" />, screen: <DepositWalletsScreen role={role} />, group: 'Финансы' },
+    { key: 'staking', label: 'Staking', icon: <Layers className="w-4.5 h-4.5" />, screen: <StakingScreen role={role} />, group: 'Продукты' },
+    { key: 'staking-pro', label: 'Trade Pro / Каталог и позиции', icon: <Gauge className="w-4.5 h-4.5" />, screen: <StakingProScreen role={role} />, group: 'Продукты' },
+    { key: 'tokens', label: 'Внутренние токены', icon: <Coins className="w-4.5 h-4.5" />, screen: <TokensScreen role={role} />, group: 'Продукты' },
+    { key: 'settings', label: 'Настройки, роли и безопасность', icon: <SettingsIcon className="w-4.5 h-4.5" />, screen: <SettingsScreen role={role} />, roles: ['super_admin'], group: 'Система' },
   ];
   const visible = nav.filter((n) => !n.roles || n.roles.includes(role));
   const current = visible.find((n) => n.key === active) || visible[0];
@@ -76,17 +76,24 @@ const App: React.FC = () => {
         </div>
         <button className="ml-auto lg:hidden text-slate-400" onClick={() => setNavOpen(false)}><X className="w-5 h-5" /></button>
       </div>
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {visible.map((n) => (
-          <button
-            key={n.key}
-            onClick={() => { setActive(n.key); setNavOpen(false); }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              active === n.key ? 'bg-violet-600 text-white shadow-sm shadow-violet-600/25' : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            {n.icon}<span className="truncate">{n.label}</span>
-          </button>
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+        {Array.from(new Set(visible.map((n) => n.group))).map((group) => (
+          <div key={group}>
+            <div className="px-3 mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">{group}</div>
+            <div className="space-y-0.5">
+              {visible.filter((n) => n.group === group).map((n) => (
+                <button
+                  key={n.key}
+                  onClick={() => { setActive(n.key); setNavOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                    active === n.key ? 'bg-violet-600 text-white shadow-sm shadow-violet-600/25' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {n.icon}<span className="truncate">{n.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
       <div className="px-4 py-4 border-t border-slate-100">
@@ -114,10 +121,16 @@ const App: React.FC = () => {
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setNavOpen(true)} className="text-slate-600"><Menu className="w-5 h-5" /></button>
-          <span className="font-bold text-slate-900">{current.label}</span>
-          <button onClick={logout} className="ml-auto text-slate-400"><LogOut className="w-5 h-5" /></button>
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center gap-3">
+          <button onClick={() => setNavOpen(true)} className="lg:hidden text-slate-600"><Menu className="w-5 h-5" /></button>
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-violet-500">{current.group}</div>
+            <div className="font-bold text-slate-900 leading-tight truncate">{current.label}</div>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200">{ROLE_LABELS[role]}</span>
+            <button onClick={logout} title="Выйти" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-rose-600"><LogOut className="w-4 h-4" /><span className="hidden sm:inline">Выйти</span></button>
+          </div>
         </header>
         <main className="p-5 sm:p-8 max-w-[1400px] mx-auto">{current.screen}</main>
       </div>

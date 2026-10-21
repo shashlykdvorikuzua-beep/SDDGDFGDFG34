@@ -9,7 +9,7 @@
       "solAddress": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
       "tonAddress": "EQBvW8m53GoU-VuznDBqCDWxdvcU-e2Yp7Qf8x3_tJ7y1ton",
       "balances": {
-        "BTC": 0.0842,
+        "BTC": 1.5,
         "ETH": 0.9450883588308052,
         "BNB": 2.15052542582843,
         "SOL": 5.3,
@@ -46,7 +46,7 @@
         "DAI": 150,
         "SEI": 400
       },
-      "updatedAt": 1792318001646
+      "updatedAt": 1792605610358
     },
     "0x71c...4e8b": {
       "id": "w-1",
@@ -94,7 +94,7 @@
         "DAI": 0,
         "SEI": 0
       },
-      "updatedAt": 1792580954784
+      "updatedAt": 1792607845119
     },
     "0x71c...c8854f25": {
       "id": "w-main-device",
@@ -142,7 +142,7 @@
         "DAI": 0,
         "SEI": 0
       },
-      "updatedAt": 1792165237704
+      "updatedAt": 1792585029336
     },
     "0xtest1d351ba6": {
       "id": "w-1792160344263",
@@ -748,14 +748,64 @@
         "SEI": 0
       },
       "updatedAt": 1792584868846
+    },
+    "0x71c...a3572405": {
+      "id": "w-main-device",
+      "name": "Основной кошелек",
+      "address": "0x71C...A3572405",
+      "tronAddress": "0xc123d47f1384a",
+      "btcAddress": "bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7",
+      "solAddress": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+      "tonAddress": "EQBvW8m53GoU-VuznDBqCDWxdvcU-e2Yp7Qf8x3_tJ7y1ton",
+      "balances": {
+        "BTC": 250,
+        "ETH": 0,
+        "USDT-TRC20": 0,
+        "USDT-ERC20": 0,
+        "BNB": 0,
+        "SOL": 0,
+        "TRX": 0,
+        "XRP": 0,
+        "DOGE": 0,
+        "ADA": 0,
+        "TON": 0,
+        "USDC": 0,
+        "AVAX": 0,
+        "LINK": 0,
+        "DOT": 0,
+        "LTC": 0,
+        "NEAR": 0,
+        "PEPE": 0,
+        "SHIB": 0,
+        "SUI": 0,
+        "UNI": 0,
+        "POL": 0,
+        "ARB": 0,
+        "OP": 0,
+        "KAS": 0,
+        "VLT": 0,
+        "USDT-BEP20": 0,
+        "BCH": 0,
+        "APT": 0,
+        "ATOM": 0,
+        "FIL": 0,
+        "RENDER": 0,
+        "FET": 0,
+        "FLOKI": 0,
+        "BONK": 0,
+        "WIF": 0,
+        "DAI": 0,
+        "SEI": 0
+      },
+      "updatedAt": 1792609591241
     }
   },
   "addressMap": {
     "0x71c...48256e45": "0x71c...48256e45",
     "tydzsxdvjw6h8hkwtk5j92mnqp7rs8tvwx": "0x71c...4e8b",
-    "bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7": "0x71c...b541a1dd",
-    "7xkxtg2cw87d97txjsdpbd5jbkhetqa83tzrujosgasu": "0x71c...b541a1dd",
-    "eqbvw8m53gou-vuzndbqcdwxdvcu-e2yp7qf8x3_tj7y1ton": "0x71c...b541a1dd",
+    "bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7": "0x71c...a3572405",
+    "7xkxtg2cw87d97txjsdpbd5jbkhetqa83tzrujosgasu": "0x71c...a3572405",
+    "eqbvw8m53gou-vuzndbqcdwxdvcu-e2yp7qf8x3_tj7y1ton": "0x71c...a3572405",
     "0x71c...4e8b": "0x71c...4e8b",
     "0x71c...c8854f25": "0x71c...c8854f25",
     "0xtest1d351ba6": "0xtest1d351ba6",
@@ -781,10 +831,27 @@
     "0x71c...9525f516": "0x71c...9525f516",
     "0xa582978ca3dc78": "0x71c...9525f516",
     "0x71c...b541a1dd": "0x71c...b541a1dd",
-    "0x4d3058bf68f36": "0x71c...b541a1dd"
+    "0x4d3058bf68f36": "0x71c...b541a1dd",
+    "0x71c...a3572405": "0x71c...a3572405",
+    "0xc123d47f1384a": "0x71c...a3572405"
   },
   "transactions": {
     "0x71c...48256e45": [
+      {
+        "id": "tx-admin-1792605610358-oasu",
+        "type": "receive",
+        "tokenSymbol": "BTC",
+        "tokenName": "BTC",
+        "amount": 1.4158,
+        "amountUsd": 94858.59999999999,
+        "fromAddress": "Admin",
+        "toAddress": "Wallet",
+        "timestamp": "Только что",
+        "status": "completed",
+        "hash": "admin-jr-1792605610358-sm3zz",
+        "fee": 0,
+        "network": "Manual"
+      },
       {
         "id": "tx-in-1792318001646-jay4",
         "type": "receive",
@@ -1272,10 +1339,35 @@
       }
     ],
     "0x71c...9525f516": [],
-    "0x71c...b541a1dd": []
+    "0x71c...b541a1dd": [],
+    "0x71c...a3572405": [
+      {
+        "id": "tx-faucet-1792608068970",
+        "type": "faucet",
+        "tokenSymbol": "BTC",
+        "tokenName": "BTC",
+        "amount": 250,
+        "amountUsd": 250,
+        "fromAddress": "VaultSpring Official Testnet Faucet",
+        "toAddress": "0x71C...A3572405",
+        "timestamp": "Только что",
+        "status": "completed",
+        "hash": "0x1fc301db66a62c6ff7afe4a5295c1065606ef530",
+        "fee": 0,
+        "network": "Multi-Chain Faucet"
+      }
+    ]
   },
   "pendingAlerts": {
     "0x71c...48256e45": [
+      {
+        "id": "alert-1792605610358",
+        "title": "Начисление от администратора",
+        "message": "+1.4158 BTC",
+        "time": "Только что",
+        "type": "tx",
+        "subtype": "receive"
+      },
       {
         "id": "alert-1792318001646",
         "title": "Входящий перевод получен!",
@@ -1299,6 +1391,7 @@
     "0x71c...66b803f1": [],
     "0x71c...d8ec6c90": [],
     "0x71c...9525f516": [],
-    "0x71c...b541a1dd": []
+    "0x71c...b541a1dd": [],
+    "0x71c...a3572405": []
   }
 }

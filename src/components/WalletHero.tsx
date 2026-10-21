@@ -157,8 +157,8 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
           onClick={onOpenSend}
           className="flex flex-col items-center gap-1.5 group cursor-pointer"
         >
-          <div className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
-            <ArrowUp className="w-5 h-5 stroke-[2.4]" />
+          <div className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
+            <ArrowUp className="w-6 h-6 stroke-[2.4]" />
           </div>
           <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white transition-colors">
             Send
@@ -170,8 +170,8 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
           onClick={onOpenReceive}
           className="flex flex-col items-center gap-1.5 group cursor-pointer"
         >
-          <div className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
-            <ArrowDown className="w-5 h-5 stroke-[2.4]" />
+          <div className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
+            <ArrowDown className="w-6 h-6 stroke-[2.4]" />
           </div>
           <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white transition-colors">
             Receive
@@ -183,8 +183,8 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
           onClick={onOpenSell}
           className="flex flex-col items-center gap-1.5 group cursor-pointer"
         >
-          <div className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
-            <Banknote className="w-5 h-5 stroke-[2.2]" />
+          <div className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
+            <Banknote className="w-6 h-6 stroke-[2.2]" />
           </div>
           <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white transition-colors">
             Sell
@@ -196,8 +196,8 @@ export const WalletHero: React.FC<WalletHeroProps> = ({
           onClick={onOpenSwap}
           className="flex flex-col items-center gap-1.5 group cursor-pointer"
         >
-          <div className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
-            <ArrowLeftRight className="w-5 h-5 stroke-[2.4]" />
+          <div className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all group-active:scale-95">
+            <ArrowLeftRight className="w-6 h-6 stroke-[2.4]" />
           </div>
           <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white transition-colors">
             Swap

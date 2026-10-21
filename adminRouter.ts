@@ -515,6 +515,18 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const txs = ledger.transactions[primary] || [];
     const restrictions = store.restrictions.filter((r: any) => r.userId === prof.id && r.active);
     const chats = store.supportChats.filter((c: any) => c.userId === prof.id);
+    const priceOverrides = prof.priceOverrides || {};
+    const depositOverrides = prof.depositOverrides || {};
+    // Enabled Trade Pro instruments feed the per-client market editor; the coins
+    // the client holds (plus common ones) feed the balance/deposit pickers.
+    const marketAssets = store.stakingProAssets.filter((a) => a.enabled).map((a) => ({
+      id: a.id, name: a.name, symbol: a.symbol, network: a.network, category: a.category || 'crypto',
+      currentPrice: a.currentPrice, change24h: a.change24h, pricePrecision: a.pricePrecision,
+    }));
+    const coinOptions = Array.from(new Set([
+      ...Object.keys(w.balances || {}), ...assets.map((a) => a.symbol),
+      ...Object.keys(store.depositSettings).map((k) => store.depositSettings[k].symbol),
+    ])).sort();
     res.json({
       profile: prof,
       wallet: { address: w.address, tronAddress: w.tronAddress, btcAddress: w.btcAddress, solAddress: w.solAddress, tonAddress: w.tonAddress },
@@ -522,6 +534,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
       balanceUsd: computeBalanceUsd(primary),
       reservedUsd: Object.entries(reservations).reduce((s, [sym, amt]) => s + Number(amt) * priceOf(sym), 0),
       journal, transactions: txs, restrictions, chats: chats.map((c) => ({ id: c.id, subject: c.subject, status: c.status })),
+      priceOverrides, depositOverrides, marketAssets, coinOptions, operatorDeposits: Object.values(store.depositSettings).filter((d) => d.enabled && d.address),
     });
   });
 
@@ -539,6 +552,129 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     saveStore();
     audit(who, 'user.update', prof.id, { oldValue, newValue: JSON.stringify({ email: prof.email, phone: prof.phone, status: prof.status, kycStatus: prof.kycStatus }), reason: req.body.reason });
     res.json({ success: true, profile: prof });
+  });
+
+  // ---- Per-client control: balance, personal market, deposit wallet + QR ----
+  // Direct balance adjustment for a single client. Every change is journalled,
+  // audited and reflected in the client's history/alerts so nothing is silent.
+  router.post('/users/:id/balance', guard('credit.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === req.params.id);
+    if (!primary) return res.status(404).json({ error: 'Пользователь не найден' });
+    const ledger = getLedger();
+    const w = ledger.wallets[primary];
+    if (!w) return res.status(404).json({ error: 'Кошелёк не найден' });
+    const prof = store.profiles[primary];
+    const asset = String(req.body.asset || '').trim().toUpperCase();
+    const mode = String(req.body.mode || 'add');
+    const amount = Number(req.body.amount);
+    const reason = String(req.body.reason || '').trim();
+    if (!asset) return res.status(400).json({ error: 'Укажите актив' });
+    if (!Number.isFinite(amount) || amount < 0) return res.status(400).json({ error: 'Некорректная сумма' });
+    const current = Number(w.balances[asset] || 0);
+    let next = current;
+    if (mode === 'set') next = amount;
+    else if (mode === 'add') next = current + amount;
+    else if (mode === 'sub') next = current - amount;
+    else return res.status(400).json({ error: 'Режим: set | add | sub' });
+    if (next < 0) return res.status(400).json({ error: 'Баланс не может быть отрицательным' });
+    const delta = next - current;
+    if (delta === 0) return res.json({ success: true, noChange: true, balance: next });
+    w.balances[asset] = next;
+    w.updatedAt = Date.now();
+    const amountUsd = Math.abs(delta) * priceOf(asset);
+    const entry = {
+      id: nowId('jr'), userId: prof.id, walletPrimary: primary, asset, amount: delta, amountUsd,
+      type: 'correction', reason: reason || `Ручная корректировка (${mode === 'set' ? 'установить' : mode === 'add' ? 'начислить' : 'списать'})`,
+      reference: 'balance-adjust', txHash: null, source: 'manual', author: who.name, authorId: who.userId,
+      createdAt: Date.now(), requiresSecondApproval: false, approved: true,
+    };
+    store.journal.unshift(entry);
+    const tx = {
+      id: `tx-admin-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: delta >= 0 ? 'receive' : 'send', tokenSymbol: asset, tokenName: asset, amount: Math.abs(delta),
+      amountUsd, fromAddress: delta >= 0 ? 'Admin' : 'Wallet', toAddress: delta >= 0 ? 'Wallet' : 'Admin',
+      timestamp: 'Только что', status: 'completed', hash: `admin-${entry.id}`, fee: 0, network: 'Manual',
+    };
+    ledger.transactions[primary] = [tx, ...(ledger.transactions[primary] || [])];
+    const alert = {
+      id: `alert-${Date.now()}`, title: delta >= 0 ? 'Начисление от администратора' : 'Списание администратором',
+      message: `${delta >= 0 ? '+' : ''}${delta} ${asset}`, time: 'Только что', type: 'tx', subtype: delta >= 0 ? 'receive' : 'send',
+    };
+    ledger.pendingAlerts[primary] = [alert, ...(ledger.pendingAlerts[primary] || [])];
+    saveLedger();
+    saveStore();
+    audit(who, 'user.balance_adjust', prof.id, { oldValue: `${current} ${asset}`, newValue: `${next} ${asset}`, reason });
+    res.json({ success: true, balance: next, delta, entry });
+  });
+
+  // Personal market prices for one client. Overrides win over the global feed on
+  // /staking-pro/public only for this wallet, so each client can see their own.
+  router.patch('/users/:id/price-overrides', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === req.params.id);
+    if (!primary) return res.status(404).json({ error: 'Пользователь не найден' });
+    const prof = store.profiles[primary];
+    if (!prof.priceOverrides) prof.priceOverrides = {};
+    if (req.body.clear === true) prof.priceOverrides = {};
+    else if (req.body.clearAsset) delete prof.priceOverrides[String(req.body.clearAsset)];
+    const map = req.body.overrides || {};
+    for (const [assetId, val] of Object.entries(map as Record<string, any>)) {
+      const v: any = val || {};
+      const cur = v.currentPrice !== undefined && v.currentPrice !== null && v.currentPrice !== '' ? Number(v.currentPrice) : undefined;
+      const chg = v.change24h !== undefined && v.change24h !== null && v.change24h !== '' ? Number(v.change24h) : undefined;
+      const hasCur = cur !== undefined && Number.isFinite(cur);
+      const hasChg = chg !== undefined && Number.isFinite(chg);
+      if (!hasCur && !hasChg) { delete prof.priceOverrides[assetId]; continue; }
+      prof.priceOverrides[assetId] = { ...(hasCur ? { currentPrice: cur } : {}), ...(hasChg ? { change24h: chg } : {}) };
+    }
+    saveStore();
+    audit(who, 'user.price_override', prof.id, { newValue: JSON.stringify(prof.priceOverrides), reason: req.body.reason });
+    res.json({ success: true, priceOverrides: prof.priceOverrides });
+  });
+
+  // Personal deposit (top-up) wallet + QR for one client, per coin/network.
+  router.patch('/users/:id/deposit-overrides', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === req.params.id);
+    if (!primary) return res.status(404).json({ error: 'Пользователь не найден' });
+    const prof = store.profiles[primary];
+    if (!prof.depositOverrides) prof.depositOverrides = {};
+    const b = req.body;
+    const symbol = String(b.symbol || '').trim().toUpperCase();
+    const network = String(b.network || '').trim();
+    const address = String(b.address || '').trim();
+    if (!symbol) return res.status(400).json({ error: 'Укажите тикер монеты' });
+    if (!address) return res.status(400).json({ error: 'Укажите адрес пополнения' });
+    if (b.qrImage && typeof b.qrImage === 'string' && b.qrImage.length > 1_500_000) return res.status(400).json({ error: 'QR-изображение слишком большое (макс. ~1.1 МБ base64)' });
+    const key = `${symbol}|${network.toLowerCase()}`;
+    const prev = prof.depositOverrides[key];
+    prof.depositOverrides[key] = {
+      symbol, network, address,
+      memo: (b.memo ?? prev?.memo ?? '').toString().trim(),
+      label: b.label ?? prev?.label ?? '',
+      qrImage: b.qrImage === undefined ? (prev?.qrImage ?? null) : (b.qrImage || null),
+      updatedAt: Date.now(),
+    };
+    saveStore();
+    audit(who, prev ? 'user.deposit_override_update' : 'user.deposit_override_create', prof.id, { newValue: `${symbol} (${network}) -> ${address}`, reason: b.label });
+    res.json({ success: true, depositOverrides: prof.depositOverrides });
+  });
+
+  router.post('/users/:id/deposit-overrides/remove', guard('pool.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === req.params.id);
+    if (!primary) return res.status(404).json({ error: 'Пользователь не найден' });
+    const prof = store.profiles[primary];
+    const symbol = String(req.body.symbol || '').trim().toUpperCase();
+    const network = String(req.body.network || '').trim();
+    const key = `${symbol}|${network.toLowerCase()}`;
+    if (prof.depositOverrides && prof.depositOverrides[key]) {
+      delete prof.depositOverrides[key];
+      saveStore();
+      audit(who, 'user.deposit_override_remove', prof.id, { oldValue: key });
+    }
+    res.json({ success: true });
   });
 
   // =========================================================================
@@ -826,11 +962,25 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
   // Configured here and shown to wallet-app users on the Receive/Deposit screen.
   // =========================================================================
   // Public read used by the wallet app (no auth) — returns the operator wallets.
-  router.get('/deposit-settings/public', (_req: Request, res: Response) => {
-    const deposits = Object.values(store.depositSettings)
-      .filter((d) => d.enabled && d.address)
-      .sort((a, b) => a.symbol.localeCompare(b.symbol) || a.network.localeCompare(b.network));
-    res.json({ deposits });
+  router.get('/deposit-settings/public', (req: Request, res: Response) => {
+    // Global operator wallets, then layered with this specific client's personal
+    // deposit overrides (a personal wallet wins for the same coin + network).
+    const address = req.query.address ? String(req.query.address) : '';
+    const primary = address ? findPrimary(address) : null;
+    const merged: any[] = Object.values(store.depositSettings).filter((d) => d.enabled && d.address).map((d) => ({ ...d }));
+    const overrides: any[] = primary && store.profiles[primary]?.depositOverrides ? Object.values(store.profiles[primary].depositOverrides) : [];
+    for (const ov of overrides) {
+      const row = {
+        id: `uov-${ov.symbol}-${(ov.network || '').toLowerCase()}`, symbol: ov.symbol, name: ov.symbol,
+        network: ov.network || '', address: ov.address, memo: ov.memo || '', label: ov.label || '',
+        minDeposit: undefined, confirmations: undefined, qrImage: ov.qrImage || null, enabled: true, updatedAt: ov.updatedAt || Date.now(),
+      };
+      const idx = merged.findIndex((d) => d.symbol === ov.symbol && (d.network || '').toLowerCase() === (ov.network || '').toLowerCase());
+      if (idx >= 0) merged[idx] = { ...merged[idx], ...row };
+      else merged.push(row);
+    }
+    merged.sort((a, b) => a.symbol.localeCompare(b.symbol) || (a.network || '').localeCompare(b.network || ''));
+    res.json({ deposits: merged });
   });
 
   router.get('/deposit-settings', guard('pool.read'), (_req: Request, res: Response) => {
@@ -1522,15 +1672,22 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
   router.get('/staking-pro/public', (req: Request, res: Response) => {
     refreshLivePrices();
     const primary = req.query.address ? findPrimary(String(req.query.address)) : null;
-    const assets = store.stakingProAssets.filter((a) => a.enabled).map((a) => ({
-      id: a.id, name: a.name, symbol: a.symbol, network: a.network, currentPrice: a.currentPrice,
-      change24h: a.change24h, minPositionUsd: a.minPositionUsd, maxLeverage: a.maxLeverage,
-      fundingRate8h: a.fundingRate8h, fundingDirection: a.fundingDirection, spread: a.spread,
-      makerFeePercent: a.makerFeePercent, takerFeePercent: a.takerFeePercent,
-      // Market metadata drives the Trade Pro catalog in the wallet app.
-      category: a.category || 'crypto', ticker: a.ticker, pricePrecision: a.pricePrecision,
-      productType: a.productType, tradingHours: a.tradingHours,
-    }));
+    // Personal market: this client's own price overrides win over the global feed.
+    const pOverrides = (primary && store.profiles[primary]?.priceOverrides) || {};
+    const assets = store.stakingProAssets.filter((a) => a.enabled).map((a) => {
+      const ov = pOverrides[a.id];
+      return {
+        id: a.id, name: a.name, symbol: a.symbol, network: a.network,
+        currentPrice: ov?.currentPrice ?? a.currentPrice,
+        change24h: ov?.change24h ?? a.change24h,
+        minPositionUsd: a.minPositionUsd, maxLeverage: a.maxLeverage,
+        fundingRate8h: a.fundingRate8h, fundingDirection: a.fundingDirection, spread: a.spread,
+        makerFeePercent: a.makerFeePercent, takerFeePercent: a.takerFeePercent,
+        // Market metadata drives the Trade Pro catalog in the wallet app.
+        category: a.category || 'crypto', ticker: a.ticker, pricePrecision: a.pricePrecision,
+        productType: a.productType, tradingHours: a.tradingHours,
+      };
+    });
     const positions = primary
       ? store.stakingProPositions.filter((p) => p.walletPrimary === primary).map(toAppPosition)
       : [];

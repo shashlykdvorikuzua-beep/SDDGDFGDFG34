@@ -112,9 +112,10 @@ async function fetchYahooGroup(groupName: string): Promise<Record<string, Provid
     console.warn(`[Trade Pro:${groupName}] Yahoo quotes failed:`, (error as Error).message);
   }
 
-  // Never lose the previous good feed — serve stale rather than empty.
+  // Never lose the previous good feed — serve stale rather than empty, and keep
+  // an empty answer uncached so the retry pass (and the next tick) can re-ask.
   const next = Object.keys(quotes).length > 0 ? quotes : (cachedEntry?.quotes || {});
-  groupCaches[cacheKey] = { quotes: next, at: Date.now() };
+  if (Object.keys(next).length) groupCaches[cacheKey] = { quotes: next, at: Date.now() };
   if (Object.keys(next).length) console.log(`[Trade Pro:${groupName}] live quotes: ${Object.keys(next).length}/${Object.keys(specs).length}`);
   return next;
 }
@@ -143,7 +144,7 @@ async function fetchCryptoGroup(): Promise<Record<string, ProviderQuote>> {
   }
 
   const next = Object.keys(quotes).length > 0 ? quotes : (cachedEntry?.quotes || {});
-  groupCaches[cacheKey] = { quotes: next, at: Date.now() };
+  if (Object.keys(next).length) groupCaches[cacheKey] = { quotes: next, at: Date.now() };
   if (Object.keys(next).length) console.log(`[Trade Pro:crypto] live quotes: ${Object.keys(next).length}/12`);
   return next;
 }
@@ -153,15 +154,27 @@ async function fetchCryptoGroup(): Promise<Record<string, ProviderQuote>> {
  * commodities, indices). Forex is derived from ECB rates in forexService and
  * is applied by the caller. Failed groups simply contribute nothing, so the
  * catalog keeps its last known price instead of showing zero.
+ *
+ * The groups are fetched one after another: Yahoo throttles concurrent bursts,
+ * which used to leave one market without quotes right after a cold start.
  */
 export async function fetchAllProviderQuotes(): Promise<Record<string, ProviderQuote>> {
-  const groups = await Promise.all([
-    fetchCryptoGroup(),
-    fetchYahooGroup('indices'),
-    fetchYahooGroup('stocks'),
-    fetchYahooGroup('commodities'),
-  ]);
-  return groups.reduce((acc, g) => ({ ...acc, ...g }), {} as Record<string, ProviderQuote>);
+  const groups: Record<string, ProviderQuote> = {};
+  const fetchers = [fetchCryptoGroup, () => fetchYahooGroup('indices'), () => fetchYahooGroup('stocks'), () => fetchYahooGroup('commodities')];
+  const pending: typeof fetchers = [];
+  for (const fetchGroup of fetchers) {
+    try {
+      Object.assign(groups, await fetchGroup());
+    } catch { /* the group already logs and keeps its previous cache */ }
+    pending.push(fetchGroup);
+  }
+  // One retry for any group that answered empty (rate limit / transient error).
+  for (const fetchGroup of pending) {
+    try {
+      Object.assign(groups, await fetchGroup());
+    } catch { /* same as above */ }
+  }
+  return groups;
 }
 
 /** Back-compatible alias used by the index-only code path. */

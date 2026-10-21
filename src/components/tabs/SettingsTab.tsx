@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Shield, KeyRound, DollarSign, Globe, Lock,
   ChevronRight, Check, Trash2, RefreshCw, Copy, MessageCircle, X, Send,
-  Palette, Languages, Smartphone, Settings2, Info
+  Palette, Languages, Smartphone, Settings2, Info, Paperclip, FileText
 } from 'lucide-react';
 import { WalletAccount } from '../../types/wallet';
 
@@ -27,9 +27,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   fiatCurrency: externalCurrency,
   onFiatCurrencyChange
 }) => {
-  const [currency, setCurrency] = useState(externalCurrency || 'USD');
-  const [theme, setTheme] = useState('system');
-  const [language, setLanguage] = useState('Русский');
+  const [currency, setCurrency] = useState(() => localStorage.getItem('vaultspring_currency') || externalCurrency || 'USD');
+  const [theme, setTheme] = useState(() => localStorage.getItem('vaultspring_theme') || 'system');
+  const [language, setLanguage] = useState(() => localStorage.getItem('vaultspring_language') || 'Русский');
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const [showSettingsSubpage, setShowSettingsSubpage] = useState(false);
   const [showSecuritySubpage, setShowSecuritySubpage] = useState(false);
   const [showAboutSubpage, setShowAboutSubpage] = useState(false);
@@ -40,13 +41,49 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   React.useEffect(() => {
     if (externalCurrency) setCurrency(externalCurrency);
   }, [externalCurrency]);
+
+  // Persist preferences and apply the chosen theme to the document root.
+  React.useEffect(() => {
+    localStorage.setItem('vaultspring_currency', currency);
+    localStorage.setItem('vaultspring_theme', theme);
+    localStorage.setItem('vaultspring_language', language);
+    const root = document.documentElement;
+    if (theme === 'light') root.classList.remove('dark');
+    else root.classList.add('dark');
+  }, [currency, theme, language]);
   
   // Support chat
   const [showSupportChat, setShowSupportChat] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{from: 'user' | 'support', text: string, time: string}[]>([
+  const [chatMessages, setChatMessages] = useState<{from: 'user' | 'support', text: string, time: string, attachment?: { name: string; url?: string } }[]>([
     { from: 'support', text: 'Здравствуйте! Чем могу помочь?', time: 'Сейчас' }
   ]);
   const [chatInput, setChatInput] = useState('');
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatFileRef = useRef<HTMLInputElement>(null);
+
+  // Send a chat message (text and/or an attached document) and trigger a reply.
+  const sendUserMessage = (text: string, attachment?: { name: string; url?: string }) => {
+    const trimmed = text.trim();
+    if (!trimmed && !attachment) return;
+    const now = new Date();
+    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    setChatMessages((prev) => [...prev, { from: 'user', text: trimmed, time, attachment }]);
+    setChatInput('');
+    const replies = [
+      'Спасибо за обращение! Оператор ответит в ближайшее время.',
+      'Ваш вопрос принят. Ожидайте ответа специалиста.',
+      'Понял вас! Передаю запрос оператору.',
+      'Здравствуйте! Уточните, пожалуйста, номер кошелька.'
+    ];
+    const reply = replies[Math.floor(Math.random() * replies.length)];
+    const replyTime = `${now.getHours().toString().padStart(2, '0')}:${(now.getMinutes() + 1).toString().padStart(2, '0')}`;
+    setTimeout(() => setChatMessages((prev) => [...prev, { from: 'support', text: reply, time: replyTime }]), 1500);
+  };
+
+  // Keep the latest message in view while the chat is open.
+  React.useEffect(() => {
+    if (showSupportChat) chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, showSupportChat]);
   
   // Secret phrase modal
   const [showPhraseModal, setShowPhraseModal] = useState(false);
@@ -121,17 +158,17 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
         onClick={onOpenWalletDetails}
         className="bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer group"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-500 p-[1.5px] shrink-0">
             <div className="w-full h-full rounded-full bg-[#0B0F19] flex items-center justify-center font-bold text-white text-sm">
               {currentWallet.name.charAt(0)}
             </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors truncate">
               {currentWallet.name}
             </span>
-            <span className="text-xs text-slate-400 font-mono">{currentWallet.address}</span>
+            <span className="text-xs text-slate-400 font-mono break-all">{currentWallet.address}</span>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[10px] text-emerald-400">● Защищенное устройство</span>
               <span className="text-[10px] text-slate-500">•</span>
@@ -140,7 +177,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           </div>
         </div>
 
-        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white" />
+        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white shrink-0" />
       </div>
 
       {/* SECURITY SECTION */}
@@ -456,7 +493,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       {/* Support Chat Modal */}
       {showSupportChat && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col h-[70vh] sm:h-[500px]">
+          <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col h-[80dvh] sm:h-[520px] overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
               <div className="flex items-center gap-3">
@@ -480,79 +517,93 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
               {chatMessages.map((msg, i) => (
                 <div
                   key={i}
                   className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
+                    className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap break-words ${
                       msg.from === 'user'
                         ? 'bg-blue-600 text-white rounded-br-md'
                         : 'bg-white/[0.06] text-slate-200 rounded-bl-md'
                     }`}
                   >
-                    {msg.text}
+                    {msg.text && <div>{msg.text}</div>}
+                    {msg.attachment && (
+                      <a
+                        href={msg.attachment.url || undefined}
+                        download={msg.attachment.url ? msg.attachment.name : undefined}
+                        target={msg.attachment.url ? '_blank' : undefined}
+                        rel="noopener noreferrer"
+                        className={`flex items-center gap-1.5 mt-1.5 px-2 py-1.5 rounded-lg text-[10px] font-medium ${
+                          msg.from === 'user' ? 'bg-white/15 text-white' : 'bg-white/[0.06] text-slate-200'
+                        } ${msg.attachment.url ? '' : 'pointer-events-none'}`}
+                      >
+                        <FileText className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{msg.attachment.name}</span>
+                      </a>
+                    )}
                     <div className={`text-[9px] mt-1 ${msg.from === 'user' ? 'text-blue-200' : 'text-slate-500'}`}>
                       {msg.time}
                     </div>
                   </div>
                 </div>
               ))}
+              <div ref={chatEndRef} />
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-white/[0.06]">
+            <div className="shrink-0 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-white/[0.06]">
               <div className="flex items-center gap-2">
                 <input
+                  ref={chatFileRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.doc,.docx,.xls,.xlsx,.zip"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const url = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined;
+                    sendUserMessage('', { name: file.name, url });
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => chatFileRef.current?.click()}
+                  aria-label="Прикрепить документ"
+                  title="Прикрепить документ"
+                  className="w-9 h-9 shrink-0 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-slate-300 flex items-center justify-center cursor-pointer transition-colors"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+                <input
                   type="text"
+                  inputMode="text"
+                  enterKeyHint="send"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && chatInput.trim()) {
-                      const now = new Date();
-                      const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                      setChatMessages((prev) => [...prev, { from: 'user', text: chatInput.trim(), time }]);
-                      setChatInput('');
-                      // Auto-reply
-                      setTimeout(() => {
-                        const replies = [
-                          'Спасибо за обращение! Оператор ответит в ближайшее время.',
-                          'Ваш вопрос принят. Ожидайте ответа специалиста.',
-                          'Понял вас! Передаю запрос оператору.',
-                          'Здравствуйте! Уточните, пожалуйста, номер кошелька.'
-                        ];
-                        const reply = replies[Math.floor(Math.random() * replies.length)];
-                        const replyTime = `${now.getHours().toString().padStart(2, '0')}:${(now.getMinutes() + 1).toString().padStart(2, '0')}`;
-                        setChatMessages((prev) => [...prev, { from: 'support', text: reply, time: replyTime }]);
-                      }, 1500);
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendUserMessage(chatInput);
                     }
                   }}
                   placeholder="Напишите сообщение..."
-                  className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  className="flex-1 min-w-0 bg-white/[0.06] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
                 <button
-                  onClick={() => {
-                    if (chatInput.trim()) {
-                      const now = new Date();
-                      const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                      setChatMessages((prev) => [...prev, { from: 'user', text: chatInput.trim(), time }]);
-                      setChatInput('');
-                      setTimeout(() => {
-                        const replies = [
-                          'Спасибо за обращение! Оператор ответит в ближайшее время.',
-                          'Ваш вопрос принят. Ожидайте ответа специалиста.',
-                          'Понял вас! Передаю запрос оператору.',
-                          'Здравствуйте! Уточните, пожалуйста, номер кошелька.'
-                        ];
-                        const reply = replies[Math.floor(Math.random() * replies.length)];
-                        const replyTime = `${now.getHours().toString().padStart(2, '0')}:${(now.getMinutes() + 1).toString().padStart(2, '0')}`;
-                        setChatMessages((prev) => [...prev, { from: 'support', text: reply, time: replyTime }]);
-                      }, 1500);
-                    }
-                  }}
-                  className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center cursor-pointer transition-colors"
+                  type="button"
+                  onClick={() => sendUserMessage(chatInput)}
+                  disabled={!chatInput.trim()}
+                  aria-label="Отправить"
+                  className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
+                    chatInput.trim()
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer'
+                      : 'bg-white/[0.06] text-slate-600 cursor-not-allowed'
+                  }`}
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -866,6 +917,23 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   <span className="text-[11px] text-slate-400">Чат, уведомления</span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
+              </div>
+
+              {/* Save preferences */}
+              <div className="pt-3 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFiatCurrencyChange?.(currency);
+                    setSettingsSaved(true);
+                    setTimeout(() => setSettingsSaved(false), 2000);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer"
+                >
+                  {settingsSaved ? <Check className="w-4 h-4" /> : null}
+                  <span>{settingsSaved ? 'Сохранено' : 'Сохранить'}</span>
+                </button>
+                <p className="text-center text-[10px] text-slate-500">Настройки сохраняются на этом устройстве</p>
               </div>
             </div>
           </div>
