@@ -1600,7 +1600,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 1.0765,
+      "currentPrice": 1.1215037121772873,
       "change24h": 0.12,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1610,7 +1610,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "gbp-usd",
@@ -1622,7 +1622,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 1.2576,
+      "currentPrice": 1.3346680013346681,
       "change24h": 0.08,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1632,7 +1632,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "usd-jpy",
@@ -1644,7 +1644,7 @@
       "pricePrecision": 3,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 149.32,
+      "currentPrice": 158.13,
       "change24h": -0.21,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1654,7 +1654,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "usd-chf",
@@ -1666,7 +1666,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 0.8824,
+      "currentPrice": 0.82363,
       "change24h": -0.09,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1676,7 +1676,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "aud-usd",
@@ -1688,7 +1688,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 0.6521,
+      "currentPrice": 0.6984703499336453,
       "change24h": 0.15,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1698,7 +1698,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "usd-cad",
@@ -1710,7 +1710,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 1.3581,
+      "currentPrice": 1.4051,
       "change24h": 0.11,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1720,7 +1720,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "nzd-usd",
@@ -1732,7 +1732,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 0.5987,
+      "currentPrice": 0.5678914191606566,
       "change24h": 0.18,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1742,7 +1742,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "eur-gbp",
@@ -1754,7 +1754,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 0.8566,
+      "currentPrice": 0.8402866563488324,
       "change24h": 0.04,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1764,7 +1764,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "eur-jpy",
@@ -1776,7 +1776,7 @@
       "pricePrecision": 3,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 160.78,
+      "currentPrice": 177.34338200659445,
       "change24h": -0.13,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1786,7 +1786,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "gbp-jpy",
@@ -1798,7 +1798,7 @@
       "pricePrecision": 3,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 187.54,
+      "currentPrice": 211.05105105105108,
       "change24h": -0.06,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1808,7 +1808,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "usd-cnh",
@@ -1820,7 +1820,7 @@
       "pricePrecision": 4,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 7.2318,
+      "currentPrice": 6.678,
       "change24h": 0.05,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1830,7 +1830,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "usd-mxn",
@@ -1842,7 +1842,7 @@
       "pricePrecision": 4,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 18.4125,
+      "currentPrice": 18.5216,
       "change24h": -0.17,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1852,7 +1852,7 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843875
     },
     {
       "id": "xau-usd",
@@ -2392,8 +2392,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 5210.32,
-      "change24h": 0.73,
+      "currentPrice": 7712.57,
+      "change24h": 0.284,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2402,7 +2402,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "ndx",
@@ -2414,8 +2414,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 18452.61,
-      "change24h": 0.92,
+      "currentPrice": 29490.283,
+      "change24h": -0.132,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.006,
@@ -2424,7 +2424,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "dji",
@@ -2436,8 +2436,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 38742.18,
-      "change24h": 0.61,
+      "currentPrice": 52495.88,
+      "change24h": 1.02,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2446,7 +2446,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "rut",
@@ -2458,8 +2458,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 2043.55,
-      "change24h": 0.44,
+      "currentPrice": 2773.42,
+      "change24h": 1.654,
       "minPositionUsd": 100,
       "maxLeverage": 5,
       "fundingRate8h": 0.006,
@@ -2468,7 +2468,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "dax",
@@ -2480,8 +2480,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 17921.36,
-      "change24h": 0.48,
+      "currentPrice": 25491.08,
+      "change24h": 0.738,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2490,7 +2490,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "uk100",
@@ -2502,8 +2502,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 7683.21,
-      "change24h": 0.37,
+      "currentPrice": 10737.59,
+      "change24h": 0.043,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2512,7 +2512,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "cac40",
@@ -2524,8 +2524,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 7842.53,
-      "change24h": 0.42,
+      "currentPrice": 7886.08,
+      "change24h": 0.607,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2534,7 +2534,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "sx5e",
@@ -2546,8 +2546,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 4891.17,
-      "change24h": 0.51,
+      "currentPrice": 6171.58,
+      "change24h": 0.815,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2556,7 +2556,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "ni225",
@@ -2568,8 +2568,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 39121.44,
-      "change24h": 0.86,
+      "currentPrice": 64621.24,
+      "change24h": 0.852,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2578,7 +2578,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "hsi",
@@ -2590,8 +2590,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 16432.18,
-      "change24h": 1.12,
+      "currentPrice": 23651.87,
+      "change24h": -0.904,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.006,
@@ -2600,7 +2600,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "nifty",
@@ -2612,8 +2612,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 24518.35,
-      "change24h": 0.58,
+      "currentPrice": 22811.35,
+      "change24h": -0.339,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2622,7 +2622,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     },
     {
       "id": "asx200",
@@ -2634,8 +2634,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 7621.58,
-      "change24h": 0.29,
+      "currentPrice": 8831.3,
+      "change24h": 0.163,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2644,7 +2644,7 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792582843690
     }
   ],
   "stakingProPositions": [

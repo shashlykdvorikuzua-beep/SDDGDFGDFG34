@@ -2,6 +2,8 @@ import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { TRADING_INSTRUMENTS } from './src/data/tradeCatalog';
+import { fetchIndexRates } from './src/services/indexService';
+import { getForexRate } from './src/services/forexService';
 import type { TradingInstrument } from './src/types/stakingPro';
 
 // ---------------------------------------------------------------------------
@@ -1036,6 +1038,62 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
       }
     });
   }
+
+  // ---- Live price sync (free providers, no API keys) -----------------------
+  // Indices come from Yahoo Finance, forex pairs from frankfurter.app (ECB).
+  // The wallet reads the refreshed prices through the existing public catalog
+  // endpoint, so no client-side provider calls are needed.
+  const FOREX_PAIRS: Record<string, [string, string]> = {
+    'eur-usd': ['EUR', 'USD'], 'gbp-usd': ['GBP', 'USD'], 'usd-jpy': ['USD', 'JPY'],
+    'usd-chf': ['USD', 'CHF'], 'aud-usd': ['AUD', 'USD'], 'usd-cad': ['USD', 'CAD'],
+    'nzd-usd': ['NZD', 'USD'], 'eur-gbp': ['EUR', 'GBP'], 'eur-jpy': ['EUR', 'JPY'],
+    'gbp-jpy': ['GBP', 'JPY'], 'usd-cnh': ['USD', 'CNY'], 'usd-mxn': ['USD', 'MXN'],
+  };
+
+  let priceSyncRunning = false;
+  async function syncLiveProviderPrices() {
+    if (priceSyncRunning) return;
+    priceSyncRunning = true;
+    try {
+      let changed = false;
+
+      const indexRates = await fetchIndexRates();
+      store.stakingProAssets.forEach((a) => {
+        const q = indexRates[a.id];
+        if (q) {
+          a.currentPrice = q.price;
+          a.change24h = q.changePercent;
+          a.updatedAt = Date.now();
+          changed = true;
+        }
+      });
+
+      for (const [id, [base, quote]] of Object.entries(FOREX_PAIRS)) {
+        const asset = store.stakingProAssets.find((x) => x.id === id);
+        if (!asset) continue;
+        try {
+          const rate = await getForexRate(base, quote);
+          if (rate > 0) {
+            asset.currentPrice = rate;
+            asset.updatedAt = Date.now();
+            changed = true;
+          }
+        } catch { /* keep the previous price */ }
+      }
+
+      if (changed) {
+        saveStore();
+        refreshLivePrices();
+      }
+    } catch (err) {
+      console.warn('[Trade Pro] Live price sync failed:', (err as Error).message);
+    } finally {
+      priceSyncRunning = false;
+    }
+  }
+
+  setInterval(() => { void syncLiveProviderPrices(); }, 5 * 60 * 1000);
+  void syncLiveProviderPrices();
 
   function computePnl(p: { direction: string; entryPrice: number; currentPrice: number; leverage: number; collateralUsd: number; openingFeeUsd: number; estClosingFeeUsd: number; accruedFundingUsd: number }) {
     const diff = p.direction === 'long' ? p.currentPrice - p.entryPrice : p.entryPrice - p.currentPrice;
