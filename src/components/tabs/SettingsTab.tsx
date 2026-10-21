@@ -327,7 +327,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* CHANGE PIN MODAL */}
       {showChangePinModal && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pb-16 sm:p-4">
           <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 flex flex-col gap-4">
             <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
               <span className="text-base font-bold text-white">Смена ПИН-кода</span>
@@ -411,7 +411,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* SECRET RECOVERY PHRASE MODAL */}
       {showPhraseModal && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pb-16 sm:p-4">
           <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl p-5 flex flex-col gap-4">
             <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
               <span className="text-base font-bold text-white">Секретная фраза восстановления</span>
@@ -492,7 +492,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* Support Chat Modal */}
       {showSupportChat && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pb-16 sm:p-4 animate-in fade-in duration-200">
           <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col h-[80dvh] sm:h-[520px] overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
@@ -555,7 +555,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             </div>
 
             {/* Input */}
-            <div className="shrink-0 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-white/[0.06]">
+            <div className="shrink-0 p-3 border-t border-white/[0.06] bg-[#0F1420]">
               <div className="flex items-center gap-2">
                 <input
                   ref={chatFileRef}
@@ -615,7 +615,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* Security Sub-page Modal */}
       {showSecuritySubpage && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pb-16 sm:p-4">
           <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[85vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/[0.06] sticky top-0 bg-[#0F1420] z-10">
@@ -748,7 +748,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* About Us Sub-page Modal */}
       {showAboutSubpage && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pb-16 sm:p-4">
           <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[85vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/[0.06] sticky top-0 bg-[#0F1420] z-10">
@@ -810,7 +810,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
       {/* Settings Sub-page Modal */}
       {showSettingsSubpage && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pb-16 sm:p-4">
           <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[85vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/[0.06] sticky top-0 bg-[#0F1420] z-10">
