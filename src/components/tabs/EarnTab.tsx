@@ -48,34 +48,54 @@ export const EarnTab: React.FC<EarnTabProps> = ({
   const totalStakingRewardsUsd = activeDeposits.reduce((acc, d) => acc + d.accruedRewardUsd, 0);
   const totalProCollateralUsd = proPositions.reduce((acc, p) => acc + p.collateralUsd, 0);
 
+  // Shared "Learn more" dialog — rendered in every view (main, classic, pro)
+  // so the "Узнать больше" button is active regardless of the current screen.
+  const learnMoreModal = learnMoreTarget ? (
+    <LearnMoreModal
+      type={learnMoreTarget}
+      onClose={() => setLearnMoreTarget(null)}
+      onAction={() => {
+        const tgt = learnMoreTarget;
+        setLearnMoreTarget(null);
+        setCurrentView(tgt === 'staking' ? 'classic' : 'pro');
+      }}
+    />
+  ) : null;
+
   if (currentView === 'classic') {
     return (
-      <ClassicStakingScreen
-        tokens={tokens}
-        activeDeposits={activeDeposits}
-        onBack={() => setCurrentView('main')}
-        onOpenLearnMore={() => setLearnMoreTarget('staking')}
-        onDepositSuccess={onDepositSuccess}
-        onUnstakeSuccess={onUnstakeSuccess}
-        onUnstakeRequest={onUnstakeRequest}
-        unlockPeriodHours={unlockPeriodHours}
-      />
+      <>
+        <ClassicStakingScreen
+          tokens={tokens}
+          activeDeposits={activeDeposits}
+          onBack={() => setCurrentView('main')}
+          onOpenLearnMore={() => setLearnMoreTarget('staking')}
+          onDepositSuccess={onDepositSuccess}
+          onUnstakeSuccess={onUnstakeSuccess}
+          onUnstakeRequest={onUnstakeRequest}
+          unlockPeriodHours={unlockPeriodHours}
+        />
+        {learnMoreModal}
+      </>
     );
   }
 
   if (currentView === 'pro') {
     return (
-      <StakingProScreen
-        assets={proAssets}
-        positions={proPositions}
-        availableBalanceUsd={availableBalanceUsd}
-        tokens={tokens}
-        onBack={() => setCurrentView('main')}
-        onOpenLearnMore={() => setLearnMoreTarget('staking_pro')}
-        onOpenPosition={onOpenPosition}
-        onClosePosition={onClosePosition}
-        onUpdateTpSl={onUpdateTpSl}
-      />
+      <>
+        <StakingProScreen
+          assets={proAssets}
+          positions={proPositions}
+          availableBalanceUsd={availableBalanceUsd}
+          tokens={tokens}
+          onBack={() => setCurrentView('main')}
+          onOpenLearnMore={() => setLearnMoreTarget('staking_pro')}
+          onOpenPosition={onOpenPosition}
+          onClosePosition={onClosePosition}
+          onUpdateTpSl={onUpdateTpSl}
+        />
+        {learnMoreModal}
+      </>
     );
   }
 
@@ -269,18 +289,6 @@ export const EarnTab: React.FC<EarnTabProps> = ({
         </div>
       </div>
 
-      {/* Learn More Modal Dialog */}
-      {learnMoreTarget && (
-        <LearnMoreModal
-          type={learnMoreTarget}
-          onClose={() => setLearnMoreTarget(null)}
-          onAction={() => {
-            const tgt = learnMoreTarget;
-            setLearnMoreTarget(null);
-            setCurrentView(tgt === 'staking' ? 'classic' : 'pro');
-          }}
-        />
-      )}
     </div>
   );
 };
