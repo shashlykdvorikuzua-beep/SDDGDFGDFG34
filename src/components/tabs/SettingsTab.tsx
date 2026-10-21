@@ -811,9 +811,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       {/* Settings Sub-page Modal */}
       {showSettingsSubpage && (
         <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 pb-16 sm:p-4">
-          <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[85vh] overflow-y-auto">
+          <div className="w-full sm:max-w-md bg-[#0F1420] border-t sm:border border-white/10 rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[80dvh] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/[0.06] sticky top-0 bg-[#0F1420] z-10">
+            <div className="flex items-center justify-between p-4 border-b border-white/[0.06] shrink-0 bg-[#0F1420] z-10">
               <button
                 onClick={() => setShowSettingsSubpage(false)}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white bg-white/[0.05] cursor-pointer"
@@ -824,7 +824,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               <div className="w-8" />
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
               {/* Currency */}
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
@@ -919,22 +919,23 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </div>
 
-              {/* Save preferences */}
-              <div className="pt-3 space-y-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onFiatCurrencyChange?.(currency);
-                    setSettingsSaved(true);
-                    setTimeout(() => setSettingsSaved(false), 2000);
-                  }}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer"
-                >
-                  {settingsSaved ? <Check className="w-4 h-4" /> : null}
-                  <span>{settingsSaved ? 'Сохранено' : 'Сохранить'}</span>
-                </button>
-                <p className="text-center text-[10px] text-slate-500">Настройки сохраняются на этом устройстве</p>
-              </div>
+            </div>
+
+            {/* Save preferences — fixed footer, always visible above the nav bar */}
+            <div className="shrink-0 border-t border-white/[0.06] bg-[#0F1420] p-4">
+              <button
+                type="button"
+                onClick={() => {
+                  onFiatCurrencyChange?.(currency);
+                  setSettingsSaved(true);
+                  setTimeout(() => setSettingsSaved(false), 2000);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors cursor-pointer"
+              >
+                {settingsSaved ? <Check className="w-4 h-4" /> : null}
+                <span>{settingsSaved ? 'Сохранено' : 'Сохранить'}</span>
+              </button>
+              <p className="text-center text-[10px] text-slate-500 mt-2">Настройки сохраняются на этом устройстве</p>
             </div>
           </div>
         </div>
