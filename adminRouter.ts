@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { TRADING_INSTRUMENTS } from './src/data/tradeCatalog';
-import { fetchIndexRates } from './src/services/indexService';
+import { fetchAllProviderQuotes } from './src/services/marketDataService';
 import { getForexRate } from './src/services/forexService';
 import type { TradingInstrument } from './src/types/stakingPro';
 
@@ -64,7 +64,17 @@ interface AdminStore {
   depositSettings: Record<string, DepositSetting>;
   stakingProAssets: StakingProAssetRow[];
   stakingProPositions: StakingProPositionRow[];
-  config?: { unlockPeriodHours?: number };
+  config?: { unlockPeriodHours?: number; priceSync?: PriceSyncConfig };
+}
+
+// Master switch + cadence of the live provider feed. Manual instruments are
+// never touched by it, so operator adjustments always stick.
+export interface PriceSyncConfig {
+  enabled: boolean;
+  intervalMinutes: number;
+  lastRunAt?: number;
+  lastStatus?: string;
+  lastError?: string;
 }
 
 export interface DepositSetting {
@@ -106,6 +116,13 @@ export interface StakingProAssetRow {
   pricePrecision?: number;
   productType?: string;
   tradingHours?: string;
+  // Price control. 'auto' follows the provider feed (with the operator's bias
+  // on top), 'manual' freezes the price at whatever the operator set.
+  priceMode?: 'auto' | 'manual';
+  biasPercent?: number;
+  providerPrice?: number;
+  providerChange?: number;
+  providerAt?: number;
 }
 
 // A Staking Pro position belongs to a specific user (walletPrimary) and is
@@ -1015,6 +1032,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
 
   router.get('/staking-pro', guard('staking.read'), (_req: Request, res: Response) => {
     res.json({
+      priceSync: priceSyncConfig(),
       assets: store.stakingProAssets,
       positions: store.stakingProPositions.map((p) => {
         const prof = Object.values(store.profiles).find((x: any) => x.id === p.userId) as any;
@@ -1039,10 +1057,11 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     });
   }
 
-  // ---- Live price sync (free providers, no API keys) -----------------------
-  // Indices come from Yahoo Finance, forex pairs from frankfurter.app (ECB).
-  // The wallet reads the refreshed prices through the existing public catalog
-  // endpoint, so no client-side provider calls are needed.
+  // ---- Live price engine (free providers + operator control) ---------------
+  // Crypto: Binance 24h ticker. Indices / stocks / commodities: Yahoo Finance.
+  // Forex: frankfurter.app (ECB). Every instrument can be flipped to 'manual'
+  // in the admin panel, which freezes it out of the feed; a per-instrument
+  // bias (%) lets the operator steer a market while the feed keeps ticking.
   const FOREX_PAIRS: Record<string, [string, string]> = {
     'eur-usd': ['EUR', 'USD'], 'gbp-usd': ['GBP', 'USD'], 'usd-jpy': ['USD', 'JPY'],
     'usd-chf': ['USD', 'CHF'], 'aud-usd': ['AUD', 'USD'], 'usd-cad': ['USD', 'CAD'],
@@ -1050,50 +1069,108 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     'gbp-jpy': ['GBP', 'JPY'], 'usd-cnh': ['USD', 'CNY'], 'usd-mxn': ['USD', 'MXN'],
   };
 
+  function priceSyncConfig(): PriceSyncConfig {
+    if (!store.config) store.config = {};
+    if (!store.config.priceSync) store.config.priceSync = { enabled: true, intervalMinutes: 5 };
+    return store.config.priceSync;
+  }
+
+  const roundTo = (value: number, precision?: number) => {
+    const p = Math.min(Math.max(Number(precision ?? 2) || 2, 0), 8);
+    return Number(value.toFixed(p));
+  };
+
+  /** Effective price = provider price × (1 + operator bias), or the frozen manual price. */
+  function recomputeAssetPrice(a: StakingProAssetRow) {
+    if (a.priceMode === 'manual') return;
+    const bias = a.biasPercent || 0;
+    if (a.providerPrice && a.providerPrice > 0) {
+      a.currentPrice = roundTo(a.providerPrice * (1 + bias / 100), a.pricePrecision);
+      a.change24h = roundTo((a.providerChange || 0) + bias, 2);
+    } else if (bias) {
+      // No feed yet (provider down / manual-only market): bias acts on the last known price.
+      a.currentPrice = roundTo(a.currentPrice * (1 + bias / 100), a.pricePrecision);
+      a.change24h = roundTo((a.change24h || 0) + bias, 2);
+    }
+  }
+
   let priceSyncRunning = false;
-  async function syncLiveProviderPrices() {
-    if (priceSyncRunning) return;
+  async function syncLiveProviderPrices(opts: { force?: boolean } = {}) {
+    const cfg = priceSyncConfig();
+    if (priceSyncRunning || (!cfg.enabled && !opts.force)) return;
     priceSyncRunning = true;
     try {
-      let changed = false;
+      const quotes = await fetchAllProviderQuotes();
+      const now = Date.now();
+      let fed = 0, manual = 0, silent = 0;
 
-      const indexRates = await fetchIndexRates();
       store.stakingProAssets.forEach((a) => {
-        const q = indexRates[a.id];
+        if (a.priceMode === 'manual') { manual++; return; }
+        const q = quotes[a.id];
         if (q) {
-          a.currentPrice = q.price;
-          a.change24h = q.changePercent;
-          a.updatedAt = Date.now();
-          changed = true;
+          a.providerPrice = q.price;
+          a.providerChange = q.changePercent;
+          a.providerAt = now;
+          fed++;
+        } else if (FOREX_PAIRS[a.id]) {
+          /* filled by the forex pass below */
+        } else {
+          silent++;
         }
       });
 
-      for (const [id, [base, quote]] of Object.entries(FOREX_PAIRS)) {
+      for (const [id, [base, quoteCcy]] of Object.entries(FOREX_PAIRS)) {
         const asset = store.stakingProAssets.find((x) => x.id === id);
-        if (!asset) continue;
+        if (!asset || asset.priceMode === 'manual') continue;
         try {
-          const rate = await getForexRate(base, quote);
+          const rate = await getForexRate(base, quoteCcy);
           if (rate > 0) {
-            asset.currentPrice = rate;
-            asset.updatedAt = Date.now();
-            changed = true;
+            // ECB publishes no intraday change, so keep the last known one.
+            asset.providerPrice = rate;
+            asset.providerChange = asset.providerChange ?? asset.change24h ?? 0;
+            asset.providerAt = now;
+            fed++;
           }
-        } catch { /* keep the previous price */ }
+        } catch { /* keep the previous rate */ }
       }
 
-      if (changed) {
-        saveStore();
-        refreshLivePrices();
-      }
+      store.stakingProAssets.forEach(recomputeAssetPrice);
+      saveStore();
+      refreshLivePrices();
+      cfg.lastRunAt = now;
+      cfg.lastError = undefined;
+      cfg.lastStatus = `Провайдер: ${fed} авто · ${manual} ручной · ${silent} без котировки`;
+      saveStore();
     } catch (err) {
-      console.warn('[Trade Pro] Live price sync failed:', (err as Error).message);
+      cfg.lastError = (err as Error).message;
+      console.warn('[Trade Pro] Live price sync failed:', cfg.lastError);
     } finally {
       priceSyncRunning = false;
     }
   }
 
-  setInterval(() => { void syncLiveProviderPrices(); }, 5 * 60 * 1000);
+  // One lightweight tick per minute; the real cadence is the operator's setting.
+  setInterval(() => {
+    const cfg = priceSyncConfig();
+    if (!cfg.enabled) return;
+    const every = Math.min(Math.max(cfg.intervalMinutes || 5, 1), 60) * 60 * 1000;
+    if (!cfg.lastRunAt || Date.now() - cfg.lastRunAt >= every) void syncLiveProviderPrices();
+  }, 60 * 1000);
   void syncLiveProviderPrices();
+
+  /** Operator steering: shift an instrument (or a whole market) by a % and keep it. */
+  function applyNudge(a: StakingProAssetRow, deltaPercent: number, targetMode?: 'auto' | 'manual') {
+    if (targetMode) a.priceMode = targetMode;
+    if (a.priceMode === 'manual') {
+      a.currentPrice = roundTo(a.currentPrice * (1 + deltaPercent / 100), a.pricePrecision);
+      a.change24h = roundTo((a.change24h || 0) + deltaPercent, 2);
+      a.providerPrice = a.currentPrice;
+    } else {
+      a.biasPercent = roundTo((a.biasPercent || 0) + deltaPercent, 4);
+      recomputeAssetPrice(a);
+    }
+    a.updatedAt = Date.now();
+  }
 
   function computePnl(p: { direction: string; entryPrice: number; currentPrice: number; leverage: number; collateralUsd: number; openingFeeUsd: number; estClosingFeeUsd: number; accruedFundingUsd: number }) {
     const diff = p.direction === 'long' ? p.currentPrice - p.entryPrice : p.entryPrice - p.currentPrice;
@@ -1243,11 +1320,100 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
       .forEach((k) => { if (b[k] !== undefined) (a as any)[k] = Number(b[k]); });
     if (b.fundingDirection !== undefined) a.fundingDirection = b.fundingDirection === 'receive' ? 'receive' : 'pay';
     if (b.enabled !== undefined) a.enabled = !!b.enabled;
+    // Price control: setting an explicit price by hand freezes the instrument.
+    if (b.priceMode !== undefined) a.priceMode = b.priceMode === 'manual' ? 'manual' : 'auto';
+    if (b.biasPercent !== undefined) a.biasPercent = roundTo(Number(b.biasPercent) || 0, 4);
+    if (b.currentPrice !== undefined && b.priceMode !== 'auto') a.priceMode = 'manual';
+    if (a.priceMode === 'manual' && b.providerPrice === undefined) a.providerPrice = a.currentPrice;
+    if (a.priceMode !== 'manual') recomputeAssetPrice(a);
     a.updatedAt = Date.now();
     saveStore();
     refreshLivePrices();
     audit(who, 'staking_pro.asset_update', a.id, { oldValue: old, newValue: JSON.stringify(a), reason: b.reason });
     res.json({ success: true, asset: a });
+  });
+
+  // ---- Price control (per instrument and per market) ----------------------
+  // Everything the operator does here is what users see in Trade Pro: the same
+  // catalog is served on /staking-pro/public, and open positions re-price live.
+  router.post('/staking-pro/assets/:id/price', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const a = store.stakingProAssets.find((x) => x.id === req.params.id);
+    if (!a) return res.status(404).json({ error: 'Инструмент не найден' });
+    const b = req.body;
+    const old = { price: a.currentPrice, change24h: a.change24h, mode: a.priceMode || 'auto', bias: a.biasPercent || 0 };
+    const delta = Number(b.deltaPercent);
+    if (Number.isFinite(delta) && delta !== 0) {
+      applyNudge(a, delta, b.priceMode);
+    } else {
+      if (b.priceMode !== undefined) a.priceMode = b.priceMode === 'manual' ? 'manual' : 'auto';
+      if (b.biasPercent !== undefined) a.biasPercent = roundTo(Number(b.biasPercent) || 0, 4);
+      if (b.price !== undefined) {
+        const price = Number(b.price);
+        if (!Number.isFinite(price) || price <= 0) return res.status(400).json({ error: 'Цена должна быть больше нуля' });
+        a.priceMode = b.priceMode === 'auto' ? 'auto' : 'manual';
+        a.currentPrice = roundTo(price, a.pricePrecision);
+        a.providerPrice = a.priceMode === 'manual' ? a.currentPrice : a.providerPrice;
+        if (b.change24h !== undefined) a.change24h = roundTo(Number(b.change24h) || 0, 2);
+      } else {
+        recomputeAssetPrice(a);
+      }
+    }
+    if (b.change24h !== undefined && b.price === undefined) a.change24h = roundTo(Number(b.change24h) || 0, 2);
+    a.updatedAt = Date.now();
+    saveStore();
+    refreshLivePrices();
+    audit(who, 'staking_pro.price_set', a.id, {
+      oldValue: old,
+      newValue: { price: a.currentPrice, change24h: a.change24h, mode: a.priceMode || 'auto', bias: a.biasPercent || 0 },
+      reason: b.reason || 'Ручная корректировка цены оператором',
+    });
+    res.json({ success: true, asset: a });
+  });
+
+  // Whole-market steering: category 'all' hits every instrument of every market.
+  router.post('/staking-pro/markets/price', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const b = req.body;
+    const category = String(b.category || 'all');
+    const delta = Number(b.deltaPercent);
+    const mode = b.priceMode === 'manual' || b.priceMode === 'auto' ? b.priceMode : undefined;
+    const targets = store.stakingProAssets.filter((a) => category === 'all' || (a.category || 'crypto') === category);
+    if (!targets.length) return res.status(404).json({ error: 'В рынке нет инструментов' });
+    const before = targets.map((a) => ({ id: a.id, price: a.currentPrice }));
+    targets.forEach((a) => {
+      if (Number.isFinite(delta) && delta !== 0) applyNudge(a, delta, mode);
+      else if (mode) { a.priceMode = mode; recomputeAssetPrice(a); a.updatedAt = Date.now(); }
+      else if (b.biasPercent !== undefined) { a.biasPercent = roundTo(Number(b.biasPercent) || 0, 4); recomputeAssetPrice(a); a.updatedAt = Date.now(); }
+    });
+    saveStore();
+    refreshLivePrices();
+    audit(who, 'staking_pro.market_price', category, {
+      oldValue: before,
+      newValue: targets.map((a) => ({ id: a.id, price: a.currentPrice, mode: a.priceMode || 'auto', bias: a.biasPercent || 0 })),
+      reason: b.reason || `Массовая корректировка рынка ${category}`,
+    });
+    res.json({ success: true, updated: targets.length, assets: targets });
+  });
+
+  // Live-feed switch: pause it to trade purely manually, resume to re-sync.
+  router.patch('/staking-pro/price-sync', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const cfg = priceSyncConfig();
+    const b = req.body;
+    if (b.enabled !== undefined) cfg.enabled = !!b.enabled;
+    if (b.intervalMinutes !== undefined) cfg.intervalMinutes = Math.min(Math.max(Number(b.intervalMinutes) || 5, 1), 60);
+    saveStore();
+    audit(who, 'staking_pro.price_sync_update', 'priceSync', { newValue: { ...cfg }, reason: b.reason });
+    if (b.run) void syncLiveProviderPrices({ force: true });
+    res.json({ success: true, priceSync: cfg });
+  });
+
+  router.post('/staking-pro/price-sync/run', guard('staking.write'), async (req: Request, res: Response) => {
+    const who = (req as any).who;
+    audit(who, 'staking_pro.price_sync_run', 'priceSync', { reason: req.body?.reason || 'Ручное обновление котировок' });
+    await syncLiveProviderPrices({ force: true });
+    res.json({ success: true, priceSync: priceSyncConfig(), assets: store.stakingProAssets });
   });
 
   router.delete('/staking-pro/assets/:id', guard('staking.write'), (req: Request, res: Response) => {

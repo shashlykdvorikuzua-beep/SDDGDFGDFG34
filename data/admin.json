@@ -7,7 +7,7 @@
       "role": "super_admin",
       "mfaEnabled": true,
       "active": true,
-      "lastLogin": 1792581011113
+      "lastLogin": 1792584966971
     },
     {
       "id": "a-finance",
@@ -86,6 +86,136 @@
       "kycStatus": "none",
       "createdAt": 1792161104188,
       "lastActiveAt": 1792161104188
+    },
+    "0xtest123": {
+      "id": "usr-1792584436620-bqz98",
+      "walletPrimary": "0xtest123",
+      "email": "user5@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792318001645,
+      "lastActiveAt": 1792318001645
+    },
+    "0x71c...f1341815": {
+      "id": "usr-1792584436620-87v34",
+      "walletPrimary": "0x71c...f1341815",
+      "email": "user6@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792320578938,
+      "lastActiveAt": 1792320578938
+    },
+    "0x71c...3e26e691": {
+      "id": "usr-1792584436620-orcu3",
+      "walletPrimary": "0x71c...3e26e691",
+      "email": "user7@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792322615900,
+      "lastActiveAt": 1792322615900
+    },
+    "0x71c...5c502946": {
+      "id": "usr-1792584436620-hf4xo",
+      "walletPrimary": "0x71c...5c502946",
+      "email": "user8@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792324654739,
+      "lastActiveAt": 1792324654739
+    },
+    "0x71c...4ebbb7fc": {
+      "id": "usr-1792584436620-6q5cq",
+      "walletPrimary": "0x71c...4ebbb7fc",
+      "email": "user9@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792328100915,
+      "lastActiveAt": 1792328100915
+    },
+    "0x71c...91b19b18": {
+      "id": "usr-1792584436621-lxl2b",
+      "walletPrimary": "0x71c...91b19b18",
+      "email": "user10@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792331067010,
+      "lastActiveAt": 1792331067010
+    },
+    "0x71c...cdd751cc": {
+      "id": "usr-1792584436621-wds9b",
+      "walletPrimary": "0x71c...cdd751cc",
+      "email": "user11@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792335150423,
+      "lastActiveAt": 1792335150423
+    },
+    "0x71c...4f65ce8c": {
+      "id": "usr-1792584436621-qi4y1",
+      "walletPrimary": "0x71c...4f65ce8c",
+      "email": "user12@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792335985767,
+      "lastActiveAt": 1792335985767
+    },
+    "0x71c...a635bfe6": {
+      "id": "usr-1792584436621-g25fx",
+      "walletPrimary": "0x71c...a635bfe6",
+      "email": "user13@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792337207205,
+      "lastActiveAt": 1792337207205
+    },
+    "0x71c...66b803f1": {
+      "id": "usr-1792584436621-mu7ix",
+      "walletPrimary": "0x71c...66b803f1",
+      "email": "user14@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792349066316,
+      "lastActiveAt": 1792349066316
+    },
+    "0x71c...d8ec6c90": {
+      "id": "usr-1792584436621-7t6we",
+      "walletPrimary": "0x71c...d8ec6c90",
+      "email": "user15@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792407675571,
+      "lastActiveAt": 1792407675571
+    },
+    "0x71c...9525f516": {
+      "id": "usr-1792584436621-vv972",
+      "walletPrimary": "0x71c...9525f516",
+      "email": "user16@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792492183975,
+      "lastActiveAt": 1792492183975
+    },
+    "0x71c...b541a1dd": {
+      "id": "usr-1792584436621-ldzt6",
+      "walletPrimary": "0x71c...b541a1dd",
+      "email": "user17@vaultspring.app",
+      "phone": "",
+      "status": "active",
+      "kycStatus": "none",
+      "createdAt": 1792581025477,
+      "lastActiveAt": 1792581025477
     }
   },
   "addressPool": [
@@ -391,6 +521,2800 @@
   ],
   "tokenPriceHistory": [],
   "auditLog": [
+    {
+      "id": "audit-1792584969211-bpkzb",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_run",
+      "object": "priceSync",
+      "reason": "Ручное обновление котировок",
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584969211
+    },
+    {
+      "id": "audit-1792584967148-yvxpw",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_update",
+      "object": "priceSync",
+      "reason": "Inter??? ?????????? ?????????: 5 ???",
+      "oldValue": null,
+      "newValue": {
+        "enabled": true,
+        "intervalMinutes": 5,
+        "lastRunAt": 1792584958948,
+        "lastStatus": "Провайдер: 60 авто · 0 ручной · 1 без котировки"
+      },
+      "reference": null,
+      "createdAt": 1792584967148
+    },
+    {
+      "id": "audit-1792584967021-yl7bq",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.market_price",
+      "object": "all",
+      "reason": "S???? ???????? ????????",
+      "oldValue": [
+        {
+          "id": "bitcoin",
+          "price": 83573.99
+        },
+        {
+          "id": "ethereum",
+          "price": 2468.23
+        },
+        {
+          "id": "solana",
+          "price": 107
+        },
+        {
+          "id": "bnb",
+          "price": 746.45
+        },
+        {
+          "id": "vaultspring",
+          "price": 5.55
+        },
+        {
+          "id": "tron",
+          "price": 0.3309
+        },
+        {
+          "id": "xrp",
+          "price": 1.3584
+        },
+        {
+          "id": "doge",
+          "price": 0.0821
+        },
+        {
+          "id": "ada",
+          "price": 0.2261
+        },
+        {
+          "id": "avax",
+          "price": 9.72
+        },
+        {
+          "id": "link",
+          "price": 12.407
+        },
+        {
+          "id": "ton",
+          "price": 1.6
+        },
+        {
+          "id": "sui",
+          "price": 1.037
+        },
+        {
+          "id": "eur-usd",
+          "price": 1.1215
+        },
+        {
+          "id": "gbp-usd",
+          "price": 1.33467
+        },
+        {
+          "id": "usd-jpy",
+          "price": 158.13
+        },
+        {
+          "id": "usd-chf",
+          "price": 0.82363
+        },
+        {
+          "id": "aud-usd",
+          "price": 0.69847
+        },
+        {
+          "id": "usd-cad",
+          "price": 1.4051
+        },
+        {
+          "id": "nzd-usd",
+          "price": 0.56789
+        },
+        {
+          "id": "eur-gbp",
+          "price": 0.84029
+        },
+        {
+          "id": "eur-jpy",
+          "price": 177.343
+        },
+        {
+          "id": "gbp-jpy",
+          "price": 211.051
+        },
+        {
+          "id": "usd-cnh",
+          "price": 6.678
+        },
+        {
+          "id": "usd-mxn",
+          "price": 18.5216
+        },
+        {
+          "id": "xau-usd",
+          "price": 4325.26
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.15
+        },
+        {
+          "id": "wti",
+          "price": 97.5
+        },
+        {
+          "id": "brent",
+          "price": 108.14
+        },
+        {
+          "id": "natgas",
+          "price": 2.837
+        },
+        {
+          "id": "copper",
+          "price": 6.479
+        },
+        {
+          "id": "platinum",
+          "price": 1630.33
+        },
+        {
+          "id": "palladium",
+          "price": 1073.65
+        },
+        {
+          "id": "corn",
+          "price": 4.542
+        },
+        {
+          "id": "wheat",
+          "price": 6.299
+        },
+        {
+          "id": "soybean",
+          "price": 12.31
+        },
+        {
+          "id": "cocoa",
+          "price": 5660.82
+        },
+        {
+          "id": "aapl",
+          "price": 339.5
+        },
+        {
+          "id": "nvda",
+          "price": 216.47
+        },
+        {
+          "id": "tsla",
+          "price": 373.71
+        },
+        {
+          "id": "msft",
+          "price": 531.87
+        },
+        {
+          "id": "amzn",
+          "price": 262.63
+        },
+        {
+          "id": "googl",
+          "price": 340.27
+        },
+        {
+          "id": "meta",
+          "price": 694.25
+        },
+        {
+          "id": "amd",
+          "price": 534.74
+        },
+        {
+          "id": "nflx",
+          "price": 68.69
+        },
+        {
+          "id": "coin",
+          "price": 170.85
+        },
+        {
+          "id": "pltr",
+          "price": 192.6
+        },
+        {
+          "id": "avgo",
+          "price": 334.37
+        },
+        {
+          "id": "spx",
+          "price": 7712.57
+        },
+        {
+          "id": "ndx",
+          "price": 29490.28
+        },
+        {
+          "id": "dji",
+          "price": 52495.88
+        },
+        {
+          "id": "rut",
+          "price": 2773.42
+        },
+        {
+          "id": "dax",
+          "price": 25522.83
+        },
+        {
+          "id": "uk100",
+          "price": 10738.47
+        },
+        {
+          "id": "cac40",
+          "price": 7894.64
+        },
+        {
+          "id": "sx5e",
+          "price": 6181.41
+        },
+        {
+          "id": "ni225",
+          "price": 64621.24
+        },
+        {
+          "id": "hsi",
+          "price": 23651.87
+        },
+        {
+          "id": "nifty",
+          "price": 22811.35
+        },
+        {
+          "id": "asx200",
+          "price": 8831.3
+        }
+      ],
+      "newValue": [
+        {
+          "id": "bitcoin",
+          "price": 83573.99,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ethereum",
+          "price": 2468.23,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "solana",
+          "price": 107,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "bnb",
+          "price": 746.45,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "vaultspring",
+          "price": 5.55,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "tron",
+          "price": 0.3309,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "xrp",
+          "price": 1.3584,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "doge",
+          "price": 0.0821,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ada",
+          "price": 0.2261,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "avax",
+          "price": 9.72,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "link",
+          "price": 12.407,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ton",
+          "price": 1.6,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "sui",
+          "price": 1.037,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "eur-usd",
+          "price": 1.1215,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "gbp-usd",
+          "price": 1.33467,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-jpy",
+          "price": 158.13,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-chf",
+          "price": 0.82363,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "aud-usd",
+          "price": 0.69847,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-cad",
+          "price": 1.4051,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nzd-usd",
+          "price": 0.56789,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "eur-gbp",
+          "price": 0.84029,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "eur-jpy",
+          "price": 177.343,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "gbp-jpy",
+          "price": 211.051,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-cnh",
+          "price": 6.678,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-mxn",
+          "price": 18.5216,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "xau-usd",
+          "price": 4158.9,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.73,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "wti",
+          "price": 98.48,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "brent",
+          "price": 109.23,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "natgas",
+          "price": 2.866,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "copper",
+          "price": 6.545,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "platinum",
+          "price": 1646.8,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "palladium",
+          "price": 1084.5,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "corn",
+          "price": 4.588,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "wheat",
+          "price": 6.362,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "soybean",
+          "price": 12.44,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "cocoa",
+          "price": 5718,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "aapl",
+          "price": 339.5,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nvda",
+          "price": 216.47,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "tsla",
+          "price": 373.71,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "msft",
+          "price": 531.87,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "amzn",
+          "price": 262.63,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "googl",
+          "price": 340.27,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "meta",
+          "price": 694.25,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "amd",
+          "price": 534.74,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nflx",
+          "price": 68.69,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "coin",
+          "price": 170.85,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "pltr",
+          "price": 192.6,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "avgo",
+          "price": 334.37,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "spx",
+          "price": 7712.57,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ndx",
+          "price": 29490.28,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "dji",
+          "price": 52495.88,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "rut",
+          "price": 2773.42,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "dax",
+          "price": 25522.83,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "uk100",
+          "price": 10738.47,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "cac40",
+          "price": 7894.64,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "sx5e",
+          "price": 6181.41,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ni225",
+          "price": 64621.24,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "hsi",
+          "price": 23651.87,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nifty",
+          "price": 22811.35,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "asx200",
+          "price": 8831.3,
+          "mode": "auto",
+          "bias": 0
+        }
+      ],
+      "reference": null,
+      "createdAt": 1792584967021
+    },
+    {
+      "id": "audit-1792584966976-bfl6m",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584966976
+    },
+    {
+      "id": "audit-1792584951942-wk7gk",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584951942
+    },
+    {
+      "id": "audit-1792584741941-y6y33",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.market_price",
+      "object": "commodities",
+      "reason": "Корректировка рынка -1%",
+      "oldValue": [
+        {
+          "id": "xau-usd",
+          "price": 4365.8
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.78
+        },
+        {
+          "id": "wti",
+          "price": 98.45
+        },
+        {
+          "id": "brent",
+          "price": 109.16
+        },
+        {
+          "id": "natgas",
+          "price": 2.858
+        },
+        {
+          "id": "copper",
+          "price": 6.551
+        },
+        {
+          "id": "platinum",
+          "price": 1648.7
+        },
+        {
+          "id": "palladium",
+          "price": 1086
+        },
+        {
+          "id": "corn",
+          "price": 4.585
+        },
+        {
+          "id": "wheat",
+          "price": 6.353
+        },
+        {
+          "id": "soybean",
+          "price": 12.43
+        },
+        {
+          "id": "cocoa",
+          "price": 5711
+        }
+      ],
+      "newValue": [
+        {
+          "id": "xau-usd",
+          "price": 4324.22,
+          "mode": "auto",
+          "bias": 4
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.21,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "wti",
+          "price": 97.47,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "brent",
+          "price": 108.07,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "natgas",
+          "price": 2.829,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "copper",
+          "price": 6.485,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "platinum",
+          "price": 1632.21,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "palladium",
+          "price": 1075.14,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "corn",
+          "price": 4.539,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "wheat",
+          "price": 6.289,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "soybean",
+          "price": 12.31,
+          "mode": "auto",
+          "bias": -1
+        },
+        {
+          "id": "cocoa",
+          "price": 5653.89,
+          "mode": "auto",
+          "bias": -1
+        }
+      ],
+      "reference": null,
+      "createdAt": 1792584741942
+    },
+    {
+      "id": "audit-1792584735744-8sdt1",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_update",
+      "object": "priceSync",
+      "reason": "Интервал обновления котировок: 1 мин",
+      "oldValue": null,
+      "newValue": {
+        "enabled": true,
+        "intervalMinutes": 1,
+        "lastRunAt": 1792584535315,
+        "lastStatus": "Провайдер: 60 авто · 0 ручной · 1 без котировки"
+      },
+      "reference": null,
+      "createdAt": 1792584735745
+    },
+    {
+      "id": "audit-1792584617928-84ajn",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584617928
+    },
+    {
+      "id": "audit-1792584590476-twh4u",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_set",
+      "object": "xau-usd",
+      "reason": "Ручная корректировка цены из админки",
+      "oldValue": {
+        "price": 4365.8,
+        "change24h": 5.37,
+        "mode": "auto",
+        "bias": 5
+      },
+      "newValue": {
+        "price": 4365.8,
+        "change24h": 5.37,
+        "mode": "auto",
+        "bias": 5
+      },
+      "reference": null,
+      "createdAt": 1792584590477
+    },
+    {
+      "id": "audit-1792584582261-rhqx7",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_set",
+      "object": "xau-usd",
+      "reason": "Ручная корректировка цены из админки",
+      "oldValue": {
+        "price": 4157.9,
+        "change24h": 0.37,
+        "mode": "auto",
+        "bias": 0
+      },
+      "newValue": {
+        "price": 4365.8,
+        "change24h": 5.37,
+        "mode": "auto",
+        "bias": 5
+      },
+      "reference": null,
+      "createdAt": 1792584582261
+    },
+    {
+      "id": "audit-1792584563679-orxq7",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.market_price",
+      "object": "commodities",
+      "reason": "Сброс смещений на рынке",
+      "oldValue": [
+        {
+          "id": "xau-usd",
+          "price": 4365.8
+        },
+        {
+          "id": "xag-usd",
+          "price": 60.67
+        },
+        {
+          "id": "wti",
+          "price": 103.37
+        },
+        {
+          "id": "brent",
+          "price": 114.62
+        },
+        {
+          "id": "natgas",
+          "price": 3.001
+        },
+        {
+          "id": "copper",
+          "price": 6.878
+        },
+        {
+          "id": "platinum",
+          "price": 1731.14
+        },
+        {
+          "id": "palladium",
+          "price": 1140.3
+        },
+        {
+          "id": "corn",
+          "price": 4.814
+        },
+        {
+          "id": "wheat",
+          "price": 6.67
+        },
+        {
+          "id": "soybean",
+          "price": 13.05
+        },
+        {
+          "id": "cocoa",
+          "price": 5996.55
+        }
+      ],
+      "newValue": [
+        {
+          "id": "xau-usd",
+          "price": 4157.9,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.78,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "wti",
+          "price": 98.45,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "brent",
+          "price": 109.16,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "natgas",
+          "price": 2.858,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "copper",
+          "price": 6.551,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "platinum",
+          "price": 1648.7,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "palladium",
+          "price": 1086,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "corn",
+          "price": 4.585,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "wheat",
+          "price": 6.353,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "soybean",
+          "price": 12.43,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "cocoa",
+          "price": 5711,
+          "mode": "auto",
+          "bias": 0
+        }
+      ],
+      "reference": null,
+      "createdAt": 1792584563679
+    },
+    {
+      "id": "audit-1792584548507-2rr08",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.market_price",
+      "object": "commodities",
+      "reason": "Корректировка рынка +5%",
+      "oldValue": [
+        {
+          "id": "xau-usd",
+          "price": 4157.9
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.78
+        },
+        {
+          "id": "wti",
+          "price": 98.45
+        },
+        {
+          "id": "brent",
+          "price": 109.16
+        },
+        {
+          "id": "natgas",
+          "price": 2.858
+        },
+        {
+          "id": "copper",
+          "price": 6.551
+        },
+        {
+          "id": "platinum",
+          "price": 1648.7
+        },
+        {
+          "id": "palladium",
+          "price": 1086
+        },
+        {
+          "id": "corn",
+          "price": 4.585
+        },
+        {
+          "id": "wheat",
+          "price": 6.353
+        },
+        {
+          "id": "soybean",
+          "price": 12.43
+        },
+        {
+          "id": "cocoa",
+          "price": 5711
+        }
+      ],
+      "newValue": [
+        {
+          "id": "xau-usd",
+          "price": 4365.8,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "xag-usd",
+          "price": 60.67,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "wti",
+          "price": 103.37,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "brent",
+          "price": 114.62,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "natgas",
+          "price": 3.001,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "copper",
+          "price": 6.878,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "platinum",
+          "price": 1731.14,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "palladium",
+          "price": 1140.3,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "corn",
+          "price": 4.814,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "wheat",
+          "price": 6.67,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "soybean",
+          "price": 13.05,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "cocoa",
+          "price": 5996.55,
+          "mode": "auto",
+          "bias": 5
+        }
+      ],
+      "reference": null,
+      "createdAt": 1792584548507
+    },
+    {
+      "id": "audit-1792584535291-l4xzh",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_run",
+      "object": "priceSync",
+      "reason": "Ручное обновление котировок из админки",
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584535292
+    },
+    {
+      "id": "audit-1792584436560-bw5fv",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584436560
+    },
+    {
+      "id": "audit-1792584385184-ly0zb",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_set",
+      "object": "doge",
+      "reason": "Ручная корректировка цены оператором",
+      "oldValue": {
+        "price": 0.0821,
+        "change24h": 3.66,
+        "mode": "auto",
+        "bias": 0
+      },
+      "newValue": {
+        "price": 0.0821,
+        "change24h": 3.66,
+        "mode": "auto",
+        "bias": 0
+      },
+      "reference": null,
+      "createdAt": 1792584385185
+    },
+    {
+      "id": "audit-1792584384848-ga5xz",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_update",
+      "object": "priceSync",
+      "reason": null,
+      "oldValue": null,
+      "newValue": {
+        "enabled": true,
+        "intervalMinutes": 5,
+        "lastRunAt": 1792584384350,
+        "lastStatus": "Провайдер: 60 авто · 0 ручной · 1 без котировки"
+      },
+      "reference": null,
+      "createdAt": 1792584384848
+    },
+    {
+      "id": "audit-1792584384626-f6re1",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_update",
+      "object": "priceSync",
+      "reason": null,
+      "oldValue": null,
+      "newValue": {
+        "enabled": false,
+        "intervalMinutes": 3,
+        "lastRunAt": 1792584384350,
+        "lastStatus": "Провайдер: 60 авто · 0 ручной · 1 без котировки"
+      },
+      "reference": null,
+      "createdAt": 1792584384626
+    },
+    {
+      "id": "audit-1792584384347-zfbys",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_run",
+      "object": "priceSync",
+      "reason": "Ручное обновление котировок",
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584384347
+    },
+    {
+      "id": "audit-1792584384248-pj35c",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.market_price",
+      "object": "all",
+      "reason": "reset biases",
+      "oldValue": [
+        {
+          "id": "bitcoin",
+          "price": 84375.19
+        },
+        {
+          "id": "ethereum",
+          "price": 2494.26
+        },
+        {
+          "id": "solana",
+          "price": 107.96
+        },
+        {
+          "id": "bnb",
+          "price": 753.93
+        },
+        {
+          "id": "vaultspring",
+          "price": 5.55
+        },
+        {
+          "id": "tron",
+          "price": 0.3342
+        },
+        {
+          "id": "xrp",
+          "price": 1.3704
+        },
+        {
+          "id": "doge",
+          "price": 0.555
+        },
+        {
+          "id": "ada",
+          "price": 0.2282
+        },
+        {
+          "id": "avax",
+          "price": 9.81
+        },
+        {
+          "id": "link",
+          "price": 12.527
+        },
+        {
+          "id": "ton",
+          "price": 1.616
+        },
+        {
+          "id": "sui",
+          "price": 1.045
+        },
+        {
+          "id": "eur-usd",
+          "price": 1.13272
+        },
+        {
+          "id": "gbp-usd",
+          "price": 1.34801
+        },
+        {
+          "id": "usd-jpy",
+          "price": 159.711
+        },
+        {
+          "id": "usd-chf",
+          "price": 0.83187
+        },
+        {
+          "id": "aud-usd",
+          "price": 0.70546
+        },
+        {
+          "id": "usd-cad",
+          "price": 1.41915
+        },
+        {
+          "id": "nzd-usd",
+          "price": 0.57357
+        },
+        {
+          "id": "eur-gbp",
+          "price": 0.84869
+        },
+        {
+          "id": "eur-jpy",
+          "price": 179.117
+        },
+        {
+          "id": "gbp-jpy",
+          "price": 213.162
+        },
+        {
+          "id": "usd-cnh",
+          "price": 6.7448
+        },
+        {
+          "id": "usd-mxn",
+          "price": 18.7068
+        },
+        {
+          "id": "xau-usd",
+          "price": 4407.37
+        },
+        {
+          "id": "xag-usd",
+          "price": 61.25
+        },
+        {
+          "id": "wti",
+          "price": 104.36
+        },
+        {
+          "id": "brent",
+          "price": 115.71
+        },
+        {
+          "id": "natgas",
+          "price": 3.029
+        },
+        {
+          "id": "copper",
+          "price": 6.944
+        },
+        {
+          "id": "platinum",
+          "price": 1747.62
+        },
+        {
+          "id": "palladium",
+          "price": 1151.16
+        },
+        {
+          "id": "corn",
+          "price": 4.86
+        },
+        {
+          "id": "wheat",
+          "price": 6.734
+        },
+        {
+          "id": "soybean",
+          "price": 13.18
+        },
+        {
+          "id": "cocoa",
+          "price": 6053.66
+        },
+        {
+          "id": "aapl",
+          "price": 342.89
+        },
+        {
+          "id": "nvda",
+          "price": 218.63
+        },
+        {
+          "id": "tsla",
+          "price": 377.45
+        },
+        {
+          "id": "msft",
+          "price": 537.19
+        },
+        {
+          "id": "amzn",
+          "price": 265.26
+        },
+        {
+          "id": "googl",
+          "price": 343.68
+        },
+        {
+          "id": "meta",
+          "price": 701.19
+        },
+        {
+          "id": "amd",
+          "price": 540.09
+        },
+        {
+          "id": "nflx",
+          "price": 69.38
+        },
+        {
+          "id": "coin",
+          "price": 172.56
+        },
+        {
+          "id": "pltr",
+          "price": 194.53
+        },
+        {
+          "id": "avgo",
+          "price": 337.71
+        },
+        {
+          "id": "spx",
+          "price": 7789.7
+        },
+        {
+          "id": "ndx",
+          "price": 29785.19
+        },
+        {
+          "id": "dji",
+          "price": 53020.84
+        },
+        {
+          "id": "rut",
+          "price": 2801.15
+        },
+        {
+          "id": "dax",
+          "price": 25772.61
+        },
+        {
+          "id": "uk100",
+          "price": 10843.52
+        },
+        {
+          "id": "cac40",
+          "price": 7971.14
+        },
+        {
+          "id": "sx5e",
+          "price": 6241.33
+        },
+        {
+          "id": "ni225",
+          "price": 65267.45
+        },
+        {
+          "id": "hsi",
+          "price": 23888.39
+        },
+        {
+          "id": "nifty",
+          "price": 23039.46
+        },
+        {
+          "id": "asx200",
+          "price": 8919.61
+        }
+      ],
+      "newValue": [
+        {
+          "id": "bitcoin",
+          "price": 83539.79,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ethereum",
+          "price": 2469.56,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "solana",
+          "price": 106.89,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "bnb",
+          "price": 746.47,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "vaultspring",
+          "price": 5.55,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "tron",
+          "price": 0.3309,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "xrp",
+          "price": 1.3568,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "doge",
+          "price": 0.5,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ada",
+          "price": 0.2259,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "avax",
+          "price": 9.72,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "link",
+          "price": 12.403,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ton",
+          "price": 1.6,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "sui",
+          "price": 1.035,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "eur-usd",
+          "price": 1.1215,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "gbp-usd",
+          "price": 1.33467,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-jpy",
+          "price": 158.13,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-chf",
+          "price": 0.82363,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "aud-usd",
+          "price": 0.69847,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-cad",
+          "price": 1.4051,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nzd-usd",
+          "price": 0.56789,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "eur-gbp",
+          "price": 0.84029,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "eur-jpy",
+          "price": 177.343,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "gbp-jpy",
+          "price": 211.051,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-cnh",
+          "price": 6.678,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "usd-mxn",
+          "price": 18.5216,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "xau-usd",
+          "price": 4157.9,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.78,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "wti",
+          "price": 98.45,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "brent",
+          "price": 109.16,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "natgas",
+          "price": 2.858,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "copper",
+          "price": 6.551,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "platinum",
+          "price": 1648.7,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "palladium",
+          "price": 1086,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "corn",
+          "price": 4.585,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "wheat",
+          "price": 6.353,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "soybean",
+          "price": 12.43,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "cocoa",
+          "price": 5711,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "aapl",
+          "price": 339.5,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nvda",
+          "price": 216.47,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "tsla",
+          "price": 373.71,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "msft",
+          "price": 531.87,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "amzn",
+          "price": 262.63,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "googl",
+          "price": 340.27,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "meta",
+          "price": 694.25,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "amd",
+          "price": 534.74,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nflx",
+          "price": 68.69,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "coin",
+          "price": 170.85,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "pltr",
+          "price": 192.6,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "avgo",
+          "price": 334.37,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "spx",
+          "price": 7712.57,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ndx",
+          "price": 29490.28,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "dji",
+          "price": 52495.88,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "rut",
+          "price": 2773.42,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "dax",
+          "price": 25517.44,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "uk100",
+          "price": 10736.16,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "cac40",
+          "price": 7892.22,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "sx5e",
+          "price": 6179.53,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "ni225",
+          "price": 64621.24,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "hsi",
+          "price": 23651.87,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "nifty",
+          "price": 22811.35,
+          "mode": "auto",
+          "bias": 0
+        },
+        {
+          "id": "asx200",
+          "price": 8831.3,
+          "mode": "auto",
+          "bias": 0
+        }
+      ],
+      "reference": null,
+      "createdAt": 1792584384248
+    },
+    {
+      "id": "audit-1792584384117-9f9d3",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.market_price",
+      "object": "all",
+      "reason": "test all",
+      "oldValue": [
+        {
+          "id": "bitcoin",
+          "price": 83539.79
+        },
+        {
+          "id": "ethereum",
+          "price": 2469.56
+        },
+        {
+          "id": "solana",
+          "price": 106.89
+        },
+        {
+          "id": "bnb",
+          "price": 746.47
+        },
+        {
+          "id": "vaultspring",
+          "price": 5.5
+        },
+        {
+          "id": "tron",
+          "price": 0.3309
+        },
+        {
+          "id": "xrp",
+          "price": 1.3568
+        },
+        {
+          "id": "doge",
+          "price": 0.55
+        },
+        {
+          "id": "ada",
+          "price": 0.2259
+        },
+        {
+          "id": "avax",
+          "price": 9.72
+        },
+        {
+          "id": "link",
+          "price": 12.403
+        },
+        {
+          "id": "ton",
+          "price": 1.6
+        },
+        {
+          "id": "sui",
+          "price": 1.035
+        },
+        {
+          "id": "eur-usd",
+          "price": 1.1215
+        },
+        {
+          "id": "gbp-usd",
+          "price": 1.33467
+        },
+        {
+          "id": "usd-jpy",
+          "price": 158.13
+        },
+        {
+          "id": "usd-chf",
+          "price": 0.82363
+        },
+        {
+          "id": "aud-usd",
+          "price": 0.69847
+        },
+        {
+          "id": "usd-cad",
+          "price": 1.4051
+        },
+        {
+          "id": "nzd-usd",
+          "price": 0.56789
+        },
+        {
+          "id": "eur-gbp",
+          "price": 0.84029
+        },
+        {
+          "id": "eur-jpy",
+          "price": 177.343
+        },
+        {
+          "id": "gbp-jpy",
+          "price": 211.051
+        },
+        {
+          "id": "usd-cnh",
+          "price": 6.678
+        },
+        {
+          "id": "usd-mxn",
+          "price": 18.5216
+        },
+        {
+          "id": "xau-usd",
+          "price": 4365.8
+        },
+        {
+          "id": "xag-usd",
+          "price": 60.67
+        },
+        {
+          "id": "wti",
+          "price": 103.37
+        },
+        {
+          "id": "brent",
+          "price": 114.62
+        },
+        {
+          "id": "natgas",
+          "price": 3.001
+        },
+        {
+          "id": "copper",
+          "price": 6.878
+        },
+        {
+          "id": "platinum",
+          "price": 1731.14
+        },
+        {
+          "id": "palladium",
+          "price": 1140.3
+        },
+        {
+          "id": "corn",
+          "price": 4.814
+        },
+        {
+          "id": "wheat",
+          "price": 6.67
+        },
+        {
+          "id": "soybean",
+          "price": 13.05
+        },
+        {
+          "id": "cocoa",
+          "price": 5996.55
+        },
+        {
+          "id": "aapl",
+          "price": 339.5
+        },
+        {
+          "id": "nvda",
+          "price": 216.47
+        },
+        {
+          "id": "tsla",
+          "price": 373.71
+        },
+        {
+          "id": "msft",
+          "price": 531.87
+        },
+        {
+          "id": "amzn",
+          "price": 262.63
+        },
+        {
+          "id": "googl",
+          "price": 340.27
+        },
+        {
+          "id": "meta",
+          "price": 694.25
+        },
+        {
+          "id": "amd",
+          "price": 534.74
+        },
+        {
+          "id": "nflx",
+          "price": 68.69
+        },
+        {
+          "id": "coin",
+          "price": 170.85
+        },
+        {
+          "id": "pltr",
+          "price": 192.6
+        },
+        {
+          "id": "avgo",
+          "price": 334.37
+        },
+        {
+          "id": "spx",
+          "price": 7712.57
+        },
+        {
+          "id": "ndx",
+          "price": 29490.28
+        },
+        {
+          "id": "dji",
+          "price": 52495.88
+        },
+        {
+          "id": "rut",
+          "price": 2773.42
+        },
+        {
+          "id": "dax",
+          "price": 25517.44
+        },
+        {
+          "id": "uk100",
+          "price": 10736.16
+        },
+        {
+          "id": "cac40",
+          "price": 7892.22
+        },
+        {
+          "id": "sx5e",
+          "price": 6179.53
+        },
+        {
+          "id": "ni225",
+          "price": 64621.24
+        },
+        {
+          "id": "hsi",
+          "price": 23651.87
+        },
+        {
+          "id": "nifty",
+          "price": 22811.35
+        },
+        {
+          "id": "asx200",
+          "price": 8831.3
+        }
+      ],
+      "newValue": [
+        {
+          "id": "bitcoin",
+          "price": 84375.19,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "ethereum",
+          "price": 2494.26,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "solana",
+          "price": 107.96,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "bnb",
+          "price": 753.93,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "vaultspring",
+          "price": 5.55,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "tron",
+          "price": 0.3342,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "xrp",
+          "price": 1.3704,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "doge",
+          "price": 0.555,
+          "mode": "auto",
+          "bias": 11
+        },
+        {
+          "id": "ada",
+          "price": 0.2282,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "avax",
+          "price": 9.81,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "link",
+          "price": 12.527,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "ton",
+          "price": 1.616,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "sui",
+          "price": 1.045,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "eur-usd",
+          "price": 1.13272,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "gbp-usd",
+          "price": 1.34801,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "usd-jpy",
+          "price": 159.711,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "usd-chf",
+          "price": 0.83187,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "aud-usd",
+          "price": 0.70546,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "usd-cad",
+          "price": 1.41915,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "nzd-usd",
+          "price": 0.57357,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "eur-gbp",
+          "price": 0.84869,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "eur-jpy",
+          "price": 179.117,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "gbp-jpy",
+          "price": 213.162,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "usd-cnh",
+          "price": 6.7448,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "usd-mxn",
+          "price": 18.7068,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "xau-usd",
+          "price": 4407.37,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "xag-usd",
+          "price": 61.25,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "wti",
+          "price": 104.36,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "brent",
+          "price": 115.71,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "natgas",
+          "price": 3.029,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "copper",
+          "price": 6.944,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "platinum",
+          "price": 1747.62,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "palladium",
+          "price": 1151.16,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "corn",
+          "price": 4.86,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "wheat",
+          "price": 6.734,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "soybean",
+          "price": 13.18,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "cocoa",
+          "price": 6053.66,
+          "mode": "auto",
+          "bias": 6
+        },
+        {
+          "id": "aapl",
+          "price": 342.89,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "nvda",
+          "price": 218.63,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "tsla",
+          "price": 377.45,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "msft",
+          "price": 537.19,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "amzn",
+          "price": 265.26,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "googl",
+          "price": 343.68,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "meta",
+          "price": 701.19,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "amd",
+          "price": 540.09,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "nflx",
+          "price": 69.38,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "coin",
+          "price": 172.56,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "pltr",
+          "price": 194.53,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "avgo",
+          "price": 337.71,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "spx",
+          "price": 7789.7,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "ndx",
+          "price": 29785.19,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "dji",
+          "price": 53020.84,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "rut",
+          "price": 2801.15,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "dax",
+          "price": 25772.61,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "uk100",
+          "price": 10843.52,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "cac40",
+          "price": 7971.14,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "sx5e",
+          "price": 6241.33,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "ni225",
+          "price": 65267.45,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "hsi",
+          "price": 23888.39,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "nifty",
+          "price": 23039.46,
+          "mode": "auto",
+          "bias": 1
+        },
+        {
+          "id": "asx200",
+          "price": 8919.61,
+          "mode": "auto",
+          "bias": 1
+        }
+      ],
+      "reference": null,
+      "createdAt": 1792584384117
+    },
+    {
+      "id": "audit-1792584383874-g85ri",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.market_price",
+      "object": "commodities",
+      "reason": "test market nudge",
+      "oldValue": [
+        {
+          "id": "xau-usd",
+          "price": 4157.9
+        },
+        {
+          "id": "xag-usd",
+          "price": 57.78
+        },
+        {
+          "id": "wti",
+          "price": 98.45
+        },
+        {
+          "id": "brent",
+          "price": 109.16
+        },
+        {
+          "id": "natgas",
+          "price": 2.858
+        },
+        {
+          "id": "copper",
+          "price": 6.551
+        },
+        {
+          "id": "platinum",
+          "price": 1648.7
+        },
+        {
+          "id": "palladium",
+          "price": 1086
+        },
+        {
+          "id": "corn",
+          "price": 4.585
+        },
+        {
+          "id": "wheat",
+          "price": 6.353
+        },
+        {
+          "id": "soybean",
+          "price": 12.43
+        },
+        {
+          "id": "cocoa",
+          "price": 5711
+        }
+      ],
+      "newValue": [
+        {
+          "id": "xau-usd",
+          "price": 4365.8,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "xag-usd",
+          "price": 60.67,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "wti",
+          "price": 103.37,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "brent",
+          "price": 114.62,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "natgas",
+          "price": 3.001,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "copper",
+          "price": 6.878,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "platinum",
+          "price": 1731.14,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "palladium",
+          "price": 1140.3,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "corn",
+          "price": 4.814,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "wheat",
+          "price": 6.67,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "soybean",
+          "price": 13.05,
+          "mode": "auto",
+          "bias": 5
+        },
+        {
+          "id": "cocoa",
+          "price": 5996.55,
+          "mode": "auto",
+          "bias": 5
+        }
+      ],
+      "reference": null,
+      "createdAt": 1792584383874
+    },
+    {
+      "id": "audit-1792584383296-uutj1",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_set",
+      "object": "doge",
+      "reason": "test nudge",
+      "oldValue": {
+        "price": 0.5,
+        "change24h": 3.66,
+        "mode": "auto",
+        "bias": 0
+      },
+      "newValue": {
+        "price": 0.55,
+        "change24h": 13.66,
+        "mode": "auto",
+        "bias": 10
+      },
+      "reference": null,
+      "createdAt": 1792584383296
+    },
+    {
+      "id": "audit-1792584383101-lmaxh",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_set",
+      "object": "doge",
+      "reason": "Ручная корректировка цены оператором",
+      "oldValue": {
+        "price": 0.5,
+        "change24h": 3.66,
+        "mode": "manual",
+        "bias": 0
+      },
+      "newValue": {
+        "price": 0.5,
+        "change24h": 3.66,
+        "mode": "auto",
+        "bias": 0
+      },
+      "reference": null,
+      "createdAt": 1792584383101
+    },
+    {
+      "id": "audit-1792584382611-te1r2",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_run",
+      "object": "priceSync",
+      "reason": "Ручное обновление котировок",
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584382611
+    },
+    {
+      "id": "audit-1792584382573-9b932",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_set",
+      "object": "doge",
+      "reason": "test manual",
+      "oldValue": {
+        "price": 0.0821,
+        "change24h": 3.66,
+        "mode": "auto",
+        "bias": 0
+      },
+      "newValue": {
+        "price": 0.5,
+        "change24h": 3.66,
+        "mode": "manual",
+        "bias": 0
+      },
+      "reference": null,
+      "createdAt": 1792584382573
+    },
+    {
+      "id": "audit-1792584382335-ycep3",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_run",
+      "object": "priceSync",
+      "reason": "test",
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584382335
+    },
+    {
+      "id": "audit-1792584381698-qan6y",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584381698
+    },
+    {
+      "id": "audit-1792584091195-d4la2",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "staking_pro.price_sync_run",
+      "object": "priceSync",
+      "reason": "Ручное обновление котировок",
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584091195
+    },
+    {
+      "id": "audit-1792584091158-gm6r2",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584091158
+    },
+    {
+      "id": "audit-1792584067165-hvn3l",
+      "actor": "Super Administrator",
+      "actorId": "a-super",
+      "role": "super_admin",
+      "action": "login",
+      "object": "session",
+      "reason": null,
+      "oldValue": null,
+      "newValue": null,
+      "reference": null,
+      "createdAt": 1792584067165
+    },
     {
       "id": "audit-1792581011118-pb29b",
       "actor": "Super Administrator",
@@ -1314,8 +4238,8 @@
       "symbol": "BTC",
       "name": "Bitcoin",
       "network": "All Networks",
-      "currentPrice": 96420.5,
-      "change24h": 3.42,
+      "currentPrice": 83573.99,
+      "change24h": 2.64,
       "minPositionUsd": 20,
       "maxLeverage": 10,
       "fundingRate8h": 0.012,
@@ -1324,20 +4248,24 @@
       "takerFeePercent": 0.05,
       "fundingDirection": "pay",
       "enabled": true,
-      "updatedAt": 1792165123509,
+      "updatedAt": 1792584967015,
       "category": "crypto",
       "ticker": "BTC/USDT",
       "pricePrecision": 2,
       "productType": "USDT-маржинальный бессрочный контракт",
-      "tradingHours": "24/7"
+      "tradingHours": "24/7",
+      "providerPrice": 83573.99,
+      "providerChange": 2.642,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "ethereum",
       "symbol": "ETH",
       "name": "Ethereum",
       "network": "Ethereum",
-      "currentPrice": 3840.25,
-      "change24h": 4.18,
+      "currentPrice": 2468.23,
+      "change24h": 3.48,
       "minPositionUsd": 10,
       "maxLeverage": 10,
       "fundingRate8h": 0.01,
@@ -1346,20 +4274,24 @@
       "takerFeePercent": 0.05,
       "fundingDirection": "pay",
       "enabled": true,
-      "updatedAt": 1792166542579,
+      "updatedAt": 1792584967015,
       "category": "crypto",
       "ticker": "ETH/USDT",
       "pricePrecision": 2,
       "productType": "USDT-маржинальный бессрочный контракт",
-      "tradingHours": "24/7"
+      "tradingHours": "24/7",
+      "providerPrice": 2468.23,
+      "providerChange": 3.476,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "solana",
       "symbol": "SOL",
       "name": "Solana",
       "network": "Solana",
-      "currentPrice": 218.4,
-      "change24h": 7.64,
+      "currentPrice": 107,
+      "change24h": 2.74,
       "minPositionUsd": 10,
       "maxLeverage": 10,
       "fundingRate8h": 0.015,
@@ -1368,20 +4300,24 @@
       "takerFeePercent": 0.05,
       "fundingDirection": "pay",
       "enabled": true,
-      "updatedAt": 1792165123509,
+      "updatedAt": 1792584967015,
       "category": "crypto",
       "ticker": "SOL/USDT",
       "pricePrecision": 2,
       "productType": "USDT-маржинальный бессрочный контракт",
-      "tradingHours": "24/7"
+      "tradingHours": "24/7",
+      "providerPrice": 107,
+      "providerChange": 2.736,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "bnb",
       "symbol": "BNB",
       "name": "BNB",
       "network": "BNB Smart Chain",
-      "currentPrice": 645.8,
-      "change24h": 1.85,
+      "currentPrice": 746.45,
+      "change24h": 2.39,
       "minPositionUsd": 10,
       "maxLeverage": 10,
       "fundingRate8h": 0.009,
@@ -1390,20 +4326,24 @@
       "takerFeePercent": 0.05,
       "fundingDirection": "pay",
       "enabled": true,
-      "updatedAt": 1792165123509,
+      "updatedAt": 1792584967015,
       "category": "crypto",
       "ticker": "BNB/USDT",
       "pricePrecision": 2,
       "productType": "USDT-маржинальный бессрочный контракт",
-      "tradingHours": "24/7"
+      "tradingHours": "24/7",
+      "providerPrice": 746.45,
+      "providerChange": 2.387,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "vaultspring",
       "symbol": "VLT",
       "name": "VaultSpring Token",
       "network": "BNB Smart Chain",
-      "currentPrice": 5.5,
-      "change24h": 2.83,
+      "currentPrice": 5.55,
+      "change24h": 3.83,
       "minPositionUsd": 5,
       "maxLeverage": 5,
       "fundingRate8h": 0.02,
@@ -1412,15 +4352,16 @@
       "takerFeePercent": 0.04,
       "fundingDirection": "pay",
       "enabled": true,
-      "updatedAt": 1792165123509
+      "updatedAt": 1792584967015,
+      "biasPercent": 0
     },
     {
       "id": "tron",
       "symbol": "TRX",
       "name": "TRON",
       "network": "TRON (TRC-20)",
-      "currentPrice": 0.335,
-      "change24h": 1.2,
+      "currentPrice": 0.3309,
+      "change24h": -0.21,
       "minPositionUsd": 5,
       "maxLeverage": 10,
       "fundingRate8h": 0.012,
@@ -1429,12 +4370,16 @@
       "takerFeePercent": 0.05,
       "fundingDirection": "pay",
       "enabled": true,
-      "updatedAt": 1792165123509,
+      "updatedAt": 1792584967015,
       "category": "crypto",
       "ticker": "TRX/USDT",
       "pricePrecision": 4,
       "productType": "USDT-маржинальный бессрочный контракт",
-      "tradingHours": "24/7"
+      "tradingHours": "24/7",
+      "providerPrice": 0.3309,
+      "providerChange": -0.211,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "xrp",
@@ -1446,8 +4391,8 @@
       "pricePrecision": 4,
       "productType": "USDT-маржинальный бессрочный контракт",
       "tradingHours": "24/7",
-      "currentPrice": 0.5281,
-      "change24h": -1.24,
+      "currentPrice": 1.3584,
+      "change24h": 4.73,
       "minPositionUsd": 5,
       "maxLeverage": 10,
       "fundingRate8h": 0.01,
@@ -1456,7 +4401,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.05,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 1.3584,
+      "providerChange": 4.734,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "doge",
@@ -1468,8 +4417,8 @@
       "pricePrecision": 4,
       "productType": "USDT-маржинальный бессрочный контракт",
       "tradingHours": "24/7",
-      "currentPrice": 0.1623,
-      "change24h": 1.08,
+      "currentPrice": 0.0821,
+      "change24h": 3.77,
       "minPositionUsd": 5,
       "maxLeverage": 5,
       "fundingRate8h": 0.015,
@@ -1478,7 +4427,12 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.05,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 0.0821,
+      "providerChange": 3.766,
+      "providerAt": 1792584969215,
+      "priceMode": "auto",
+      "biasPercent": 0
     },
     {
       "id": "ada",
@@ -1490,8 +4444,8 @@
       "pricePrecision": 4,
       "productType": "USDT-маржинальный бессрочный контракт",
       "tradingHours": "24/7",
-      "currentPrice": 0.4112,
-      "change24h": 2.43,
+      "currentPrice": 0.2261,
+      "change24h": 4.39,
       "minPositionUsd": 5,
       "maxLeverage": 10,
       "fundingRate8h": 0.012,
@@ -1500,7 +4454,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.05,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 0.2261,
+      "providerChange": 4.386,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "avax",
@@ -1512,8 +4470,8 @@
       "pricePrecision": 2,
       "productType": "USDT-маржинальный бессрочный контракт",
       "tradingHours": "24/7",
-      "currentPrice": 28.41,
-      "change24h": 1.77,
+      "currentPrice": 9.72,
+      "change24h": 3.01,
       "minPositionUsd": 5,
       "maxLeverage": 10,
       "fundingRate8h": 0.013,
@@ -1522,7 +4480,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.05,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 9.723,
+      "providerChange": 3.009,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "link",
@@ -1534,8 +4496,8 @@
       "pricePrecision": 3,
       "productType": "USDT-маржинальный бессрочный контракт",
       "tradingHours": "24/7",
-      "currentPrice": 14.28,
-      "change24h": 1.36,
+      "currentPrice": 12.407,
+      "change24h": 3.6,
       "minPositionUsd": 5,
       "maxLeverage": 10,
       "fundingRate8h": 0.012,
@@ -1544,7 +4506,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.05,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 12.407,
+      "providerChange": 3.599,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "ton",
@@ -1556,8 +4522,8 @@
       "pricePrecision": 3,
       "productType": "USDT-маржинальный бессрочный контракт",
       "tradingHours": "24/7",
-      "currentPrice": 5.42,
-      "change24h": 2.08,
+      "currentPrice": 1.6,
+      "change24h": 0.95,
       "minPositionUsd": 5,
       "maxLeverage": 10,
       "fundingRate8h": 0.013,
@@ -1566,7 +4532,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.05,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 1.6,
+      "providerChange": 0.946,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "sui",
@@ -1578,8 +4548,8 @@
       "pricePrecision": 3,
       "productType": "USDT-маржинальный бессрочный контракт",
       "tradingHours": "24/7",
-      "currentPrice": 3.87,
-      "change24h": 4.11,
+      "currentPrice": 1.037,
+      "change24h": 4.53,
       "minPositionUsd": 5,
       "maxLeverage": 10,
       "fundingRate8h": 0.016,
@@ -1588,7 +4558,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.05,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 1.0371,
+      "providerChange": 4.525,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "eur-usd",
@@ -1600,7 +4574,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 1.1215037121772873,
+      "currentPrice": 1.1215,
       "change24h": 0.12,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1610,7 +4584,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 1.1215037121772873,
+      "providerChange": 0.12,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "gbp-usd",
@@ -1622,7 +4600,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 1.3346680013346681,
+      "currentPrice": 1.33467,
       "change24h": 0.08,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1632,7 +4610,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 1.3346680013346681,
+      "providerChange": 0.08,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "usd-jpy",
@@ -1654,7 +4636,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 158.13,
+      "providerChange": -0.21,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "usd-chf",
@@ -1676,7 +4662,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 0.82363,
+      "providerChange": -0.09,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "aud-usd",
@@ -1688,7 +4678,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 0.6984703499336453,
+      "currentPrice": 0.69847,
       "change24h": 0.15,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1698,7 +4688,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 0.6984703499336453,
+      "providerChange": 0.15,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "usd-cad",
@@ -1720,7 +4714,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 1.4051,
+      "providerChange": 0.11,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "nzd-usd",
@@ -1732,7 +4730,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 0.5678914191606566,
+      "currentPrice": 0.56789,
       "change24h": 0.18,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1742,7 +4740,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 0.5678914191606566,
+      "providerChange": 0.18,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "eur-gbp",
@@ -1754,7 +4756,7 @@
       "pricePrecision": 5,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 0.8402866563488324,
+      "currentPrice": 0.84029,
       "change24h": 0.04,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1764,7 +4766,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 0.8402866563488324,
+      "providerChange": 0.04,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "eur-jpy",
@@ -1776,7 +4782,7 @@
       "pricePrecision": 3,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 177.34338200659445,
+      "currentPrice": 177.343,
       "change24h": -0.13,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1786,7 +4792,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 177.34338200659445,
+      "providerChange": -0.13,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "gbp-jpy",
@@ -1798,7 +4808,7 @@
       "pricePrecision": 3,
       "productType": "CFD / спот-форекс с плечом",
       "tradingHours": "Пн–Пт 24 часа",
-      "currentPrice": 211.05105105105108,
+      "currentPrice": 211.051,
       "change24h": -0.06,
       "minPositionUsd": 50,
       "maxLeverage": 20,
@@ -1808,7 +4818,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 211.05105105105108,
+      "providerChange": -0.06,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "usd-cnh",
@@ -1830,7 +4844,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 6.678,
+      "providerChange": 0.05,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "usd-mxn",
@@ -1852,7 +4870,11 @@
       "makerFeePercent": 0.01,
       "takerFeePercent": 0.03,
       "enabled": true,
-      "updatedAt": 1792582843875
+      "updatedAt": 1792584967015,
+      "providerPrice": 18.5216,
+      "providerChange": -0.17,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "xau-usd",
@@ -1864,8 +4886,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 2392.18,
-      "change24h": 0.63,
+      "currentPrice": 4158.9,
+      "change24h": 0.39,
       "minPositionUsd": 50,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -1874,7 +4896,12 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 4158.9,
+      "providerChange": 0.393,
+      "providerAt": 1792584969215,
+      "biasPercent": 0,
+      "priceMode": "auto"
     },
     {
       "id": "xag-usd",
@@ -1886,8 +4913,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 28.14,
-      "change24h": 1.21,
+      "currentPrice": 57.73,
+      "change24h": -0.47,
       "minPositionUsd": 20,
       "maxLeverage": 10,
       "fundingRate8h": 0.006,
@@ -1896,7 +4923,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 57.73,
+      "providerChange": -0.466,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "wti",
@@ -1908,8 +4939,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 78.32,
-      "change24h": 0.48,
+      "currentPrice": 98.48,
+      "change24h": 0.68,
       "minPositionUsd": 50,
       "maxLeverage": 10,
       "fundingRate8h": 0.008,
@@ -1918,7 +4949,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 98.48,
+      "providerChange": 0.675,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "brent",
@@ -1930,8 +4965,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 82.71,
-      "change24h": 0.52,
+      "currentPrice": 109.23,
+      "change24h": 0.4,
       "minPositionUsd": 50,
       "maxLeverage": 10,
       "fundingRate8h": 0.008,
@@ -1940,7 +4975,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 109.23,
+      "providerChange": 0.404,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "natgas",
@@ -1952,8 +4991,8 @@
       "pricePrecision": 3,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 2.68,
-      "change24h": -1.34,
+      "currentPrice": 2.866,
+      "change24h": -3.27,
       "minPositionUsd": 20,
       "maxLeverage": 5,
       "fundingRate8h": 0.01,
@@ -1962,7 +5001,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 2.866,
+      "providerChange": -3.274,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "copper",
@@ -1974,8 +5017,8 @@
       "pricePrecision": 3,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 4.21,
-      "change24h": 0.73,
+      "currentPrice": 6.545,
+      "change24h": -0.89,
       "minPositionUsd": 20,
       "maxLeverage": 10,
       "fundingRate8h": 0.006,
@@ -1984,7 +5027,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 6.5445,
+      "providerChange": -0.8934,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "platinum",
@@ -1996,8 +5043,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 931.4,
-      "change24h": 0.36,
+      "currentPrice": 1646.8,
+      "change24h": -0.59,
       "minPositionUsd": 50,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2006,7 +5053,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 1646.8,
+      "providerChange": -0.586,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "palladium",
@@ -2018,8 +5069,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 1032.5,
-      "change24h": -0.42,
+      "currentPrice": 1084.5,
+      "change24h": -1.84,
       "minPositionUsd": 50,
       "maxLeverage": 10,
       "fundingRate8h": 0.006,
@@ -2028,7 +5079,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 1084.5,
+      "providerChange": -1.837,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "corn",
@@ -2040,8 +5095,8 @@
       "pricePrecision": 3,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 4.36,
-      "change24h": 0.21,
+      "currentPrice": 4.588,
+      "change24h": -0.7,
       "minPositionUsd": 20,
       "maxLeverage": 5,
       "fundingRate8h": 0.008,
@@ -2050,7 +5105,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 4.5875,
+      "providerChange": -0.703,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "wheat",
@@ -2062,8 +5121,8 @@
       "pricePrecision": 3,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 5.72,
-      "change24h": 0.18,
+      "currentPrice": 6.362,
+      "change24h": -1.09,
       "minPositionUsd": 20,
       "maxLeverage": 5,
       "fundingRate8h": 0.008,
@@ -2072,7 +5131,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 6.3625,
+      "providerChange": -1.088,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "soybean",
@@ -2084,8 +5147,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 11.82,
-      "change24h": 0.39,
+      "currentPrice": 12.44,
+      "change24h": -0.36,
       "minPositionUsd": 20,
       "maxLeverage": 5,
       "fundingRate8h": 0.008,
@@ -2094,7 +5157,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 12.4375,
+      "providerChange": -0.361,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "cocoa",
@@ -2106,8 +5173,8 @@
       "pricePrecision": 2,
       "productType": "CFD на фьючерс",
       "tradingHours": "Биржевые сессии CME/COMEX/LME",
-      "currentPrice": 8431,
-      "change24h": -1.12,
+      "currentPrice": 5718,
+      "change24h": -1.43,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.01,
@@ -2116,7 +5183,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 5718,
+      "providerChange": -1.431,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "aapl",
@@ -2128,8 +5199,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 186.52,
-      "change24h": 1.24,
+      "currentPrice": 339.5,
+      "change24h": -1,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.004,
@@ -2138,7 +5209,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 339.5,
+      "providerChange": -1.003,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "nvda",
@@ -2150,8 +5225,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 875.62,
-      "change24h": 2.31,
+      "currentPrice": 216.47,
+      "change24h": -0.29,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.006,
@@ -2160,7 +5235,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 216.47,
+      "providerChange": -0.286,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "tsla",
@@ -2172,8 +5251,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 248.32,
-      "change24h": -2.18,
+      "currentPrice": 373.71,
+      "change24h": 1.53,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.006,
@@ -2182,7 +5261,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 373.71,
+      "providerChange": 1.535,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "msft",
@@ -2194,8 +5277,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 410.17,
-      "change24h": 0.95,
+      "currentPrice": 531.87,
+      "change24h": -0.31,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.004,
@@ -2204,7 +5287,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 531.87,
+      "providerChange": -0.309,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "amzn",
@@ -2216,8 +5303,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 178.43,
-      "change24h": 1.36,
+      "currentPrice": 262.63,
+      "change24h": 0.07,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.004,
@@ -2226,7 +5313,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 262.63,
+      "providerChange": 0.069,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "googl",
@@ -2238,8 +5329,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 159.21,
-      "change24h": 1.02,
+      "currentPrice": 340.27,
+      "change24h": -1.14,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.004,
@@ -2248,7 +5339,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 340.275,
+      "providerChange": -1.135,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "meta",
@@ -2260,8 +5355,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 514.28,
-      "change24h": 1.45,
+      "currentPrice": 694.25,
+      "change24h": -1.59,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.005,
@@ -2270,7 +5365,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 694.25,
+      "providerChange": -1.586,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "amd",
@@ -2282,8 +5381,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 169.44,
-      "change24h": 2.05,
+      "currentPrice": 534.74,
+      "change24h": -0.61,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.005,
@@ -2292,7 +5391,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 534.74,
+      "providerChange": -0.615,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "nflx",
@@ -2304,8 +5407,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 631.18,
-      "change24h": -0.82,
+      "currentPrice": 68.69,
+      "change24h": -1.66,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.005,
@@ -2314,7 +5417,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 68.69,
+      "providerChange": -1.661,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "coin",
@@ -2326,8 +5433,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 214.55,
-      "change24h": 3.18,
+      "currentPrice": 170.85,
+      "change24h": 1.43,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.007,
@@ -2336,7 +5443,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 170.85,
+      "providerChange": 1.425,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "pltr",
@@ -2348,8 +5459,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 62.35,
-      "change24h": 2.64,
+      "currentPrice": 192.6,
+      "change24h": -0.8,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.006,
@@ -2358,7 +5469,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 192.6,
+      "providerChange": -0.798,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "avgo",
@@ -2370,8 +5485,8 @@
       "pricePrecision": 2,
       "productType": "CFD / токенизированная акция (не подтверждено)",
       "tradingHours": "Сессия биржи листинга (US: 09:30–16:00 ET)",
-      "currentPrice": 132.48,
-      "change24h": 1.72,
+      "currentPrice": 334.37,
+      "change24h": -0.07,
       "minPositionUsd": 50,
       "maxLeverage": 5,
       "fundingRate8h": 0.005,
@@ -2380,7 +5495,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792491856269
+      "updatedAt": 1792584967015,
+      "providerPrice": 334.37,
+      "providerChange": -0.066,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "spx",
@@ -2393,7 +5512,7 @@
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
       "currentPrice": 7712.57,
-      "change24h": 0.284,
+      "change24h": 0.28,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2402,7 +5521,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967015,
+      "providerPrice": 7712.57,
+      "providerChange": 0.284,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "ndx",
@@ -2414,8 +5537,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 29490.283,
-      "change24h": -0.132,
+      "currentPrice": 29490.28,
+      "change24h": -0.13,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.006,
@@ -2424,7 +5547,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967015,
+      "providerPrice": 29490.283,
+      "providerChange": -0.132,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "dji",
@@ -2446,7 +5573,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967015,
+      "providerPrice": 52495.88,
+      "providerChange": 1.02,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "rut",
@@ -2459,7 +5590,7 @@
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
       "currentPrice": 2773.42,
-      "change24h": 1.654,
+      "change24h": 1.65,
       "minPositionUsd": 100,
       "maxLeverage": 5,
       "fundingRate8h": 0.006,
@@ -2468,7 +5599,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967015,
+      "providerPrice": 2773.42,
+      "providerChange": 1.654,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "dax",
@@ -2480,8 +5615,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 25491.08,
-      "change24h": 0.738,
+      "currentPrice": 25522.83,
+      "change24h": 0.86,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2490,7 +5625,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967015,
+      "providerPrice": 25522.83,
+      "providerChange": 0.863,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "uk100",
@@ -2502,8 +5641,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 10737.59,
-      "change24h": 0.043,
+      "currentPrice": 10738.47,
+      "change24h": 0.05,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2512,7 +5651,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967015,
+      "providerPrice": 10738.47,
+      "providerChange": 0.051,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "cac40",
@@ -2524,8 +5667,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 7886.08,
-      "change24h": 0.607,
+      "currentPrice": 7894.64,
+      "change24h": 0.72,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2534,7 +5677,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967016,
+      "providerPrice": 7894.64,
+      "providerChange": 0.716,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "sx5e",
@@ -2546,8 +5693,8 @@
       "pricePrecision": 2,
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
-      "currentPrice": 6171.58,
-      "change24h": 0.815,
+      "currentPrice": 6181.41,
+      "change24h": 0.98,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2556,7 +5703,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967016,
+      "providerPrice": 6181.41,
+      "providerChange": 0.976,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "ni225",
@@ -2569,7 +5720,7 @@
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
       "currentPrice": 64621.24,
-      "change24h": 0.852,
+      "change24h": 0.85,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2578,7 +5729,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967016,
+      "providerPrice": 64621.24,
+      "providerChange": 0.852,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "hsi",
@@ -2591,7 +5746,7 @@
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
       "currentPrice": 23651.87,
-      "change24h": -0.904,
+      "change24h": -0.9,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.006,
@@ -2600,7 +5755,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967016,
+      "providerPrice": 23651.87,
+      "providerChange": -0.904,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "nifty",
@@ -2613,7 +5772,7 @@
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
       "currentPrice": 22811.35,
-      "change24h": -0.339,
+      "change24h": -0.34,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.005,
@@ -2622,7 +5781,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967016,
+      "providerPrice": 22811.35,
+      "providerChange": -0.339,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     },
     {
       "id": "asx200",
@@ -2635,7 +5798,7 @@
       "productType": "CFD на индекс",
       "tradingHours": "Сессия региональной биржи + ночная сессия",
       "currentPrice": 8831.3,
-      "change24h": 0.163,
+      "change24h": 0.16,
       "minPositionUsd": 100,
       "maxLeverage": 10,
       "fundingRate8h": 0.004,
@@ -2644,7 +5807,11 @@
       "makerFeePercent": 0.02,
       "takerFeePercent": 0.04,
       "enabled": true,
-      "updatedAt": 1792582843690
+      "updatedAt": 1792584967016,
+      "providerPrice": 8831.3,
+      "providerChange": 0.163,
+      "providerAt": 1792584969215,
+      "biasPercent": 0
     }
   ],
   "stakingProPositions": [
@@ -2744,5 +5911,13 @@
       "realizedPnlUsd": -0.5,
       "closedAt": 1792165150439
     }
-  ]
+  ],
+  "config": {
+    "priceSync": {
+      "enabled": true,
+      "intervalMinutes": 5,
+      "lastRunAt": 1792584969215,
+      "lastStatus": "Провайдер: 60 авто · 0 ручной · 1 без котировки"
+    }
+  }
 }

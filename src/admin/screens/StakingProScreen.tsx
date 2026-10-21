@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Power, TrendingUp, TrendingDown, ShieldAlert, Download } from 'lucide-react';
+import {
+  Plus, Pencil, Trash2, Power, TrendingUp, TrendingDown, ShieldAlert, Download,
+  SlidersHorizontal, RefreshCw, Pause, Play, RotateCcw,
+} from 'lucide-react';
 import { api, fmtUsd, fmtNum, fmtDate } from '../api';
 import {
   SectionTitle, Badge, Button, Table, Td, Spinner, Empty, Modal,
-  Field, inputCls, useToast, StatCard,
+  Field, inputCls, useToast, StatCard, Card,
 } from '../ui';
 import type { Role } from '../types';
 import {
@@ -21,6 +24,13 @@ interface Asset {
   // Trade Pro market metadata. Legacy rows without a category are treated as crypto.
   category?: MarketCategory; ticker?: string; pricePrecision?: number;
   productType?: string; tradingHours?: string;
+  // Operator price control: 'auto' follows the live feed (+ bias), 'manual' is frozen.
+  priceMode?: 'auto' | 'manual'; biasPercent?: number;
+  providerPrice?: number; providerChange?: number; providerAt?: number;
+}
+interface PriceSync {
+  enabled: boolean; intervalMinutes: number; lastRunAt?: number;
+  lastStatus?: string; lastError?: string;
 }
 interface Position {
   id: string; userId: string; walletPrimary: string; email: string; address: string;
@@ -49,13 +59,15 @@ function netPnl(p: { direction: string; entryPrice: number; currentPrice: number
 }
 
 export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
-  const [tab, setTab] = useState<'positions' | 'catalog'>('positions');
+  const [tab, setTab] = useState<'positions' | 'catalog' | 'markets'>('positions');
   const [assets, setAssets] = useState<Asset[] | null>(null);
   const [positions, setPositions] = useState<Position[] | null>(null);
+  const [priceSync, setPriceSync] = useState<PriceSync | null>(null);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [statusFilter, setStatusFilter] = useState<'open' | 'closed' | 'all'>('open');
   const [marketFilter, setMarketFilter] = useState<MarketCategory | 'all'>('all');
   const [assetEdit, setAssetEdit] = useState<Asset | 'new' | null>(null);
+  const [priceTarget, setPriceTarget] = useState<Asset | null>(null);
   const [openPos, setOpenPos] = useState(false);
   const [adjust, setAdjust] = useState<Position | null>(null);
   const [closeTarget, setCloseTarget] = useState<Position | null>(null);
@@ -63,8 +75,8 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
   const writable = canWrite(role);
 
   const load = () => {
-    api.get<{ assets: Asset[]; positions: Position[] }>('/staking-pro')
-      .then((r) => { setAssets(r.assets); setPositions(r.positions); })
+    api.get<{ assets: Asset[]; positions: Position[]; priceSync?: PriceSync }>('/staking-pro')
+      .then((r) => { setAssets(r.assets); setPositions(r.positions); setPriceSync(r.priceSync || null); })
       .catch((e) => toast.show(e.message, 'red'));
   };
 
@@ -98,17 +110,19 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
         title="Trade Pro / Управление"
         subtitle="Каталог торговых инструментов по рынкам и позиции клиентов. Обеспечение всегда в USDT. Всё настраивается здесь и сразу видно пользователям в приложении; обеспечение резервируется/возвращается через журнал и фиксируется в аудите."
         action={writable && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setTab(tab === 'positions' ? 'catalog' : 'positions')}>
-              {tab === 'positions' ? 'Каталог активов' : 'Позиции'}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => exportCsv(shown)}><Download className="w-4 h-4" /> CSV</Button>
+          <div className="flex gap-2 flex-wrap">
+            {([['positions', 'Позиции'], ['catalog', 'Каталог'], ['markets', 'Управление ценами']] as const).map(([key, label]) => (
+              <Button key={key} variant={tab === key ? 'primary' : 'outline'} size="sm" onClick={() => setTab(key)}>{label}</Button>
+            ))}
+            {tab === 'positions' && <Button variant="outline" size="sm" onClick={() => exportCsv(shown)}><Download className="w-4 h-4" /> CSV</Button>}
             {tab === 'positions'
               ? <>
                   <Button variant="outline" size="sm" onClick={() => runSweep(load, toast.show)}><ShieldAlert className="w-4 h-4" /> Проверить ликвидации</Button>
                   <Button size="sm" onClick={() => setOpenPos(true)}><Plus className="w-4 h-4" /> Открыть позицию</Button>
                 </>
-              : <Button size="sm" onClick={() => setAssetEdit('new')}><Plus className="w-4 h-4" /> Добавить актив</Button>}
+              : tab === 'catalog'
+                ? <Button size="sm" onClick={() => setAssetEdit('new')}><Plus className="w-4 h-4" /> Добавить актив</Button>
+                : <Button size="sm" onClick={() => runSync(load, toast.show)}><RefreshCw className="w-4 h-4" /> Обновить котировки</Button>}
           </div>
         )}
       />
@@ -208,9 +222,9 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
             </Table>
           )}
         </div>
-      ) : (
+      ) : tab === 'catalog' ? (
         <div>
-          <Table columns={['Инструмент', 'Рынок', 'Цена', '24ч', 'Мин. позиция', 'Плечо', 'Funding/8ч', 'Комис. taker', 'Доступен', '']}>
+          <Table columns={['Инструмент', 'Рынок', 'Цена', 'Режим цены', '24ч', 'Мин. позиция', 'Плечо', 'Funding/8ч', 'Комис. taker', 'Доступен', '']}>
             {shownAssets.map((a) => (
               <tr key={a.id} className="hover:bg-slate-50">
                 <Td>
@@ -221,7 +235,22 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
                   <div>{marketOf(a).label}</div>
                   {marketOf(a).providerStatus === 'pending' && <Badge tone="amber">нет провайдера</Badge>}
                 </Td>
-                <Td className="font-mono">${dispPrice(a.currentPrice, a.pricePrecision)}</Td>
+                <Td className="font-mono">
+                  <div>${dispPrice(a.currentPrice, a.pricePrecision)}</div>
+                  {!!a.biasPercent && a.priceMode !== 'manual' && (
+                    <div className={`text-[10px] font-normal ${a.biasPercent > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>смещение {a.biasPercent > 0 ? '+' : ''}{a.biasPercent}%</div>
+                  )}
+                </Td>
+                <Td className="text-[11px]">
+                  <button type="button" onClick={() => writable && setPriceTarget(a)} className="text-left">
+                    <Badge tone={a.priceMode === 'manual' ? 'amber' : 'blue'}>
+                      {a.priceMode === 'manual' ? 'ручная' : 'авто · провайдер'}
+                    </Badge>
+                  </button>
+                  {a.providerAt && a.priceMode !== 'manual' && (
+                    <div className="text-slate-400 mt-0.5">котировка {fmtDate(a.providerAt)}</div>
+                  )}
+                </Td>
                 <Td className={`font-mono text-xs ${a.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{a.change24h >= 0 ? '+' : ''}{a.change24h}%</Td>
                 <Td className="text-xs">${fmtNum(a.minPositionUsd, 0)}</Td>
                 <Td className="text-xs font-semibold">{a.maxLeverage}x</Td>
@@ -238,6 +267,7 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
                 <Td>
                   {writable && (
                     <div className="flex gap-1.5">
+                      <Button size="sm" variant="outline" title="Настроить цену" onClick={() => setPriceTarget(a)}><SlidersHorizontal className="w-3.5 h-3.5" /></Button>
                       <Button size="sm" variant="outline" onClick={() => setAssetEdit(a)}><Pencil className="w-3.5 h-3.5" /></Button>
                       <Button size="sm" variant="ghost" onClick={() => removeAsset(a, () => load(), toast.show)}><Trash2 className="w-3.5 h-3.5" /></Button>
                     </div>
@@ -250,12 +280,22 @@ export const StakingProScreen: React.FC<{ role: Role }> = ({ role }) => {
             <Power className="w-3 h-3 inline mr-1" /> Выключенный инструмент исчезает из приложения у всех пользователей, но открытые по нему позиции сохраняются. Каталог пополняется автоматически из списка торговых инструментов при старте сервера — правки оператора не перезаписываются.
           </p>
         </div>
+      ) : (
+        <MarketsTab
+          assets={assets}
+          priceSync={priceSync}
+          writable={writable}
+          reload={load}
+          show={toast.show}
+          onEditPrice={setPriceTarget}
+        />
       )}
 
       {openPos && <OpenPositionModal users={users} assets={assets} onClose={() => setOpenPos(false)} onDone={() => { setOpenPos(false); load(); toast.show('Позиция открыта, обеспечение зарезервировано'); }} />}
       {adjust && <AdjustModal pos={adjust} onClose={() => setAdjust(null)} onDone={() => { setAdjust(null); load(); toast.show('Уровни TP/SL обновлены'); }} />}
       {closeTarget && <CloseModal pos={closeTarget} onClose={() => setCloseTarget(null)} onDone={() => { setCloseTarget(null); load(); toast.show('Позиция закрыта, обеспечение возвращено'); }} />}
       {assetEdit && <AssetModal asset={assetEdit} onClose={() => setAssetEdit(null)} onDone={() => { setAssetEdit(null); load(); toast.show('Каталог обновлён'); }} />}
+      {priceTarget && <PriceModal asset={priceTarget} onClose={() => setPriceTarget(null)} onDone={() => { setPriceTarget(null); load(); toast.show('Цена обновлена — пользователи видят её сразу'); }} />}
       {toast.node}
     </div>
   );
@@ -277,6 +317,35 @@ async function runSweep(reload: () => void, show: (t: string, tone?: 'green' | '
   try {
     const r = await api.post('/staking-pro/liquidate-sweep', {});
     show(r.count ? `Ликвидировано позиций: ${r.count}` : 'Позиций для ликвидации нет', r.count ? 'red' : 'green');
+    reload();
+  } catch (e: any) { show(e.message, 'red'); }
+}
+
+async function runSync(reload: () => void, show: (t: string, tone?: 'green' | 'red') => void) {
+  try {
+    const r = await api.post('/staking-pro/price-sync/run', { reason: 'Ручное обновление котировок из админки' });
+    show(`Котировки обновлены: ${r.priceSync?.lastStatus || 'ответ провайдера получен'}`, 'green');
+    reload();
+  } catch (e: any) { show(e.message, 'red'); }
+}
+
+async function patchSync(body: Record<string, unknown>, reload: () => void, show: (t: string, tone?: 'green' | 'red') => void, ok: string) {
+  try { await api.patch('/staking-pro/price-sync', body); show(ok); reload(); }
+  catch (e: any) { show(e.message, 'red'); }
+}
+
+async function nudgeMarket(category: string, deltaPercent: number, reload: () => void, show: (t: string, tone?: 'green' | 'red') => void) {
+  try {
+    const r = await api.post('/staking-pro/markets/price', { category, deltaPercent, reason: `Корректировка рынка ${deltaPercent > 0 ? '+' : ''}${deltaPercent}%` });
+    show(`${deltaPercent > 0 ? 'Подняли' : 'Опустили'} рынок на ${Math.abs(deltaPercent)}% — затронуто инструментов: ${r.updated}`, 'green');
+    reload();
+  } catch (e: any) { show(e.message, 'red'); }
+}
+
+async function setMarketMode(category: string, priceMode: 'auto' | 'manual', reload: () => void, show: (t: string, tone?: 'green' | 'red') => void) {
+  try {
+    const r = await api.post('/staking-pro/markets/price', { category, priceMode, reason: `Рынок переведён в режим ${priceMode}` });
+    show(`Режим «${priceMode === 'manual' ? 'ручные цены' : 'авто по провайдеру'}» применён к ${r.updated} инструментам`, 'green');
     reload();
   } catch (e: any) { show(e.message, 'red'); }
 }
@@ -580,6 +649,243 @@ const AssetModal: React.FC<{ asset: Asset | 'new'; onClose: () => void; onDone: 
         {err && <div className="text-sm text-rose-600">{err}</div>}
         <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={onClose}>Отмена</Button><Button type="submit" disabled={busy || !f.symbol || !f.name}>{busy ? 'Сохранение…' : 'Сохранить'}</Button></div>
       </form>
+    </Modal>
+  );
+};
+
+// ------------------------------------------------------- Price management tab
+type Show = (t: string, tone?: 'green' | 'red') => void;
+
+const MarketPriceCard: React.FC<{
+  market: (typeof TRADING_MARKETS)[number];
+  rows: Asset[];
+  writable: boolean;
+  reload: () => void;
+  show: Show;
+  onEditPrice: (a: Asset) => void;
+}> = ({ market, rows, writable, reload, show, onEditPrice }) => {
+  const [custom, setCustom] = useState('1');
+  const auto = rows.filter((a) => a.priceMode !== 'manual');
+  const manual = rows.filter((a) => a.priceMode === 'manual');
+  const avgBias = auto.length ? auto.reduce((s, a) => s + (a.biasPercent || 0), 0) / auto.length : 0;
+  const delta = Number(custom) || 0;
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div>
+          <div className="text-sm font-bold text-slate-800">{market.icon} {market.label} <span className="text-slate-400 font-medium">({market.subtitle})</span></div>
+          <div className="text-[11px] text-slate-500 mt-0.5">{market.provider}</div>
+        </div>
+        <Badge tone={market.providerStatus === 'live' ? 'green' : 'amber'}>{market.providerStatus === 'live' ? 'live feed' : 'нет провайдера'}</Badge>
+      </div>
+
+      <div className="text-[11px] text-slate-500 mb-3">
+        Инструментов: <b>{rows.length}</b> · на авто: <b>{auto.length}</b> · вручную: <b>{manual.length}</b>
+        {auto.length > 0 && <> · среднее смещение: <b className={avgBias >= 0 ? 'text-emerald-600' : 'text-rose-600'}>{avgBias > 0 ? '+' : ''}{avgBias.toFixed(2)}%</b></>}
+      </div>
+
+      {rows.length === 0 ? <div className="text-[11px] text-slate-400">В этом рынке пока нет инструментов.</div> : (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[-5, -1, 5].map((d) => (
+              <button key={d} type="button" disabled={!writable} onClick={() => nudgeMarket(market.id, d, reload, show)}
+                className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border ${d > 0 ? 'text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100' : 'text-rose-700 border-rose-300 bg-rose-50 hover:bg-rose-100'} disabled:opacity-40`}>
+                {d > 0 ? `+${d}%` : `${d}%`}
+              </button>
+            ))}
+            <input type="number" step="0.1" className={`${inputCls} !w-20 !py-1.5 text-xs`} value={custom} onChange={(e) => setCustom(e.target.value)} />
+            <Button size="sm" variant="outline" disabled={!writable || !delta} onClick={() => nudgeMarket(market.id, delta, reload, show)}>
+              Сдвинуть рынок
+            </Button>
+            <Button size="sm" variant="ghost" disabled={!writable} title="Сбросить ручные смещения всех инструментов рынка"
+              onClick={() => api.post('/staking-pro/markets/price', { category: market.id, biasPercent: 0, reason: 'Сброс смещений на рынке' }).then(() => { show('Смещения сброшены — цены вернулись к котировкам провайдера', 'green'); reload(); }).catch((e: any) => show(e.message, 'red'))}>
+              <RotateCcw className="w-3.5 h-3.5" /> Сброс
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Button size="sm" variant="outline" disabled={!writable} onClick={() => setMarketMode(market.id, 'auto', reload, show)}>Весь рынок на авто</Button>
+            <Button size="sm" variant="outline" disabled={!writable} onClick={() => setMarketMode(market.id, 'manual', reload, show)}>Весь рынок на ручные цены</Button>
+          </div>
+          <div className="grid grid-cols-2 gap-1 mt-1 max-h-36 overflow-y-auto">
+            {rows.map((a) => (
+              <button key={a.id} type="button" onClick={() => onEditPrice(a)}
+                className="text-left text-[11px] px-2 py-1.5 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50 flex items-center justify-between gap-2">
+                <span className="font-semibold text-slate-700 truncate">{a.ticker || a.symbol}</span>
+                <span className="font-mono text-slate-500 shrink-0">
+                  ${dispPrice(a.currentPrice, a.pricePrecision)}
+                  {a.priceMode === 'manual' && <span className="text-amber-600 ml-1">P</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+};
+
+// Synthetic card that targets the whole catalog at once.
+const ALL_MARKETS_CARD = {
+  id: 'all', label: 'Все рынки', title: 'Все рынки', subtitle: 'All markets', icon: '🌐',
+  provider: 'Binance + Yahoo Finance + Frankfurter (ECB) одновременно', providerStatus: 'live',
+} as unknown as (typeof TRADING_MARKETS)[number];
+
+const MarketsTab: React.FC<{
+  assets: Asset[];
+  priceSync: PriceSync | null;
+  writable: boolean;
+  reload: () => void;
+  show: Show;
+  onEditPrice: (a: Asset) => void;
+}> = ({ assets, priceSync, writable, reload, show, onEditPrice }) => {
+  const [busy, setBusy] = useState(false);
+
+  const toggleFeed = async () => {
+    if (!priceSync) return;
+    setBusy(true);
+    await patchSync({ enabled: !priceSync.enabled, reason: priceSync.enabled ? 'Автообновление котировок приостановлено' : 'Автообновление котировок включено' }, reload, show,
+      priceSync.enabled ? 'Живые котировки приостановлены — цены заморозаны на текущих значениях' : 'Живые котировки снова обновляются автоматически');
+    setBusy(false);
+  };
+
+  const setIntervalMinutes = (v: number) =>
+    patchSync({ intervalMinutes: v, reason: `Интервал обновления котировок: ${v} мин` }, reload, show, `Интервал обновления: ${v} мин`);
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-bold text-slate-800">Живые котировки и ручное управление рынками</div>
+            <div className="text-[11px] text-slate-500 mt-1 max-w-3xl">
+              Провайдеры без ключей: Binance (крипто), Yahoo Finance (индексы, акции, сырьё), Frankfurter/ECB (форекс).
+              Смещение (%) работает поверх котировки — рынок «едет» по рынку, но с вашей поправкой. Ручной режим полностью
+              замораживает инструмент: автосинхронизация его не перезапишет. Всё применяется моментально и видно всем пользователям.
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge tone={priceSync?.enabled ? 'green' : 'amber'}>{priceSync?.enabled ? 'авто-фид включён' : 'авто-фид выключен'}</Badge>
+            <Button size="sm" variant="outline" disabled={!writable || busy} onClick={toggleFeed}>
+              {priceSync?.enabled ? <><Pause className="w-3.5 h-3.5" /> Пауза</> : <><Play className="w-3.5 h-3.5" /> Включить</>}
+            </Button>
+            <Button size="sm" disabled={!writable || busy} onClick={() => runSync(reload, show)}><RefreshCw className="w-3.5 h-3.5" /> Обновить сейчас</Button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-slate-500">
+          <span>Интервал:</span>
+          {[1, 2, 5, 15, 30, 60].map((v) => (
+            <button key={v} type="button" disabled={!writable} onClick={() => setIntervalMinutes(v)}
+              className={`px-2 py-1 rounded-lg border text-xs font-semibold ${priceSync?.intervalMinutes === v ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>
+              {v} мин
+            </button>
+          ))}
+          <span className="ml-auto">Последнее обновление: <b>{priceSync?.lastRunAt ? fmtDate(priceSync.lastRunAt) : '—'}</b></span>
+        </div>
+        {priceSync?.lastStatus && <div className="text-[11px] text-slate-500 mt-1">{priceSync.lastStatus}</div>}
+        {priceSync?.lastError && <div className="text-[11px] text-rose-600 mt-1">Ошибка фида: {priceSync.lastError}</div>}
+      </Card>
+
+      <div className="grid grid-cols-2 gap-4">
+        <MarketPriceCard market={ALL_MARKETS_CARD} rows={assets} writable={writable} reload={reload} show={show} onEditPrice={onEditPrice} />
+        {TRADING_MARKETS.map((m) => (
+          <MarketPriceCard key={m.id} market={m} rows={assets.filter((a) => (a.category || 'crypto') === m.id)}
+            writable={writable} reload={reload} show={show} onEditPrice={onEditPrice} />
+        ))}
+      </div>
+      <p className="text-[11px] text-slate-400">
+        Первая карточка — «Все рынки сразу»: сдвиг на ней влияет на каждый инструмент каталога. Изменения цен фиксируются в аудите с причиной.
+      </p>
+    </div>
+  );
+};
+
+// ------------------------------------------------------------------ Price modal
+const PriceModal: React.FC<{ asset: Asset; onClose: () => void; onDone: () => void }> = ({ asset, onClose, onDone }) => {
+  const [a, setA] = useState(asset);
+  const [price, setPrice] = useState(String(asset.currentPrice));
+  const [change, setChange] = useState(String(asset.change24h ?? 0));
+  const [bias, setBias] = useState(String(asset.biasPercent ?? 0));
+  const [manual, setManual] = useState(asset.priceMode === 'manual');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const prec = a.pricePrecision ?? 2;
+
+  const send = async (body: Record<string, unknown>, okMsg?: string) => {
+    setBusy(true); setErr(null);
+    try {
+      const r = await api.post(`/staking-pro/assets/${a.id}/price`, { ...body, reason: body.reason || 'Ручная корректировка цены из админки' });
+      setA(r.asset);
+      setPrice(String(r.asset.currentPrice));
+      setChange(String(r.asset.change24h ?? 0));
+      setBias(String(r.asset.biasPercent ?? 0));
+      setManual(r.asset.priceMode === 'manual');
+      if (okMsg) onDone();
+    } catch (e: any) { setErr(e.message); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <Modal open onClose={onClose} title={`Цена ${a.ticker || a.symbol} — ${marketOf(a).label}`}>
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-2 text-sm bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div><div className="text-[11px] text-slate-500">Цена для пользователей</div><div className="font-mono font-bold">${dispPrice(a.currentPrice, prec)}</div></div>
+          <div><div className="text-[11px] text-slate-500">Котировка провайдера</div><div className="font-mono">{a.providerPrice ? `$${dispPrice(a.providerPrice, prec)}` : '—'}</div></div>
+          <div><div className="text-[11px] text-slate-500">Изменение 24ч</div><div className={`font-mono ${a.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{a.change24h >= 0 ? '+' : ''}{a.change24h}%</div></div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => send({ priceMode: 'auto' })}
+            className={`py-2 rounded-xl text-sm font-bold border ${!manual ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-500 border-slate-300'}`}>
+            Авто по провайдеру
+          </button>
+          <button type="button" onClick={() => send({ priceMode: 'manual', price: a.currentPrice })}
+            className={`py-2 rounded-xl text-sm font-bold border ${manual ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-300'}`}>
+            Ручная цена
+          </button>
+        </div>
+
+        <div>
+          <div className="text-xs font-semibold text-slate-600 mb-1">Сдвинуть цену прямо сейчас</div>
+          <div className="flex flex-wrap gap-1.5">
+            {[-5, -2, -1, -0.5, 0.5, 1, 2, 5].map((d) => (
+              <button key={d} type="button" disabled={busy} onClick={() => send({ deltaPercent: d })}
+                className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border ${d > 0 ? 'text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100' : 'text-rose-700 border-rose-300 bg-rose-50 hover:bg-rose-100'}`}>
+                {d > 0 ? `+${d}%` : `${d}%`}
+              </button>
+            ))}
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1.5">
+            {manual
+              ? 'Ручной режим: сдвиг меняет саму цену, провайдер её не перезапишет.'
+              : 'Авто-режим: сдвиг копится в смещении, поэтому котировка провайдера продолжает жить, но с вашей поправкой.'}
+          </div>
+        </div>
+
+        {!manual && (
+          <Field label="Смещение к котировке (%)" hint="0 — цена ровно как у провайдера">
+            <div className="flex gap-2">
+              <input type="number" step="0.1" className={inputCls} value={bias} onChange={(e) => setBias(e.target.value)} />
+              <Button type="button" variant="outline" disabled={busy} onClick={() => send({ biasPercent: Number(bias) || 0 })}>Применить</Button>
+            </div>
+          </Field>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Задать цену вручную" hint={manual ? 'Применится сразу и заморозит инструмент' : 'Применение переведёт инструмент в ручной режим'}>
+            <input type="number" step={priceStep(prec)} className={inputCls} value={price} onChange={(e) => setPrice(e.target.value)} />
+          </Field>
+          <Field label="Изменение 24ч (%)"><input type="number" step="0.01" className={inputCls} value={change} onChange={(e) => setChange(e.target.value)} /></Field>
+        </div>
+
+        {err && <div className="text-sm text-rose-600">{err}</div>}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>Закрыть</Button>
+          <Button type="button" disabled={busy} onClick={() => send({ price: Number(price) || a.currentPrice, change24h: Number(change) || 0, priceMode: 'manual' }, 'saved')}>
+            {busy ? 'Сохранение…' : 'Сохранить цену'}
+          </Button>
+        </div>
+      </div>
     </Modal>
   );
 };
