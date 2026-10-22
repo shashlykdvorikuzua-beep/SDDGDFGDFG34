@@ -5,6 +5,7 @@ import {
   Palette, Languages, Smartphone, Settings2, Info, Paperclip, FileText
 } from 'lucide-react';
 import { WalletAccount } from '../../types/wallet';
+import { DEFAULT_PIN } from '../../utils';
 
 interface SettingsTabProps {
   currentWallet: WalletAccount;
@@ -102,7 +103,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   const [changePinSuccess, setChangePinSuccess] = useState(false);
 
   const handleReveal = () => {
-    const target = savedPin || '123456';
+    const target = savedPin || DEFAULT_PIN;
     if (pinInput === target) {
       setRevealedPhrase(true);
       setPhraseError(null);
@@ -112,8 +113,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   };
 
   const handleVerifyCurrentPin = () => {
-    const target = savedPin || '123456';
-    if (currentPinAttempt === target || currentPinAttempt === '123456') {
+    const target = savedPin || DEFAULT_PIN;
+    if (currentPinAttempt === target || currentPinAttempt === DEFAULT_PIN) {
       setChangePinStep('set_new');
       setChangePinError(null);
     } else {

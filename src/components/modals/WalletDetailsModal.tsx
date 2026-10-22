@@ -4,6 +4,7 @@ import {
   Clock, AlertCircle, CheckCircle2
 } from 'lucide-react';
 import { WalletAccount } from '../../types/wallet';
+import { DEFAULT_PIN, FALLBACK_ADDRESSES } from '../../utils';
 
 interface WalletDetailsModalProps {
   wallet: WalletAccount;
@@ -39,7 +40,7 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   const [resetError, setResetError] = useState<string | null>(null);
 
   const handleRevealPhrase = () => {
-    const savedPin = localStorage.getItem('vaultspring_pin') || '123456';
+    const savedPin = localStorage.getItem('vaultspring_pin') || DEFAULT_PIN;
     if (pinInput === savedPin) {
       setShowPhrase(true);
       setPinPrompt(false);
@@ -50,7 +51,7 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
   };
 
   const handleConfirmReset = () => {
-    const savedPin = localStorage.getItem('vaultspring_pin') || '123456';
+    const savedPin = localStorage.getItem('vaultspring_pin') || DEFAULT_PIN;
     if (resetPin === savedPin) {
       onResetWallet();
       onClose();
@@ -135,12 +136,12 @@ export const WalletDetailsModal: React.FC<WalletDetailsModalProps> = ({
                   <span className="text-[9px] bg-red-500/20 text-red-300 font-bold px-1.5 py-0.2 rounded">USDT TRC-20</span>
                 </div>
                 <span className="text-xs font-mono text-purple-300 break-all">
-                  {wallet.tronAddress || 'TYDZSxdvjW6H8HkWtK5J92mNqP7rS8tVwX'}
+                  {wallet.tronAddress || FALLBACK_ADDRESSES.tron}
                 </span>
               </div>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(wallet.tronAddress || 'TYDZSxdvjW6H8HkWtK5J92mNqP7rS8tVwX');
+                  navigator.clipboard.writeText(wallet.tronAddress || FALLBACK_ADDRESSES.tron);
                   setCopiedTron(true);
                   setTimeout(() => setCopiedTron(false), 2000);
                 }}

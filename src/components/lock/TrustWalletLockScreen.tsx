@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Fingerprint, Lock, AlertCircle, RefreshCw, Smartphone, ArrowLeft } from 'lucide-react';
+import { DEFAULT_PIN } from '../../utils';
 
 interface TrustWalletLockScreenProps {
   savedPin: string;
@@ -29,8 +30,8 @@ export const TrustWalletLockScreen: React.FC<TrustWalletLockScreenProps> = ({
 
       if (next.length === 6) {
         // Compare with savedPin or default demo 123456
-        const targetPin = savedPin || '123456';
-        if (next === targetPin || next === '123456') {
+        const targetPin = savedPin || DEFAULT_PIN;
+        if (next === targetPin || next === DEFAULT_PIN) {
           // Success
           setTimeout(() => {
             onUnlock();

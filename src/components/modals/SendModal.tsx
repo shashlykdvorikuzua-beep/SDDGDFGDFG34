@@ -3,6 +3,13 @@ import { X, ArrowRight, CheckCircle2, ChevronDown, AlertCircle, Clock } from 'lu
 import { Token, Transaction } from '../../types/wallet';
 import { CryptoIcon } from '../common/CryptoIcon';
 import { executePeerTransfer } from '../../services/walletSyncService';
+import { FALLBACK_ADDRESSES } from '../../utils';
+
+/** Map fiat currency codes to their display symbols. */
+const FIAT_SYMBOLS: Record<string, string> = {
+  USD: '$', EUR: '€', GBP: '£', JPY: '¥', CNY: '¥',
+  CHF: 'CHF ', CAD: 'C$', AUD: 'A$', PLN: 'zł', INR: '₹',
+};
 
 // Light address validation by network
 function validateAddress(network: string, address: string): string | null {
@@ -27,7 +34,7 @@ export const SendModal: React.FC<SendModalProps> = ({
   tokens,
   initialToken,
   walletAddress = '0x71C...4e8B',
-  tronAddress = 'TYDZSxdvjW6H8HkWtK5J92mNqP7rS8tVwX',
+  tronAddress = FALLBACK_ADDRESSES.tron,
   fiatCurrency = 'USD',
   onClose,
   onSendSuccess
@@ -46,7 +53,7 @@ export const SendModal: React.FC<SendModalProps> = ({
   const numAmount = parseFloat(amount) || 0;
   // numAmount is always in crypto units internally
   const amountUsd = numAmount * selectedToken.price;
-  const fiatSymbol = fiatCurrency === 'USD' ? '$' : fiatCurrency === 'EUR' ? '€' : fiatCurrency === 'GBP' ? '£' : fiatCurrency === 'JPY' ? '¥' : fiatCurrency === 'CNY' ? '¥' : fiatCurrency === 'CHF' ? 'CHF ' : fiatCurrency === 'CAD' ? 'C$' : fiatCurrency === 'AUD' ? 'A$' : fiatCurrency === 'PLN' ? 'zł' : fiatCurrency === 'INR' ? '₹' : '$';
+  const fiatSymbol = FIAT_SYMBOLS[fiatCurrency] || '$';
   
   // Fee is deducted FROM the amount (like other wallets)
   // Fee percentage based on network and speed
@@ -84,7 +91,7 @@ export const SendModal: React.FC<SendModalProps> = ({
       if (text) setRecipient(text);
     } catch {
       // fallback test address
-      setRecipient(isTron ? 'TYDZSxdvjW6H8HkWtK5J92mNqP7rS8tVwX' : '0x4e8B...99a1');
+      setRecipient(isTron ? FALLBACK_ADDRESSES.tron : '0x4e8B...99a1');
     }
   };
 
@@ -92,7 +99,7 @@ export const SendModal: React.FC<SendModalProps> = ({
     setIsSubmitting(true);
     setTransferError(null);
 
-    const fallbackRecipient = isTron ? 'TYDZSxdvjW6H8HkWtK5J92mNqP7rS8tVwX' : '0x4e8B...99a1';
+    const fallbackRecipient = isTron ? FALLBACK_ADDRESSES.tron : '0x4e8B...99a1';
     const targetRecipient = recipient.trim() || fallbackRecipient;
     const senderAddr = isTron ? tronAddress : walletAddress;
 

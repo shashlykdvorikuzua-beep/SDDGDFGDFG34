@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Lock, ShieldCheck, Delete } from 'lucide-react';
+import { DEFAULT_PIN } from '../../utils';
 
 interface PinVerifyModalProps {
   title?: string;
@@ -24,7 +25,7 @@ export const PinVerifyModal: React.FC<PinVerifyModalProps> = ({
       setError(null);
       if (nextPin.length === 6) {
         // Verify against stored PIN
-        const savedPin = localStorage.getItem('vaultspring_pin') || '123456';
+        const savedPin = localStorage.getItem('vaultspring_pin') || DEFAULT_PIN;
         setTimeout(() => {
           if (nextPin === savedPin) {
             onSuccess();

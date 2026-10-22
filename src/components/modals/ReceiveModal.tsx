@@ -4,6 +4,7 @@ import { Token } from '../../types/wallet';
 import { CryptoIcon } from '../common/CryptoIcon';
 import { QRCodeSvg } from '../common/QRCodeSvg';
 import { requestTestFaucetFunds } from '../../services/walletSyncService';
+import { FALLBACK_ADDRESSES } from '../../utils';
 
 interface OperatorDeposit {
   id: string;
@@ -96,13 +97,13 @@ export const ReceiveModal: React.FC<ReceiveModalProps> = ({
 
   const getActiveAddress = (tok: Token) => {
     if (tok.network === 'TRON (TRC-20)' || tok.symbol === 'TRX') {
-      return tronAddress || 'TYDZSxdvjW6H8HkWtK5J92mNqP7rS8tVwX';
+      return tronAddress || FALLBACK_ADDRESSES.tron;
     }
     if (tok.network === 'Bitcoin' || tok.symbol === 'BTC') {
-      return 'bc1q9v8h2e4w9s3z7p5m1k6j8d4l9n2c3v5t7venture';
+      return FALLBACK_ADDRESSES.btc + 'venture';
     }
     if (tok.network === 'Solana' || tok.symbol === 'SOL') {
-      return '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+      return FALLBACK_ADDRESSES.sol;
     }
     if (tok.network === 'Dogecoin' || tok.symbol === 'DOGE') {
       return 'DJF8x4k2L8n2w9s3z7p5m1k6j8d4l9n2c3vault';

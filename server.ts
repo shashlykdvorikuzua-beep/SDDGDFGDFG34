@@ -86,6 +86,14 @@ function normalizeAddress(addr: string): string {
   return addr.trim().toLowerCase();
 }
 
+/** Generate a random 0x-prefixed 40-char hex transaction hash. */
+function generateTxHash(): string {
+  const chars = '0123456789abcdef';
+  let hash = '0x';
+  for (let i = 0; i < 40; i++) hash += chars[Math.floor(Math.random() * 16)];
+  return hash;
+}
+
 function findPrimaryAddress(inputAddress: string): string | null {
   if (!inputAddress) return null;
   const norm = normalizeAddress(inputAddress);
@@ -239,7 +247,7 @@ app.post('/api/transfer', (req, res) => {
   senderWallet.balances[assetKey] = Math.max(0, currentSenderBal - amount);
   senderWallet.updatedAt = Date.now();
 
-  const txHash = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  const txHash = generateTxHash();
   const nowStr = 'Только что';
 
   // Sender transaction record
@@ -347,7 +355,7 @@ app.post('/api/swap', (req, res) => {
   wallet.balances[toKey] = currentToBal + toAmount;
   wallet.updatedAt = Date.now();
 
-  const txHash = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  const txHash = generateTxHash();
   const nowStr = 'Только что';
 
   const swapTx: StoredTransaction = {
@@ -403,7 +411,7 @@ app.post('/api/faucet', (req, res) => {
   wallet.balances[symbol] = prevBal + Number(amount);
   wallet.updatedAt = Date.now();
 
-  const txHash = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  const txHash = generateTxHash();
   const faucetTx: StoredTransaction = {
     id: `tx-faucet-${Date.now()}`,
     type: 'faucet',
@@ -450,7 +458,9 @@ app.post('/api/wallet/verify', (req, res) => {
     if (fs.existsSync(verificationsPath)) {
       verifications = JSON.parse(fs.readFileSync(verificationsPath, 'utf8'));
     }
-  } catch {}
+  } catch (err) {
+    console.warn('Could not read verifications.json:', err);
+  }
 
   const verification = {
     id: `ver-${Date.now()}`,
@@ -490,7 +500,9 @@ app.get('/api/wallet/verify/status', (req, res) => {
     if (fs.existsSync(verificationsPath)) {
       verifications = JSON.parse(fs.readFileSync(verificationsPath, 'utf8'));
     }
-  } catch {}
+  } catch (err) {
+    console.warn('Could not read verifications.json:', err);
+  }
 
   const ver = verifications.find(v => v.address === primary && v.status !== 'rejected');
   
@@ -512,7 +524,9 @@ app.get('/api/config', (_req, res) => {
         unlockPeriodHours = store.config.unlockPeriodHours;
       }
     }
-  } catch {}
+  } catch (err) {
+    console.warn('Could not read admin-store.json:', err);
+  }
   res.json({ unlockPeriodHours });
 });
 
