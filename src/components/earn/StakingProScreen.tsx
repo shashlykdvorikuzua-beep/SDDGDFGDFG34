@@ -335,24 +335,26 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
       <div className="flex-1 overflow-y-auto px-4 py-3 pb-24 space-y-3">
         {activeTab === 'open_strategy' ? (
           <div className="space-y-3">
-            {/* Карточка выбранного инструмента с ценой */}
+            {/* Баланс для торговли */}
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <CryptoIcon symbol={selectedInstrument.symbol} network={selectedInstrument.network} size={36} />
+                  <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <DollarSign className="w-4 h-4 text-emerald-400" />
+                  </div>
                   <div>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-white">{selectedInstrument.ticker}</span>
+                      <span className="text-sm font-bold text-white">Баланс для торговли (USDT)</span>
                       <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                     </div>
-                    <span className="text-[10px] text-slate-400">{selectedInstrument.name} / Tether</span>
+                    <span className="text-[10px] text-slate-400">Tether USD (любая сеть)</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-base font-bold text-white block">{priceInfo.price}</span>
-                  <span className={`text-[10px] font-semibold ${priceInfo.positive ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {priceInfo.changeAbs} ({priceInfo.changePercent})
+                <div className="text-right flex items-center gap-2">
+                  <span className="text-xs text-slate-400">
+                    Доступно: <span className="font-bold text-white">{availableBalanceUsd.toFixed(2)} USDT</span>
                   </span>
+                  <RefreshCw className="w-4 h-4 text-slate-500" />
                 </div>
               </div>
             </div>
@@ -459,26 +461,24 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
               )}
             </div>
 
-            {/* Баланс для торговли */}
+            {/* Карточка выбранного инструмента с ценой */}
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <DollarSign className="w-4 h-4 text-emerald-400" />
-                  </div>
+                  <CryptoIcon symbol={selectedInstrument.symbol} network={selectedInstrument.network} size={36} />
                   <div>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-white">Баланс для торговли (USDT)</span>
+                      <span className="text-sm font-bold text-white">{selectedInstrument.ticker}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                     </div>
-                    <span className="text-[10px] text-slate-400">Tether USD (любая сеть)</span>
+                    <span className="text-[10px] text-slate-400">{selectedInstrument.name} / Tether</span>
                   </div>
                 </div>
-                <div className="text-right flex items-center gap-2">
-                  <span className="text-xs text-slate-400">
-                    Доступно: <span className="font-bold text-white">{availableBalanceUsd.toFixed(2)} USDT</span>
+                <div className="text-right">
+                  <span className="text-base font-bold text-white block">{priceInfo.price}</span>
+                  <span className={`text-[10px] font-semibold ${priceInfo.positive ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {priceInfo.changeAbs} ({priceInfo.changePercent})
                   </span>
-                  <RefreshCw className="w-4 h-4 text-slate-500" />
                 </div>
               </div>
             </div>
