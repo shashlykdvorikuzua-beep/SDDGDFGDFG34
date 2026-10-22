@@ -647,7 +647,11 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
       delete prof.allowedAssetIds;
     } else if (Array.isArray(b.assetIds)) {
       const validIds = new Set(store.stakingProAssets.map((a) => a.id));
-      prof.allowedAssetIds = b.assetIds.filter((id: any) => validIds.has(String(id))).map(String);
+      const cleaned = b.assetIds.filter((id: any) => validIds.has(String(id))).map(String);
+      // An empty selection would lock the client out of Trade Pro entirely —
+      // require at least one instrument, or reset to 'all' explicitly.
+      if (cleaned.length === 0) return res.status(400).json({ error: 'Выберите хотя бы один инструмент или верните режим «все рынки»' });
+      prof.allowedAssetIds = cleaned;
     } else {
       return res.status(400).json({ error: 'Некорректный формат: передайте mode="all" или assetIds=[...]' });
     }

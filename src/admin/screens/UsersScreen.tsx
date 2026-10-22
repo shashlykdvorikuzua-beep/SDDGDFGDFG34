@@ -439,7 +439,7 @@ const MarketTab: React.FC<{ d: UserDetail; canOps: boolean; reload: () => void; 
             )}
 
             <div className="flex justify-end">
-              <Button size="sm" onClick={saveAccess} disabled={accessBusy}>
+              <Button size="sm" onClick={saveAccess} disabled={accessBusy || (accessMode === 'custom' && selectedIds.size === 0)}>
                 <Save className="w-3.5 h-3.5" /> {accessBusy ? 'Сохранение…' : 'Сохранить доступ'}
               </Button>
             </div>
