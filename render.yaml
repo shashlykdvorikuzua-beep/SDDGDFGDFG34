@@ -1,0 +1,19 @@
+# Render Blueprint for Vaultspring Wallet (full-stack: Express API + built frontend)
+# Connect this GitHub repo on Render (New + -> Blueprint) and it will read this file.
+services:
+  - type: web
+    name: vaultspring-wallet
+    runtime: node
+    plan: free
+    region: oregon
+    # Build the Vite frontend (dist/) and install deps, then start server.ts,
+    # which serves both the API (/api/*) and the static app in production.
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/config
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: ALLOWED_ORIGIN
+        # The Vercel frontend origin allowed to call this API directly.
+        value: https://vaultspring-wallet.vercel.app

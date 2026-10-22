@@ -6,6 +6,28 @@ import { createAdminRouter } from './adminRouter';
 import { fetchForexRates, getForexRate, getForexChange24h } from './src/services/forexService';
 
 const app = express();
+
+// Allow the static frontend hosted on another origin (e.g. Vercel) to call the API.
+// Set ALLOWED_ORIGIN to the exact frontend URL; falls back to a permissive policy so
+// same-origin and Vercel-proxied requests keep working without configuration.
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN;
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGIN) {
+    if (origin && ALLOWED_ORIGIN.split(',').map((s) => s.trim()).includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+    }
+  } else if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Key');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
 app.use(express.json());
 
 // Persistent ledger file path
