@@ -6,10 +6,10 @@ services:
     runtime: node
     plan: free
     region: oregon
-    # Build the Vite frontend (dist/) and install deps, then start server.ts,
-    # which serves both the API (/api/*) and the static app in production.
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    # Build the Vite frontend (dist/) and install ALL deps (tsx is a devDependency
+    # but is required at runtime to start server.ts), then start the full-stack server.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npx tsx server.ts
     healthCheckPath: /api/config
     envVars:
       - key: NODE_VERSION
