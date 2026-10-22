@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useId } from 'react';
+import { renderInstrumentIcon } from './instrumentIcons';
 
 interface CryptoIconProps {
   symbol: string;
@@ -14,6 +15,7 @@ export const CryptoIcon: React.FC<CryptoIconProps> = ({
   network 
 }) => {
   const s = size;
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
 
   // Determine if a chain badge should be shown on the corner
   const getChainBadge = () => {
@@ -71,6 +73,11 @@ export const CryptoIcon: React.FC<CryptoIconProps> = ({
   };
 
   const renderSvg = () => {
+    // Non-crypto Trade Pro markets (Forex / Commodities / Stocks / Indices)
+    // get proper offline logos before the crypto-specific switch.
+    const instrument = renderInstrumentIcon(symbol, s, uid);
+    if (instrument) return instrument;
+
     switch (symbol.toUpperCase()) {
       case 'BTC':
         return (
