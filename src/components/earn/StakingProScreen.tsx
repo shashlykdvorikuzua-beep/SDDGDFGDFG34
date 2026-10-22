@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   ArrowLeft, Info, TrendingUp, TrendingDown, Search, AlertTriangle,
-  X, Edit3, Star, ChevronDown, ShieldAlert, RefreshCw, Bitcoin, DollarSign, Droplet, Apple, BarChart3,
+  X, Edit3, Star, ChevronDown, ShieldAlert, RefreshCw, DollarSign,
 } from 'lucide-react';
 import {
   StakingProAsset, StakingProPosition, PositionDirection, MarketCategory, TradingInstrument,
@@ -28,15 +28,6 @@ interface StakingProScreenProps {
 }
 
 const DEFAULT_LEVERAGE = 3;
-
-// Иконки для рынков
-const MARKET_ICONS: Record<MarketCategory, React.ReactNode> = {
-  crypto: <Bitcoin className="w-4 h-4" />,
-  forex: <DollarSign className="w-4 h-4" />,
-  commodities: <Droplet className="w-4 h-4" />,
-  stocks: <Apple className="w-4 h-4" />,
-  indices: <BarChart3 className="w-4 h-4" />,
-};
 
 export const StakingProScreen: React.FC<StakingProScreenProps> = ({
   assets,
@@ -341,28 +332,6 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
         </button>
       </div>
 
-      {/* Горизонтальные табы рынков */}
-      <div className="px-2 py-2 flex gap-1 bg-[#07090E] border-b border-white/[0.06] overflow-x-auto shrink-0">
-        {TRADING_MARKETS.map((m) => {
-          const isActive = selectedMarket === m.id;
-          return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => handleSelectMarket(m.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                isActive
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
-              }`}
-            >
-              {MARKET_ICONS[m.id]}
-              <span>{m.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
       <div className="flex-1 overflow-y-auto px-4 py-3 pb-24 space-y-3">
         {activeTab === 'open_strategy' ? (
           <div className="space-y-3">
@@ -407,8 +376,8 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
               </div>
             </div>
 
-            {/* Второй ряд табов-фильтров */}
-            <div className="flex gap-4 border-b border-white/[0.06] pb-2">
+            {/* Ряд табов-фильтров рынков */}
+            <div className="flex gap-5 border-b border-white/[0.06] pb-2 overflow-x-auto">
               {TRADING_MARKETS.map((m) => {
                 const isActive = selectedMarket === m.id;
                 return (
@@ -416,7 +385,7 @@ export const StakingProScreen: React.FC<StakingProScreenProps> = ({
                     key={m.id}
                     type="button"
                     onClick={() => handleSelectMarket(m.id)}
-                    className={`text-xs font-semibold pb-1 relative transition-colors ${
+                    className={`text-base font-bold pb-1.5 relative whitespace-nowrap transition-colors ${
                       isActive ? 'text-white' : 'text-slate-500 hover:text-slate-300'
                     }`}
                   >
