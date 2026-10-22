@@ -8675,7 +8675,7 @@
     "priceSync": {
       "enabled": true,
       "intervalMinutes": 5,
-      "lastRunAt": 1792661182769,
+      "lastRunAt": 1792669480008,
       "lastStatus": "Провайдер: 0 авто · 61 ручной · 0 без котировки"
     }
   }
