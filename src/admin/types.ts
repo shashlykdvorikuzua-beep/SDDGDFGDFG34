@@ -43,6 +43,8 @@ export interface UserDetail {
   marketAssets: { id: string; name: string; symbol: string; network: string; category: string; currentPrice: number; change24h: number; pricePrecision?: number }[];
   coinOptions: string[];
   operatorDeposits: { symbol: string; network: string; address: string; memo?: string; label?: string; qrImage: string | null }[];
+  // Per-client market access: null/undefined = all enabled assets, array = only these asset IDs.
+  allowedAssetIds?: string[] | null;
 }
 
 export interface ClientDepositOverride {

@@ -146,8 +146,9 @@ const UserDetailModal: React.FC<{ id: string; role: Role; onClose: () => void; o
                 </select></label>
             </div>
           )}
-          <div className="grid grid-cols-3 gap-2 pt-1">
+          <div className="grid grid-cols-4 gap-2 pt-1">
             <Stat label="Активов" value={String(d.assets.length)} />
+            <Stat label="Рынков доступно" value={Array.isArray(d.allowedAssetIds) && d.allowedAssetIds.length > 0 ? `${d.allowedAssetIds.length}` : 'все'} />
             <Stat label="Персональных цен" value={String(Object.keys(d.priceOverrides || {}).length)} />
             <Stat label="Личных кошельков" value={String(Object.keys(d.depositOverrides || {}).length)} />
           </div>
@@ -285,13 +286,172 @@ const MarketTab: React.FC<{ d: UserDetail; canOps: boolean; reload: () => void; 
   const rows = d.marketAssets.filter((a) => category === 'all' || a.category === category);
   const overrideCount = Object.keys(overrides).length;
 
+  // Per-client market access state
+  const hasCustomAccess = Array.isArray(d.allowedAssetIds) && d.allowedAssetIds!.length > 0;
+  const [accessMode, setAccessMode] = useState<'all' | 'custom'>(hasCustomAccess ? 'custom' : 'all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(hasCustomAccess ? d.allowedAssetIds! : [])
+  );
+  const [accessBusy, setAccessBusy] = useState(false);
+
   const clearAll = async () => {
     try { await api.patch(`/users/${d.profile.id}/price-overrides`, { clear: true, reason: 'Сброс персональных цен' }); toast('Персональные цены сброшены'); reload(); }
     catch (e: any) { toast(e.message, 'red'); }
   };
 
+  const toggleAsset = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllInCategory = (cat: string) => {
+    const ids = d.marketAssets.filter((a) => a.category === cat).map((a) => a.id);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const deselectAllInCategory = (cat: string) => {
+    const ids = d.marketAssets.filter((a) => a.category === cat).map((a) => a.id);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+  };
+
+  const saveAccess = async () => {
+    setAccessBusy(true);
+    try {
+      const body = accessMode === 'all'
+        ? { mode: 'all', reason: 'Доступ ко всем рынкам' }
+        : { assetIds: Array.from(selectedIds), reason: 'Индивидуальный набор рынков для клиента' };
+      await api.patch(`/users/${d.profile.id}/allowed-assets`, body);
+      toast(accessMode === 'all' ? 'Доступ: все рынки' : `Доступ: ${selectedIds.size} инструментов`);
+      reload();
+    } catch (e: any) { toast(e.message, 'red'); }
+    finally { setAccessBusy(false); }
+  };
+
+  const allowedCount = hasCustomAccess ? d.allowedAssetIds!.length : d.marketAssets.length;
+
   return (
     <div className="space-y-4">
+      {/* Per-client market access section */}
+      <Card className="p-4 bg-sky-50 border-sky-100">
+        <div className="flex items-center gap-2 mb-3">
+          <SlidersHorizontal className="w-4 h-4 text-sky-600" />
+          <span className="text-sm font-bold text-sky-800">Доступ к рынкам Trade Pro</span>
+          <Badge tone={hasCustomAccess ? 'purple' : 'green'}>
+            {hasCustomAccess ? `${allowedCount} выбрано` : 'все рынки'}
+          </Badge>
+        </div>
+        <p className="text-xs text-sky-700 mb-3">
+          По умолчанию клиент видит <b>все включённые инструменты</b>. Здесь можно выбрать конкретные рынки, которые увидит именно этот клиент в Trade Pro.
+        </p>
+
+        {canOps ? (
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAccessMode('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                  accessMode === 'all' ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Все рынки
+              </button>
+              <button
+                onClick={() => setAccessMode('custom')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                  accessMode === 'custom' ? 'bg-sky-600 text-white border-sky-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Выбрать вручную
+              </button>
+            </div>
+
+            {accessMode === 'custom' && (
+              <div className="space-y-2">
+                {/* Category quick-actions */}
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {cats.map((cat) => {
+                    const catTotal = d.marketAssets.filter((a) => a.category === cat).length;
+                    const catSelected = d.marketAssets.filter((a) => a.category === cat && selectedIds.has(a.id)).length;
+                    const allSelected = catSelected === catTotal;
+                    return (
+                      <div key={cat} className="flex items-center gap-1">
+                        <button
+                          onClick={() => allSelected ? deselectAllInCategory(cat) : selectAllInCategory(cat)}
+                          className={`text-[11px] font-semibold px-2 py-1 rounded-lg border transition-colors ${
+                            allSelected ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          {CATEGORY_LABELS[cat] || cat} ({catSelected}/{catTotal})
+                        </button>
+                      </div>
+                    );
+                  })}
+                  <button
+                    onClick={() => setSelectedIds(new Set(d.marketAssets.map((a) => a.id)))}
+                    className="text-[11px] font-semibold px-2 py-1 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                  >
+                    Выбрать все
+                  </button>
+                  <button
+                    onClick={() => setSelectedIds(new Set())}
+                    className="text-[11px] font-semibold px-2 py-1 rounded-lg border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                  >
+                    Снять все
+                  </button>
+                </div>
+
+                {/* Asset checkboxes grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-52 overflow-y-auto">
+                  {d.marketAssets.map((a) => (
+                    <label
+                      key={a.id}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-xs border transition-colors ${
+                        selectedIds.has(a.id) ? 'bg-sky-50 border-sky-300 text-sky-800' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(a.id)}
+                        onChange={() => toggleAsset(a.id)}
+                        className="w-3.5 h-3.5 rounded accent-sky-600"
+                      />
+                      <span className="font-semibold truncate">{a.symbol}</span>
+                      <span className="text-[10px] text-slate-400 truncate">{CATEGORY_LABELS[a.category] || a.category}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="text-[11px] text-slate-500">
+                  Выбрано: <b className="text-sky-700">{selectedIds.size}</b> из {d.marketAssets.length}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button size="sm" onClick={saveAccess} disabled={accessBusy}>
+                <Save className="w-3.5 h-3.5" /> {accessBusy ? 'Сохранение…' : 'Сохранить доступ'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Card className="p-3 bg-amber-50 border-amber-100 text-amber-800 text-sm">
+            У вашей роли нет прав на изменение доступа к рынкам.
+          </Card>
+        )}
+      </Card>
+
+      {/* Price overrides section */}
       <Card className="p-4 bg-violet-50 border-violet-100">
         <p className="text-sm text-violet-800">
           Здесь задаются <b>личные цены этого клиента</b>. В Trade Pro он будет видеть именно их, а общий рынок для остальных не меняется.

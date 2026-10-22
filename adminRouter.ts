@@ -535,6 +535,7 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
       reservedUsd: Object.entries(reservations).reduce((s, [sym, amt]) => s + Number(amt) * priceOf(sym), 0),
       journal, transactions: txs, restrictions, chats: chats.map((c) => ({ id: c.id, subject: c.subject, status: c.status })),
       priceOverrides, depositOverrides, marketAssets, coinOptions, operatorDeposits: Object.values(store.depositSettings).filter((d) => d.enabled && d.address),
+      allowedAssetIds: prof.allowedAssetIds ?? null,
     });
   });
 
@@ -631,6 +632,32 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     saveStore();
     audit(who, 'user.price_override', prof.id, { newValue: JSON.stringify(prof.priceOverrides), reason: req.body.reason });
     res.json({ success: true, priceOverrides: prof.priceOverrides });
+  });
+
+  // Per-client market access: assign which Trade Pro assets this user can see.
+  // null/undefined = all enabled assets; an array of IDs = only those assets.
+  router.patch('/users/:id/allowed-assets', guard('staking.write'), (req: Request, res: Response) => {
+    const who = (req as any).who;
+    const primary = Object.keys(store.profiles).find((p) => store.profiles[p].id === req.params.id);
+    if (!primary) return res.status(404).json({ error: 'Пользователь не найден' });
+    const prof = store.profiles[primary];
+    const b = req.body;
+    const oldVal = prof.allowedAssetIds ?? null;
+    if (b.mode === 'all' || b.assetIds === null || b.assetIds === undefined) {
+      delete prof.allowedAssetIds;
+    } else if (Array.isArray(b.assetIds)) {
+      const validIds = new Set(store.stakingProAssets.map((a) => a.id));
+      prof.allowedAssetIds = b.assetIds.filter((id: any) => validIds.has(String(id))).map(String);
+    } else {
+      return res.status(400).json({ error: 'Некорректный формат: передайте mode="all" или assetIds=[...]' });
+    }
+    saveStore();
+    audit(who, 'user.allowed_assets', prof.id, {
+      oldValue: oldVal ? `${oldVal.length} assets` : 'all',
+      newValue: prof.allowedAssetIds ? `${prof.allowedAssetIds.length} assets` : 'all',
+      reason: b.reason || 'Изменение доступа к рынкам для клиента',
+    });
+    res.json({ success: true, allowedAssetIds: prof.allowedAssetIds ?? null });
   });
 
   // Personal deposit (top-up) wallet + QR for one client, per coin/network.
@@ -1674,20 +1701,26 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const primary = req.query.address ? findPrimary(String(req.query.address)) : null;
     // Personal market: this client's own price overrides win over the global feed.
     const pOverrides = (primary && store.profiles[primary]?.priceOverrides) || {};
-    const assets = store.stakingProAssets.filter((a) => a.enabled).map((a) => {
-      const ov = pOverrides[a.id];
-      return {
-        id: a.id, name: a.name, symbol: a.symbol, network: a.network,
-        currentPrice: ov?.currentPrice ?? a.currentPrice,
-        change24h: ov?.change24h ?? a.change24h,
-        minPositionUsd: a.minPositionUsd, maxLeverage: a.maxLeverage,
-        fundingRate8h: a.fundingRate8h, fundingDirection: a.fundingDirection, spread: a.spread,
-        makerFeePercent: a.makerFeePercent, takerFeePercent: a.takerFeePercent,
-        // Market metadata drives the Trade Pro catalog in the wallet app.
-        category: a.category || 'crypto', ticker: a.ticker, pricePrecision: a.pricePrecision,
-        productType: a.productType, tradingHours: a.tradingHours,
-      };
-    });
+    // Per-client market access: if the profile has an explicit allowedAssetIds
+    // array, only those assets are visible; otherwise all enabled assets show.
+    const allowedIds = (primary && store.profiles[primary]?.allowedAssetIds) || null;
+    const allowedSet = allowedIds && allowedIds.length > 0 ? new Set(allowedIds) : null;
+    const assets = store.stakingProAssets
+      .filter((a) => a.enabled && (!allowedSet || allowedSet.has(a.id)))
+      .map((a) => {
+        const ov = pOverrides[a.id];
+        return {
+          id: a.id, name: a.name, symbol: a.symbol, network: a.network,
+          currentPrice: ov?.currentPrice ?? a.currentPrice,
+          change24h: ov?.change24h ?? a.change24h,
+          minPositionUsd: a.minPositionUsd, maxLeverage: a.maxLeverage,
+          fundingRate8h: a.fundingRate8h, fundingDirection: a.fundingDirection, spread: a.spread,
+          makerFeePercent: a.makerFeePercent, takerFeePercent: a.takerFeePercent,
+          // Market metadata drives the Trade Pro catalog in the wallet app.
+          category: a.category || 'crypto', ticker: a.ticker, pricePrecision: a.pricePrecision,
+          productType: a.productType, tradingHours: a.tradingHours,
+        };
+      });
     const positions = primary
       ? store.stakingProPositions.filter((p) => p.walletPrimary === primary).map(toAppPosition)
       : [];
@@ -1700,7 +1733,10 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const ledger = getLedger();
     if (!primary || !ledger.wallets[primary]) return res.status(404).json({ error: 'Кошелёк не найден' });
     const prof = ensureProfile(primary, ledger.wallets[primary]);
-    const asset = store.stakingProAssets.find((a) => a.id === b.assetId && a.enabled);
+    // Enforce per-client market access: if allowedAssetIds is set, the asset must be in it.
+    const allowed = prof.allowedAssetIds;
+    const asset = store.stakingProAssets.find((a) => a.id === b.assetId && a.enabled
+      && (!allowed || allowed.length === 0 || allowed.includes(a.id)));
     if (!asset) return res.status(400).json({ error: 'Актив недоступен' });
     const pos = buildPositionFromInput(b, asset, primary, prof.id, 'client', 'client');
     if (pos.positionSizeUsd < asset.minPositionUsd) return res.status(400).json({ error: `Минимальный размер: $${asset.minPositionUsd}` });
