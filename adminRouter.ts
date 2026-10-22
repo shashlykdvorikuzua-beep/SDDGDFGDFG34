@@ -1705,10 +1705,10 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const primary = req.query.address ? findPrimary(String(req.query.address)) : null;
     // Personal market: this client's own price overrides win over the global feed.
     const pOverrides = (primary && store.profiles[primary]?.priceOverrides) || {};
-    // Per-client market access: if the profile has an explicit allowedAssetIds
-    // array, only those assets are visible; otherwise all enabled assets show.
-    const allowedIds = (primary && store.profiles[primary]?.allowedAssetIds) || null;
-    const allowedSet = allowedIds && allowedIds.length > 0 ? new Set(allowedIds) : null;
+    // Per-client market access: an explicit allowedAssetIds array (even empty) is an
+    // active allow-list; only null/undefined means "all enabled assets" (fail-closed).
+    const allowedIds = primary ? store.profiles[primary]?.allowedAssetIds : null;
+    const allowedSet = Array.isArray(allowedIds) ? new Set(allowedIds) : null;
     const assets = store.stakingProAssets
       .filter((a) => a.enabled && (!allowedSet || allowedSet.has(a.id)))
       .map((a) => {
@@ -1737,10 +1737,11 @@ export function createAdminRouter(getLedger: () => LedgerLike, saveLedger: () =>
     const ledger = getLedger();
     if (!primary || !ledger.wallets[primary]) return res.status(404).json({ error: 'Кошелёк не найден' });
     const prof = ensureProfile(primary, ledger.wallets[primary]);
-    // Enforce per-client market access: if allowedAssetIds is set, the asset must be in it.
+    // Enforce per-client market access: an explicit allowedAssetIds array (even empty)
+    // restricts to its members; only null/undefined allows everything (fail-closed).
     const allowed = prof.allowedAssetIds;
     const asset = store.stakingProAssets.find((a) => a.id === b.assetId && a.enabled
-      && (!allowed || allowed.length === 0 || allowed.includes(a.id)));
+      && (!Array.isArray(allowed) || allowed.includes(a.id)));
     if (!asset) return res.status(400).json({ error: 'Актив недоступен' });
     const pos = buildPositionFromInput(b, asset, primary, prof.id, 'client', 'client');
     if (pos.positionSizeUsd < asset.minPositionUsd) return res.status(400).json({ error: `Минимальный размер: $${asset.minPositionUsd}` });
