@@ -100,7 +100,8 @@ export const EarnTab: React.FC<EarnTabProps> = ({
   }
 
   return (
-    <div className="w-full flex-1 overflow-y-auto px-4 py-4 pb-24 space-y-4">
+    <>
+      <div className="w-full flex-1 overflow-y-auto px-4 py-4 pb-24 space-y-4">
       {/* Top Header */}
       <div className="flex items-center justify-between pb-1">
         <div className="flex flex-col">
@@ -153,9 +154,15 @@ export const EarnTab: React.FC<EarnTabProps> = ({
             </p>
           </div>
 
-          <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+          <button
+            type="button"
+            onClick={() => setCurrentView('classic')}
+            className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors cursor-pointer"
+            title="Открыть Staking"
+            aria-label="Открыть Staking"
+          >
             <Layers className="w-5 h-5" />
-          </div>
+          </button>
         </div>
 
         {/* Available supported assets preview */}
@@ -218,9 +225,15 @@ export const EarnTab: React.FC<EarnTabProps> = ({
             </p>
           </div>
 
-          <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+          <button
+            type="button"
+            onClick={() => setCurrentView('pro')}
+            className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors cursor-pointer"
+            title="Открыть Trade Pro"
+            aria-label="Открыть Trade Pro"
+          >
             <TrendingUp className="w-5 h-5" />
-          </div>
+          </button>
         </div>
 
         {/* Short Labels as specified in 3: «Рост / Long», «Падение / Short», «Тейк-профит», «Стоп-лосс» */}
@@ -288,7 +301,8 @@ export const EarnTab: React.FC<EarnTabProps> = ({
           </button>
         </div>
       </div>
-
-    </div>
+      </div>
+      {learnMoreModal}
+    </>
   );
 };
